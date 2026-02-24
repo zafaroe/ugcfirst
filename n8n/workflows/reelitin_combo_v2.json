@@ -1,0 +1,613 @@
+{
+  "updatedAt": "2025-12-02T21:49:27.000Z",
+  "createdAt": "2025-11-27T18:30:48.427Z",
+  "id": "P178pqIl8sXkf3Ks",
+  "name": "reelitin_combo_v2",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "reelitin",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Product URL"
+            },
+            {
+              "fieldLabel": "Product Name",
+              "placeholder": "Name of the product...",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Product Images",
+              "fieldType": "file",
+              "acceptFileTypes": ".jpg,.jpeg,.png,.webp,.heic,.heif",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Preset",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "The Authentic Testimonial (Trust-Builder)"
+                  },
+                  {
+                    "option": "The Problem/Solution (High-CTR)"
+                  },
+                  {
+                    "option": "The Aesthetic Showcase (Desire-Creation)"
+                  },
+                  {
+                    "option": "The \"Day in the Life\" Vlog (Lifestyle Integration)"
+                  },
+                  {
+                    "option": "The Rapid-Fire Listicle (Education)"
+                  },
+                  {
+                    "option": "The Unboxing Experience (Anticipation)"
+                  },
+                  {
+                    "option": "The \"Us vs. Them\" Comparison (Differentiation)"
+                  },
+                  {
+                    "option": "The Pattern Interrupt (The Wildcard)"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Target Platform",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Facebook"
+                  },
+                  {
+                    "option": "Instagram"
+                  },
+                  {
+                    "option": "TikTok"
+                  },
+                  {
+                    "option": "Youtube"
+                  },
+                  {
+                    "option": "Other"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Duration",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "10s"
+                  },
+                  {
+                    "option": "15s"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Target Region",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Global"
+                  },
+                  {
+                    "option": "North America"
+                  },
+                  {
+                    "option": "Latin America"
+                  },
+                  {
+                    "option": "Europe"
+                  },
+                  {
+                    "option": "Middle East"
+                  },
+                  {
+                    "option": "Africa"
+                  },
+                  {
+                    "option": "South Asia"
+                  },
+                  {
+                    "option": "East & Southeast Asia"
+                  },
+                  {
+                    "option": "Oceania"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Language"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        208
+      ],
+      "id": "6da2b3ba-89d2-4fc7-be2c-2c603b045270",
+      "name": "form_trigger",
+      "webhookId": "ef8e73e7-9091-4b5c-bdfa-413b56f81236"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1936,
+        208
+      ],
+      "id": "8ff7ffb6-4b81-4449-8d32-39778702ad1b",
+      "name": "generate_ad_prompts",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "unB4eloasizYTddN",
+          "name": "Google Gemini(PaLM) Api azfoundary account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sora-2-image-to-video\",\n  \"input\": {\n    \"prompt\": {{ JSON.stringify($('If').item.json.vidgen_prompt) }},\n    \"image_urls\": [ {{ JSON.stringify($json.url) }} ],\n    \"aspect_ratio\": \"portrait\",\n    \"n_frames\": \"{{ $('If').item.json.config.effective_config.duration_seconds }}\",\n    \"remove_watermark\": false\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        208
+      ],
+      "id": "0a1a09c8-cdb2-4896-8f28-ab04aa6af89c",
+      "name": "Create Sora Ad",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JOMTRw8Hk22l5E88",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the raw text output from the previous Gemini node\nconst rawText = $input.item.json.candidates[0].content.parts[0].text || \"\";\n\n// --- Helper Function: Extract text between two headers (Flexible) ---\nfunction extractSection(text, startHeader, endHeader) {\n  if (!text) return null;\n\n  // Escape special regex characters in the header string\n  const escapedHeader = startHeader\n    .replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')\n    .replace(/\\s+/g, '\\\\s+');\n\n  // Start Pattern: matches optional numbering, bolding, hashes, etc.\n  const startPattern =\n    `(?:^|\\\\n)` +                      // start of string or newline\n    `(?:[\\\\#>\\\\d\\\\.\\\\)\\\\-\\\\s]*)?` +    // optional markdown prefixes / numbers\n    `(?:\\\\*\\\\*|__)?` +                 // optional bold start\n    `${escapedHeader}` +               // the header text itself\n    `(?:.*?)?` +                       // optional trailing chars\n    `(?:\\\\*\\\\*|__)?` +                 // optional bold end\n    `[:\\\\s]*`;                         // optional colon / spaces\n\n  const startRegex = new RegExp(startPattern, 'i');\n  const startMatch = text.match(startRegex);\n\n  if (!startMatch) return null;\n\n  const startIndex = startMatch.index + startMatch[0].length;\n\n  // Find End Index\n  let endIndex = text.length;\n  if (endHeader) {\n    const endHeaders = Array.isArray(endHeader) ? endHeader : [endHeader];\n    const combinedEndPattern = endHeaders.map(h => {\n      const esc = h\n        .replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')\n        .replace(/\\s+/g, '\\\\s+');\n      return `(?:^|\\\\n)(?:[\\\\#>\\\\d\\\\.\\\\)\\\\-\\\\s]*)?(?:\\\\*\\\\*|__)?${esc}`;\n    }).join('|');\n\n    const endRegex = new RegExp(combinedEndPattern, 'i');\n    const remainingText = text.substring(startIndex);\n    const endMatch = remainingText.match(endRegex);\n\n    if (endMatch) {\n      endIndex = startIndex + endMatch.index;\n    }\n  }\n\n  return text.substring(startIndex, endIndex).trim();\n}\n\n// --- Helper Function: Robust JSON Parsing ---\nfunction parseJSONBlock(rawString) {\n  if (!rawString) return {};\n  try {\n    // 1. Find the index of the first '{'\n    const firstBrace = rawString.indexOf('{');\n    // 2. Find the index of the last '}'\n    const lastBrace = rawString.lastIndexOf('}');\n\n    // 3. If valid braces found, extract ONLY that substring\n    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n      const jsonCandidate = rawString.substring(firstBrace, lastBrace + 1);\n      return JSON.parse(jsonCandidate);\n    }\n\n    // Fallback: simple cleanup if braces methodology fails\n    let cleanString = rawString\n      .replace(/```json/g, '')\n      .replace(/```/g, '');\n    return JSON.parse(cleanString);\n  } catch (e) {\n    return {\n      error: \"Failed to parse JSON\",\n      raw_text: rawString,\n      message: e.message,\n    };\n  }\n}\n\n// --- MAIN EXTRACTION LOGIC ---\n\n// 1) Parse the main JSON object from the full Gemini output\nconst mainObj = parseJSONBlock(rawText) || {};\n\n// Safely unpack sub-objects\nconst configObj = mainObj.config || {};\nconst selectedConfig = configObj.selected_config || {};\nconst recommendedConfig = configObj.recommended_config || {};\nconst effectiveConfig = configObj.effective_config || {};\n\nconst marketResearch = mainObj.market_research || {};\nconst personaObj = mainObj.persona || {};\nconst productObj = mainObj.product_profile || {};\nconst performanceForecast = mainObj.performance_forecast || {};\nconst strategy = mainObj.strategy || {};\n\n// 2) Extract the START FRAME IMAGE PROMPT section\n// Header in prompt: \"### START FRAME IMAGE PROMPT\"\nconst frame0Prompt = extractSection(\n  rawText,\n  \"START FRAME IMAGE PROMPT\",\n  \"SORA PROMPT BLOCK\"\n);\n\n// 3) Extract the SORA PROMPT BLOCK section\n// Header in prompt: \"### SORA PROMPT BLOCK\"\n// This is the final section, so no endHeader\nconst soraVideoPrompt = extractSection(\n  rawText,\n  \"SORA PROMPT BLOCK\",\n  null\n);\n\n// 4) Optional: derive a simple research_summary string for backward compatibility\nconst researchSummary =\n  marketResearch.summary_of_patterns ||\n  marketResearch.inferred_category ||\n  \"\";\n\n// --- RETURN STRUCTURED DATA ---\nreturn {\n  json: {\n    raw_text: rawText,                 // full Gemini output (debugging / logging)\n\n    // New structured fields from JSON\n    config: configObj,\n    selected_config: selectedConfig,\n    recommended_config: recommendedConfig,\n    effective_config: effectiveConfig,\n    market_research: marketResearch,\n    persona: personaObj,\n    product_profile: productObj,\n    performance_forecast: performanceForecast,\n    strategy: strategy,\n\n    // Backward-compatible / convenience fields\n    vid_config: effectiveConfig,                       // effective config for video generation\n    research_summary: researchSummary,                 // short summary string if you need it\n    strategy_snapshot: strategy,                       // whole strategy object\n\n    // Sora + image-model facing text blocks\n    start_frame_image_prompt: frame0Prompt,\n    vidgen_prompt: soraVideoPrompt\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        208
+      ],
+      "id": "8aa862d9-3240-4c03-b4f2-724df5e1b70c",
+      "name": "Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "72e2545f-3548-49d6-a3c2-1eb1af84c932",
+              "leftValue": "={{ $json.vidgen_prompt.length }}",
+              "rightValue": 5000,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            },
+            {
+              "id": "2259937a-4602-4cfa-9bbf-ffa3e2df3008",
+              "leftValue": "={{ $json.start_frame_image_prompt.length }}",
+              "rightValue": 5000,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2384,
+        208
+      ],
+      "id": "b98af23a-e939-45c8-8514-465486cda7d0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "={{ JSON.parse($json.body.data.resultJson).resultUrls[0] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-cloudinary.cloudinary",
+      "typeVersion": 1,
+      "position": [
+        3056,
+        208
+      ],
+      "id": "77185f10-b6c4-4bbe-b5da-83544f8b4125",
+      "name": "Upload start frame",
+      "credentials": {
+        "cloudinaryApi": {
+          "id": "V8DVtY71cU7eraO1",
+          "name": "Cloudinary account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  (() => {\n    // 1. Get the image list from the \"Aggregate\" node (which has the Cloudinary URLs)\n    // MAKE SURE this node name matches exactly what is on your canvas\n    const imageList = $('aggregate_images_urls_and_format_inputs').first().json.images || [];\n\n    // 2. Map them to just the Public URLs\n    // We filter(Boolean) to remove any empty entries just in case\n    const imageUrls = imageList.map(img => img.public_url).filter(Boolean);\n\n    // 3. Return the JSON string\n    return JSON.stringify({\n      \"model\": \"nano-banana-pro\",\n      \"callBackUrl\": $execution.resumeUrl,\n      \"input\": {\n        // Pull the prompt from the Parser node\n        \"prompt\": $('Parser').item.json.start_frame_image_prompt,\n        \n        \"aspect_ratio\": \"9:16\",\n        \"resolution\": \"1K\",\n        \"output_format\": \"png\",\n        \n        // 4. Send the array of URLs (e.g. [\"https://res.cloudinary...\", ...])\n        \"image_input\": imageUrls \n      }\n    });\n  })()\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2608,
+        208
+      ],
+      "id": "a554c34a-e8c5-463b-a373-75193c46f39d",
+      "name": "generate_start_frame",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "JOMTRw8Hk22l5E88",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2c2bbb98-c6e4-4339-971a-2d6487f6bd29",
+              "name": "prompt",
+              "value": "=You are an expert Performance Marketer, Consumer Psychologist, and Sora Prompt Engineer.\n\nYour mission is to:\n\nAnalyze the product and find real-world viral benchmarks for this category and region.\n\nEngineer a short-form video designed primarily to drive SALES (conversion).\n\nGenerate a data-informed performance and strategy snapshot that is directional, not fantasy.\n\nDeliver a precise Start Frame image prompt and a Sora-ready cinematic blueprint.\n\nAll reasoning must:\n\nStay grounded in the product images, product URL, and visible or generic category knowledge.\n\nAvoid invented product features, fake performance numbers, or guaranteed outcomes.\n\nINPUT DATA AND PRESETS\n\nUser Inputs:\n\nProduct URL: {{ $json['Product URL'] }}\n\nProduct Name: {{ $json['Product Name'] }}\n\nProduct Images: [Attached inline; up to 3 views of the same product]\n\nPreset: {{ $json['Preset'] }} (see Preset Definitions)\n\nTarget Platform: {{ $json['Target Platform'] }} (may be empty)\n\nDuration: {{ $json.Duration }} (expected: \"10s\", \"15s\", or empty)\n\nRegion: {{ $json['Target Region'] }}\n\nLanguage: {{ $json.Language }} (may be empty)\n\nPreset Definitions (Strategic Angles):\n\nThe Authentic Testimonial (Trust-Builder)\nHandheld, \"TikTok made me buy it\" vibe.\nFocus on social proof and lived experience to lower purchase resistance.\n\nThe Problem/Solution (High-CTR)\nAggressive hook and editing.\nOpens on a painful problem and positions the product as the quick fix.\nOptimized for immediate clicks and strong thumb-stop.\n\nThe Aesthetic Showcase (Desire-Creation)\nCinematic, ASMR, texture-focused visuals.\nElevates perceived value and justifies a higher price point.\n\nThe \"Day in the Life\" Vlog (Lifestyle Integration)\nShows how the product naturally fits into a real daily routine.\nReduces \"will I actually use this?\" friction.\n\nThe Rapid-Fire Listicle (Education)\n\"3 Reasons Why...\" structure.\nFast-paced value stacking.\nGood for slightly complex or unfamiliar products.\n\nThe Unboxing Experience (Anticipation)\nFocuses on the dopamine of receiving and unboxing.\nReduces shipping and quality anxiety.\n\nThe \"Us vs. Them\" Comparison (Differentiation)\nVisual side-by-side vs generic alternative.\nHighlights clear win conditions for this product.\n\nThe Pattern Interrupt (The Wildcard)\nA unique or slightly surreal visual hook.\nDesigned to stop the scroll and cheaply capture attention, then pivot into product relevance.\n\nEach Preset implicitly defines both the narrative style and the production look. All creative decisions, the Start Frame, and the Sora block must stay consistent with the effective Preset you end up using.\n\nSTEP 0: GROUND IN PRODUCT IMAGES (CRITICAL)\n\nBefore any research, forecasting, or script writing:\n\nInspect all attached product images carefully.\n\nFrom the images, infer ONLY:\n\nMaterials, color palette, textures, and overall build quality.\n\nApproximate size and form factor.\n\nVisible logos, labels, buttons, openings, ports.\n\nPlausible ways it can be held, worn, or used.\n\nRealistic usage context (for example: bedroom, kitchen, car, outdoor, desk).\n\nDo NOT:\n\nInvent magical or unlikely functionality.\n\nAssume medical, financial, or extreme performance claims that are not visibly obvious or typical for this category.\n\nYou must reuse this visual grounding in:\n\npersona.environment\n\nproduct_profile.creative_visuals\n\nproduct_profile.creative_visuals.viral_hook_concept\n\nSTART FRAME IMAGE PROMPT\n\nSORA PROMPT BLOCK (shot list and actions)\n\nSTEP 1: BUILD SELECTED_CONFIG FROM RAW INPUTS\n\nYou must first build a selected_config object that captures raw user intent and which fields are AUTO (to be decided by you):\n\npreset_input:\n\nValue of Preset if provided; otherwise null.\n\nplatform_input:\n\nValue of Target Platform if provided; otherwise null.\n\nduration_input:\n\nThe string \"10s\" or \"15s\" if provided; otherwise null.\n\nregion_input:\n\nAlways the Region from the form. This is required.\n\nlanguage_input:\n\nValue of Language if provided; otherwise null.\n\nauto_fields:\n\nA list of field names from [\"preset\", \"platform\", \"duration\", \"language\"] for which the corresponding input is null (empty).\n\nFor example, if Preset and Duration were empty, auto_fields might be [\"preset\",\"duration\"].\n\nselected_config constrains your research:\n\nIf platform_input is not null, prioritize that platform in research.\n\nIf preset_input is not null, prefer examples whose format resembles that Preset.\n\nregion_input always guides regional assumptions.\n\nThis selected_config will be output later under config.selected_config in the JSON.\n\nSTEP 2: MARKET RESEARCH AND BENCHMARKING\n\nGoal: understand what actually works for this product category and region, and extract grounded numeric ranges where possible.\n\nUse web search tools to find a few highly relevant recent short-form videos:\n\nSame or closely related product category.\n\nRegion: region_input (or global if region-specific results are weak).\n\nPrefer platform_input if provided; otherwise look across TikTok, Instagram Reels, and YouTube Shorts.\n\nFrom these examples, extract patterns:\n\nOpening hook styles in the first 1 second.\n\nCommon narrative formats (for example: testimonial, problem/solution, listicle, aesthetic, unboxing).\n\nProduction style (simple UGC, polished UGC, cinematic, animated).\n\nVisible performance metrics when available:\n\nIf view counts are visible, note approximate numbers.\n\nIf benchmark articles or sources are available, you may use their ranges.\n\nNumeric constraints:\n\nWhen you provide numeric ranges later (for views or conversion uplift), they MUST:\n\nBe supported by at least one of:\n\nVisible metrics from example videos, or\n\nPublished benchmark ranges for that platform and product type, or\n\nBroad, clearly described industry norms for similar ecommerce creatives.\n\nFormat for numeric ranges:\n\nUse strings like \"10000-50000\" with no commas or units.\n\nIf you cannot confidently derive a numeric range from any of the above:\n\nYou MUST set the corresponding field to the exact string \"insufficient_data\" in the JSON.\n\nHallucination constraints:\n\nDo NOT invent exact view counts, ROI figures, or growth curves.\n\nDo NOT fabricate creator names, brands, or made-up campaign stories.\n\nAll numeric ranges must be broad and clearly justified in the accompanying rationale text.\n\nSTEP 3: BUILD RECOMMENDED_CONFIG AND EFFECTIVE_CONFIG\n\nUsing your research and selected_config:\n\nFor each field in [\"preset\",\"platform\",\"duration_seconds\",\"language\"]:\n\n\"preset\" corresponds to:\n\nselected_config.preset_input (string or null)\n\nrecommended_config.preset (string or null)\n\n\"platform\" corresponds to:\n\nselected_config.platform_input (string or null)\n\nrecommended_config.platform (string or null)\n\n\"duration_seconds\" corresponds to:\n\nselected_config.duration_input (string \"10s\" or \"15s\" or null)\n\nrecommended_config.duration_seconds (number 10 or 15, or null when set by user)\n\n\"language\" corresponds to:\n\nselected_config.language_input (string or null)\n\nrecommended_config.language (string or null)\n\nRules for recommended_config:\n\nIf a field is NOT listed in selected_config.auto_fields:\n\nThis field was set by the user.\n\nDo NOT change it.\n\nIn recommended_config:\n\nSet the value for this field to null.\n\nSet rationales[field] to \"set_by_user\".\n\nIf a field IS in selected_config.auto_fields:\n\nYou must choose a value based on your market research and product logic:\n\npreset:\n\nIf Preset was empty, choose the Preset most likely to drive conversions for this category and region on the best-fit platform.\n\nplatform:\n\nIf Platform was empty, choose the platform with the strongest purchase intent signals (for example, comments like \"where can I buy this?\") for this category and region.\n\nduration_seconds:\n\nIf Duration was empty, choose 10 or 15 seconds based on:\n\nTypical runtime and retention patterns from research, and\n\nHow much time this Preset needs to tell a tight, non-bloated story.\n\nlanguage:\n\nIf Language was empty, infer the most natural language for the region and the dominant language used in viral content for this category.\n\nIn recommended_config:\n\nSet the value for this field to your chosen value.\n\nSet rationales[field] to a short explanation of why you chose it.\n\nThen build effective_config as the final configuration to be used for all creative and for Sora:\n\neffective_config.region = selected_config.region_input\n\neffective_config.preset:\n\nIf selected_config.preset_input is not null:\n\nUse selected_config.preset_input.\n\nElse:\n\nUse recommended_config.preset.\n\neffective_config.platform:\n\nIf selected_config.platform_input is not null:\n\nUse selected_config.platform_input.\n\nElse:\n\nUse recommended_config.platform.\n\neffective_config.duration_seconds:\n\nIf selected_config.duration_input is not null:\n\nIf duration_input is \"10s\", use 10.\n\nIf duration_input is \"15s\", use 15.\n\nElse:\n\nUse recommended_config.duration_seconds.\n\neffective_config.language:\n\nIf selected_config.language_input is not null:\n\nUse selected_config.language_input.\n\nElse:\n\nUse recommended_config.language.\n\nYou must:\n\nOutput selected_config, recommended_config, and effective_config under config in the JSON.\n\nAlways use effective_config (not selected_config, not recommended_config alone) when constructing:\n\npersona and environment tone\n\nSTART FRAME IMAGE PROMPT\n\nSORA PROMPT BLOCK\n\nSTEP 4: OUTPUT MAIN JSON OBJECT\n\nNow output a single JSON object with this structure (no extra commentary around it):\n\n{\n  \"config\": {\n    \"selected_config\": {\n      \"preset_input\": \"... or null\",\n      \"platform_input\": \"... or null\",\n      \"duration_input\": \"... or null\", \n      \"region_input\": \"...\",\n      \"language_input\": \"... or null\",\n      \"auto_fields\": [\"preset\", \"platform\", \"duration\", \"language\"]\n    },\n    \"recommended_config\": {\n      \"preset\": \"... or null\",\n      \"platform\": \"... or null\",\n      \"duration_seconds\": 10,\n      \"language\": \"... or null\",\n      \"rationales\": {\n        \"preset\": \"Short explanation or 'set_by_user'.\",\n        \"platform\": \"Short explanation or 'set_by_user'.\",\n        \"duration_seconds\": \"Short explanation or 'set_by_user'.\",\n        \"language\": \"Short explanation or 'set_by_user'.\"\n      }\n    },\n    \"effective_config\": {\n      \"preset\": \"...\",\n      \"platform\": \"...\",\n      \"duration_seconds\": 10,\n      \"language\": \"...\",\n      \"region\": \"...\"\n    }\n  },\n  \"market_research\": {\n    \"inferred_category\": \"...\",\n    \"summary_of_patterns\": \"Short paragraph summarizing hook styles, formats, and production looks that perform well.\",\n    \"competitor_benchmarks\": [\n      {\n        \"format_label\": \"e.g. 'problem/solution UGC'\",\n        \"video_hook_description\": \"Description of the opening 0-1 second visual pattern.\",\n        \"observed_view_range\": \"e.g. '20000-80000' or 'insufficient_data'\",\n        \"comment_themes\": [\"e.g. 'where can I get this?', 'is it worth the price?'\"],\n        \"why_it_likely_drove_sales\": \"1-2 sentences focused on sales psychology.\"\n      }\n    ]\n  },\n  \"persona\": {\n    \"core_identity\": {\n      \"name\": \"...\",\n      \"age\": 0,\n      \"location\": \"...\",\n      \"occupation\": \"...\"\n    },\n    \"psychographics\": {\n      \"pain_points\": [\"Specific frustration 1\", \"Specific frustration 2\"],\n      \"buying_trigger_emotion\": \"The main emotion that makes them click 'Buy now'.\",\n      \"objections\": [\"Price\", \"Quality doubt\", \"Will I use it?\", \"...\"]\n    },\n    \"communication_style\": {\n      \"tone_description\": \"How they naturally talk on camera.\",\n      \"energy_level\": \"e.g. 'calm but confident', 'high-energy and playful'.\",\n      \"platform_fit_notes\": \"Why this persona feels native on the chosen platform.\"\n    },\n    \"environment\": {\n      \"setting_description\": \"Concrete description of where they are filming (matches product use and images).\",\n      \"lighting_mood\": \"e.g. 'soft morning light through a window', 'cozy warm indoor lighting'.\"\n    }\n  },\n  \"product_profile\": {\n    \"core_info\": {\n      \"category\": \"...\",\n      \"intended_use\": \"What it is used for and in what context.\",\n      \"ideal_customer\": \"Demographic and behavioral description.\",\n      \"secondary_customers\": [\"Optional, other likely buyers.\"]\n    },\n    \"selling_points\": [\n      {\n        \"usp\": \"...\",\n        \"benefit_to_user\": \"...\",\n        \"visual_proof_from_images_or_category\": \"What in the images or typical category supports this.\",\n        \"confidence_0to1\": 0.85\n      }\n    ],\n    \"creative_visuals\": {\n      \"recommended_framing\": [\"e.g. 'top-down on table', 'medium close-up with hands in frame'\"],\n      \"key_demo_actions\": [\"Concrete actions that visually prove the value.\"],\n      \"sound_or_texture_cues\": [\"e.g. 'soft click', 'foam sound', 'pouring water'\"],\n      \"viral_hook_concept\": \"Exact 0-1 second motion pattern designed to stop the scroll, grounded in research and product reality.\"\n    }\n  },\n  \"performance_forecast\": {\n    \"target_audience_segment\": \"Specific description of who this video is meant to reach.\",\n    \"sales_impact_hypothesis\": \"How and why this concept should increase conversions vs a generic video.\",\n    \"projected_performance\": {\n      \"view_volume_range\": \"e.g. '10000-50000' or 'insufficient_data'\",\n      \"view_volume_rationale\": \"Short explanation grounded in research examples or benchmarks.\",\n      \"conversion_impact_uplift_range_percent\": \"e.g. '5-20%' or 'insufficient_data'\",\n      \"conversion_impact_rationale\": \"Context for that range based on category, region, and platform.\",\n      \"virality_context\": \"Short text describing how this creative compares to typical organic performance for this category and platform.\"\n    },\n    \"disclaimer\": \"Clear statement that these are directional, benchmark-based expectations, not guaranteed results.\"\n  },\n  \"strategy\": {\n    \"primary_platform\": \"Platform to prioritize for this creative and why.\",\n    \"posting_recommendation\": \"High-level guidance on whether to start organic, go straight to ads, or do a staged approach (for example, 'post organically for 5-7 days, then test as ads if hook performance is strong').\",\n    \"initial_test_duration_days\": 7,\n    \"initial_spend_range\": \"e.g. '50-200' (in typical platform currency) or 'insufficient_data'\",\n    \"test_and_learn_plan\": \"What to watch during the test (for example, hook hold rate, CTR, cost per add-to-cart) and what actions to take if results are strong vs weak.\",\n    \"cross_posting_ideas\": [\n      \"Optional suggestions for reusing this creative on other platforms or placements.\"\n    ]\n  }\n}\n\nRules:\n\nDo not add fields not described above.\n\nAll numeric ranges must follow the pattern \"min-max\" or the exact string \"insufficient_data\".\n\nDo not output this JSON inside the SORA PROMPT BLOCK.\n\nSTEP 5: START FRAME IMAGE PROMPT\n\nAfter outputting the JSON above, you must output a separate section:\n\nLabel it exactly:\n\nSTART FRAME IMAGE PROMPT\n\nRequirements:\n\nThe product is the clear hero, filling about 70-80 percent of the frame.\n\nThe vibe must match effective_config.preset and its implied production style.\n\nThe environment must match persona.environment and the product’s plausible usage context.\n\nNO faces or identifiable facial features in the Start Frame:\n\nThe camera framing MUST completely exclude the face of any person (adult or child).\nThis means: no full faces, no partial faces, no side profiles, no cheeks, no chin, no forehead, no “barely visible” face in a corner.\nDo not mention or imply any facial features (eyes, nose, mouth, cheeks, jawline, ears, hair on the forehead, smile, expression, etc).\nIf a person is present, explicitly frame and describe them from the neck down or shoulders down only, with the face or side of face fully out of frame. You may describe hands, arms, torso, over-the-shoulder, or neck-down shots only.\n\nThis no-face / no-head rule applies ONLY to the START FRAME IMAGE PROMPT.\n\n\nExplicitly describe:\n\nCamera framing and angle:\n\nFor example, \"top-down shot on kitchen counter\", \"medium close-up from slightly above\", \"over-the-shoulder toward the product on a desk\".\n\nDepth of field:\n\nWhat is in sharp focus vs softly blurred.\n\nLighting:\n\nDirection and mood (soft, harsh, warm, cool).\n\nMention 3-5 anchor colors that match the product and setting.\n\nForeground, midground, and background:\n\nSurfaces, props, furniture, hands, and relevant contextual objects.\n\nTexture and material feel:\n\nWood grain, plastic shine, fabric softness, etc.\n\nImplied soundscape:\n\nBrief hint that aligns with the later video (for example, quiet bedroom, city apartment, kitchen ambience).\n\nWrite this as a single dense descriptive paragraph that an image model can use directly with a product reference image. Do not use JSON in this section.\n\nSTEP 6: SORA PROMPT BLOCK\n\nThis is the only block Sora will receive, together with the Start Frame image and product visual reference.\n\nConstraints:\n\nTotal characters for this block (everything under the heading) must be under 4800 characters.\n\nNo JSON inside this block. Plain text only.\n\nNo instructions about on-screen text, captions, or graphic overlays.\n\nScript and descriptions must be in effective_config.language.\n\nOrientation is always vertical 9:16.\n\nLabel it exactly:\n\nSORA PROMPT BLOCK\n\nInside this block, follow this structure:\n\nCONFIG (short lines)\n\nWrite:\n\nCONFIG:\nPreset: [effective_config.preset]\nPlatform: [effective_config.platform]\nDuration: [effective_config.duration_seconds] seconds\nRegion context: [effective_config.region]\nOrientation: vertical 9:16\nNo on-screen text, captions, or graphic overlays anywhere.\n\nSCRIPT (timestamped, sales-focused)\n\nLabel:\n\nSCRIPT:\n\nRules:\n\nOptimize for SALES, not just views.\n\nFocus on benefits and emotional outcomes; use features only as proof.\n\nSplit into three phases:\n\nHook (first roughly 30 percent of duration).\n\nValue (middle roughly 50-60 percent).\n\nClose or Call-to-Action (final roughly 10-20 percent).\n\nUse a structure like this (structure only, do not copy text):\n\n[0.0s - 2.5s] (Hook)\nAction: [Describe what the viewer sees in this moment.]\nSpeaker: \"Short, punchy opening line tied to persona pain point and product promise.\"\n\n[2.5s - 8.0s] (Value)\nAction: [Demonstrate 1-3 key selling points in a natural flow.]\nSpeaker: \"Natural spoken lines matching persona.communication_style.\"\n\n[8.0s - 10.0s or 15.0s] (Close)\nAction: [Visual resolution plus loop-friendly motion that can cut back to the first frame.]\nSpeaker: \"Light, natural CTA suitable for the platform, not a hard infomercial tone.\"\n\nMake sure:\n\nLines are short enough to be spoken in the given time window.\n\nTone matches persona.communication_style and the effective_config.preset.\n\nWording feels like something a real creator would say on the chosen platform.\n\nCINEMATIC BLUEPRINT (shot list)\n\nLabel:\n\nCINEMATIC BLUEPRINT:\n\nRules:\n\nDefine 3-5 shots total, depending on effective_config.duration_seconds and Preset.\n\nEach shot must have:\n\nA time range.\n\nFraming and angle.\n\nOne primary camera motion (for example, slow push-in, gentle handheld sway, top-down pan).\n\nThe main visible action or actions.\n\nAny relevant ambient sound cues.\n\nSHOT 1 must:\n\nStart exactly from the START FRAME IMAGE PROMPT composition.\n\nBreak into motion using product_profile.creative_visuals.viral_hook_concept.\n\nLaunch audio and spoken script immediately, with natural lip-sync.\n\nThe final shot must:\n\nEnd in a way that visually loops back cleanly to the first frame composition when the video restarts.\n\nExample structure (do not copy text):\n\nSHOT 1 (0.0s - X.Xs) - Hook\nCamera: [Framing and motion from Start Frame.]\nAction: [Describe movement and what the viewer sees in this shot.]\nAudio: [Mention room tone, subtle sounds, and which part of the script is spoken here, with lips syncing.]\n\nSHOT 2 (X.Xs - Y.Ys) - Build or Proof\nCamera: [Framing and motion.]\nAction: [Demonstrate a key benefit visually, aligned with the script lines here.]\nAudio: [Ambient sound plus continued natural voice.]\n\n...\n\nFINAL SHOT (last Z seconds) - Close and Loop\nCamera: [Describe how the shot resolves and returns to a loopable composition.]\nAction: [Close on the product plus a small motion that makes the loop seamless.]\nAudio: [Final line from the script, ending on a light, satisfying note.]\n\nTECHNICAL DIRECTIVES\n\nLabel:\n\nTECHNICAL DIRECTIVES:\n\nInclude short, compact lines specifying:\n\nFilming method:\n\nFor example, \"Handheld selfie on phone\", \"Phone on tripod with smooth pan\", or \"Over-the-shoulder UGC\", matching effective_config.preset.\n\nDominant hand and interaction:\n\nFor example, \"Right hand holds product, left hand interacts with features.\"\n\nEnvironment specifics:\n\nTie directly to persona.environment and product_profile.creative_visuals (for example, \"small kitchen counter with warm under-cabinet light\").\n\nAudio environment:\n\nFor UGC: natural phone-mic sound with realistic room tone.\n\nFor more cinematic looks: clean, controlled audio with minimal noise.\n\nOnly mention music or extra sound design if it clearly supports the preset vibe.\n\nKeep the entire SORA PROMPT BLOCK:\n\nUnder 4800 characters.\n\nFully consistent with:\n\nconfig.effective_config\n\nThe JSON you produced\n\nThe product images and product_profile\n\nThe selected Preset and intended sales outcome.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1488,
+        208
+      ],
+      "id": "6195e510-aa34-4681-803f-1957418c36f4",
+      "name": "set_master_prompt"
+    },
+    {
+      "parameters": {
+        "operation": "uploadFile",
+        "additionalFieldsFile": {}
+      },
+      "type": "n8n-nodes-cloudinary.cloudinary",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        208
+      ],
+      "id": "c4faf066-7791-4051-b0a0-edbf01389ae8",
+      "name": "upload_product_images",
+      "credentials": {
+        "cloudinaryApi": {
+          "id": "V8DVtY71cU7eraO1",
+          "name": "Cloudinary account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const newItems = [];\n\n// 1. Get the single input item from the form\nconst item = $input.item;\n\n// 2. Check if binary data exists\nif (item.binary) {\n  // 3. Loop through every uploaded file (data, data_1, data_2)\n  for (const key of Object.keys(item.binary)) {\n    const binaryFile = item.binary[key];\n\n    // 4. Create a separate item for each file\n    // We keep the original JSON fields (Product Name, etc) on every item\n    newItems.push({\n      json: {\n        ...item.json,\n        originalBinaryKey: key // tracking ID\n      },\n      binary: {\n        data: binaryFile // Standardize the binary key to just 'data' for the upload node\n      }\n    });\n  }\n}\n\nreturn newItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        208
+      ],
+      "id": "c3bc0c7a-8ad8-4aeb-9085-0b8049d9b57b",
+      "name": "split_product_images"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the raw Master Prompt string\nconst sourceJson = $('set_master_prompt').first().json;\nconst rawPromptString = sourceJson.text || sourceJson.prompt || sourceJson.promptText;\n\n// 2. Define the 'parts' array\nconst parts = [];\n\n// 3. Add the Text Part\nif (rawPromptString) {\n  parts.push({\n    \"text\": rawPromptString\n  });\n} else {\n  parts.push({\n    \"text\": \"Error: Prompt text not found.\"\n  });\n}\n\n// 4. Get the Images from 'Aggregate image URLs and Format'\nconst imageList = $('aggregate_images_urls_and_format_inputs').first().json.images || [];\n\n// 5. Loop through images and add ONLY the sanitized inline_data\nfor (const img of imageList) {\n  if (img.inline_data) {\n    // We explicitly create a new object to STRIP OUT 'public_url' and 'fileName'\n    parts.push({\n      inline_data: {\n        mime_type: img.inline_data.mime_type || \"image/jpeg\",\n        data: img.inline_data.data\n      }\n    });\n  } \n  else if (img.data) {\n    parts.push({\n      inline_data: {\n        \"mime_type\": img.mimeType || \"image/jpeg\",\n        \"data\": img.data\n      }\n    });\n  }\n}\n\n// 6. Return the FULL API BODY structure\n// This constructs the exact JSON object Gemini needs: { \"contents\": [ ... ] }\nreturn {\n  json: {\n    contents: [\n      {\n        parts: parts\n      }\n    ]\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        208
+      ],
+      "id": "dd27b4ab-db03-4cab-9744-81493e24a659",
+      "name": "multimodal_prompt_assembler"
+    },
+    {
+      "parameters": {
+        "jsCode": "const processedImages = [];\n\n// 1. Get the URLs from the current input (Cloudinary output)\nconst cloudinaryItems = $input.all();\n\n// 2. Get the Base64 data from the earlier 'Split files' node\n// We have to reach back because Cloudinary stripped the binary data\nconst splitItems = $('split_product_images').all();\n\n// 3. Loop through the items and merge them\nfor (let i = 0; i < cloudinaryItems.length; i++) {\n  const cloudItem = cloudinaryItems[i];\n  // We grab the corresponding item from the split node using the same index\n  const splitItem = splitItems[i]; \n\n  if (splitItem && splitItem.binary && splitItem.binary.data) {\n    // Extract URL (from Cloudinary)\n    const publicUrl = cloudItem.json.secure_url;\n\n    // Extract Base64 (from Split node)\n    const binaryData = splitItem.binary.data;\n    \n    processedImages.push({\n      // For Gemini (Base64)\n      inline_data: {\n        mime_type: binaryData.mimeType,\n        data: binaryData.data\n      },\n      // For Sora/Nano (URL)\n      public_url: publicUrl,\n      // Metadata\n      fileName: binaryData.fileName\n    });\n  }\n}\n\n// 4. Return the combined result\n// We grab the original form data from the first split item\nconst originalData = splitItems.length > 0 ? splitItems[0].json : {};\n\nreturn {\n  json: {\n    ...originalData, // Keeps Product Name, Duration, etc.\n    images: processedImages\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        208
+      ],
+      "id": "fd3bf511-0d3e-4546-a7c7-086ab10c5cd4",
+      "name": "aggregate_images_urls_and_format_inputs"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2832,
+        208
+      ],
+      "id": "cb176812-13c9-4c79-99af-1332f4d9eaad",
+      "name": "Wait",
+      "webhookId": "27ed794a-ba9a-4fe9-822a-57b2c2985f73"
+    }
+  ],
+  "connections": {
+    "form_trigger": {
+      "main": [
+        [
+          {
+            "node": "split_product_images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_ad_prompts": {
+      "main": [
+        [
+          {
+            "node": "Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "generate_start_frame",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload start frame": {
+      "main": [
+        [
+          {
+            "node": "Create Sora Ad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_start_frame": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_master_prompt": {
+      "main": [
+        [
+          {
+            "node": "multimodal_prompt_assembler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload_product_images": {
+      "main": [
+        [
+          {
+            "node": "aggregate_images_urls_and_format_inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split_product_images": {
+      "main": [
+        [
+          {
+            "node": "upload_product_images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "multimodal_prompt_assembler": {
+      "main": [
+        [
+          {
+            "node": "generate_ad_prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "aggregate_images_urls_and_format_inputs": {
+      "main": [
+        [
+          {
+            "node": "set_master_prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Upload start frame",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "3965bd3a-7173-41bb-9586-cd0a01db8055",
+  "activeVersionId": null,
+  "versionCounter": 55,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-27T18:30:48.433Z",
+      "createdAt": "2025-11-27T18:30:48.433Z",
+      "role": "workflow:owner",
+      "workflowId": "P178pqIl8sXkf3Ks",
+      "projectId": "YLY2TqeyFKXcwi0t",
+      "project": {
+        "updatedAt": "2025-11-19T07:47:46.163Z",
+        "createdAt": "2025-11-19T07:46:29.581Z",
+        "id": "YLY2TqeyFKXcwi0t",
+        "name": "Osama Zafar <osama.zafariqbal@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "758d783a-d693-411e-9f06-0f7eeacf7bcc",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-11-19T07:46:29.582Z",
+            "createdAt": "2025-11-19T07:46:29.582Z",
+            "userId": "758d783a-d693-411e-9f06-0f7eeacf7bcc",
+            "projectId": "YLY2TqeyFKXcwi0t",
+            "user": {
+              "updatedAt": "2026-02-01T08:08:41.000Z",
+              "createdAt": "2025-11-19T07:46:28.806Z",
+              "id": "758d783a-d693-411e-9f06-0f7eeacf7bcc",
+              "email": "osama.zafariqbal@gmail.com",
+              "firstName": "Osama",
+              "lastName": "Zafar",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-11-19T07:47:57.873Z",
+                "personalization_survey_n8n_version": "1.120.3",
+                "companySize": "<20",
+                "companyType": "saas",
+                "role": "business-owner",
+                "reportedSource": "youtube"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "U6yF7UZB9YYkynAG",
+                "userActivatedAt": 1767807452186,
+                "npsSurvey": {
+                  "waitingForResponse": true,
+                  "ignoredCount": 1,
+                  "lastShownAt": 1768925639912
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-01",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

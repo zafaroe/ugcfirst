@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="320" viewBox="0 0 1200 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="80" y1="60" x2="260" y2="260" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#D946EF"/>
+    </linearGradient>
+  </defs>
+  <!-- icon -->
+  <g transform="translate(40,40)">
+    <svg width="240" height="240" viewBox="0 0 1024 1024">
+      <defs>
+        <linearGradient id="gg" x1="240" y1="200" x2="820" y2="824" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#6366F1"/>
+          <stop offset="1" stop-color="#D946EF"/>
+        </linearGradient>
+      </defs>
+      <path d="M338 182 C300 204 274 246 274 294 V730 C274 778 300 820 338 842 C376 864 422 861 458 836 L792 630 C825 610 846 574 846 536 C846 498 825 462 792 442 L458 188 C422 163 376 160 338 182Z" fill="url(#gg)"/>
+      <path d="M560 228 L404 540 H518 L464 796 L628 486 H520 L560 228Z" fill="#0F172A"/>
+    </svg>
+  </g>
+
+  <!-- word -->
+  <text x="330" y="205" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="144" font-weight="800" fill="#F8FAFC">
+    Vidnary
+  </text>
+</svg>
