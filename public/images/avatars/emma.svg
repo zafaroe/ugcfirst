@@ -8,5 +8,5 @@
   <rect width="400" height="400" fill="url(#bg)"/>
   <circle cx="200" cy="150" r="70" fill="#F8FAFC" opacity="0.9"/>
   <circle cx="200" cy="350" r="120" fill="#F8FAFC" opacity="0.9"/>
-  <text x="200" y="380" text-anchor="middle" fill="#1E293B" font-family="system-ui" font-size="24" font-weight="600">Emma</text>
+  <text x="200" y="380" text-anchor="middle" fill="#F5F5F4" font-family="system-ui" font-size="24" font-weight="600">Emma</text>
 </svg>

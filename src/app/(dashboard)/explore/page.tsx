@@ -93,13 +93,13 @@ export default function ExplorePage() {
           className="text-center md:text-left"
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center">
               <FontAwesomeIcon icon={faGlobe} className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-text-primary">Explore</h1>
           </div>
           <p className="text-text-muted">
-            Discover videos created by the Vidnary community
+            Discover videos created by the UGCFirst community
           </p>
         </motion.div>
 
@@ -195,7 +195,7 @@ function PublicVideoCard({ video, onClick }: PublicVideoCardProps) {
       onClick={onClick}
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video bg-deep-space overflow-hidden">
+      <div className="relative aspect-video bg-cream overflow-hidden">
         {video.thumbnail ? (
           <motion.img
             src={video.thumbnail}
@@ -205,7 +205,7 @@ function PublicVideoCard({ video, onClick }: PublicVideoCardProps) {
             transition={{ duration: 0.3 }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface to-deep-space">
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface to-cream">
             <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center">
               <FontAwesomeIcon icon={faPlay} className="w-5 h-5 text-text-muted" />
             </div>
@@ -220,7 +220,7 @@ function PublicVideoCard({ video, onClick }: PublicVideoCardProps) {
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-14 h-14 rounded-full bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia flex items-center justify-center"
+            className="w-14 h-14 rounded-full bg-gradient-to-r from-mint to-mint-dark flex items-center justify-center"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -246,11 +246,11 @@ function PublicVideoCard({ video, onClick }: PublicVideoCardProps) {
           <span
             className={`text-xs px-2 py-0.5 rounded-full ${
               video.mode === 'concierge'
-                ? 'bg-vibrant-fuchsia/20 text-vibrant-fuchsia'
-                : 'bg-electric-indigo/20 text-electric-indigo'
+                ? 'bg-coral/20 text-coral'
+                : 'bg-mint/20 text-mint'
             }`}
           >
-            {video.mode === 'concierge' ? 'Reel It In' : 'DIY'}
+            {video.mode === 'concierge' ? 'Drop & Go' : 'Studio'}
           </span>
         </div>
       </div>
@@ -262,11 +262,11 @@ function VideoCardSkeleton() {
   return (
     <Card padding="none" className="overflow-hidden">
       <motion.div
-        className="aspect-video bg-deep-space"
+        className="aspect-video bg-cream"
         animate={{
           background: [
-            'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-            'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
+            'linear-gradient(90deg, #0C0A09 0%, #FAFAF9 50%, #0C0A09 100%)',
+            'linear-gradient(90deg, #FAFAF9 0%, #0C0A09 50%, #FAFAF9 100%)',
           ],
         }}
         transition={{
@@ -277,11 +277,11 @@ function VideoCardSkeleton() {
       />
       <div className="p-4 space-y-3">
         <motion.div
-          className="h-5 bg-deep-space rounded w-3/4"
+          className="h-5 bg-cream rounded w-3/4"
           animate={{
             background: [
-              'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-              'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
+              'linear-gradient(90deg, #0C0A09 0%, #FAFAF9 50%, #0C0A09 100%)',
+              'linear-gradient(90deg, #FAFAF9 0%, #0C0A09 50%, #FAFAF9 100%)',
             ],
           }}
           transition={{
@@ -292,11 +292,11 @@ function VideoCardSkeleton() {
           }}
         />
         <motion.div
-          className="h-4 bg-deep-space rounded w-1/2"
+          className="h-4 bg-cream rounded w-1/2"
           animate={{
             background: [
-              'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-              'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
+              'linear-gradient(90deg, #0C0A09 0%, #FAFAF9 50%, #0C0A09 100%)',
+              'linear-gradient(90deg, #FAFAF9 0%, #0C0A09 50%, #FAFAF9 100%)',
             ],
           }}
           transition={{
@@ -337,7 +337,7 @@ function VideoModal({ video, onClose }: VideoModalProps) {
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       >
         <GlassCard className="w-full max-w-4xl max-h-full overflow-hidden">
-          <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <div className="p-4 border-b border-border-default flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-text-primary">{video.product_name}</h3>
               <p className="text-sm text-text-muted" suppressHydrationWarning>
@@ -355,7 +355,7 @@ function VideoModal({ video, onClose }: VideoModalProps) {
                 className="w-full aspect-video rounded-lg overflow-hidden"
               />
             ) : (
-              <div className="aspect-video bg-deep-space rounded-lg flex items-center justify-center">
+              <div className="aspect-video bg-cream rounded-lg flex items-center justify-center">
                 <p className="text-text-muted">Video not available</p>
               </div>
             )}

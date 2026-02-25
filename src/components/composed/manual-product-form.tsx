@@ -123,7 +123,7 @@ export function ManualProductForm({ onChange, className }: ManualProductFormProp
       {/* Product Features */}
       <div>
         <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-electric-indigo" />
+          <Sparkles className="w-4 h-4 text-mint" />
           Product Features <span className="text-status-error">*</span>
         </label>
         <p className="text-xs text-text-muted mb-3">
@@ -163,7 +163,7 @@ export function ManualProductForm({ onChange, className }: ManualProductFormProp
             variant="secondary"
             size="sm"
             onClick={addFeature}
-            className="w-full hover:border-electric-indigo/50"
+            className="w-full hover:border-mint/50"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Feature

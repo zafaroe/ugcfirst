@@ -29,7 +29,7 @@ const statusConfig: Record<ProjectStatus, { icon: IconDefinition; label: string;
   queued: {
     icon: faClock,
     label: 'Queued',
-    classes: 'bg-electric-indigo/20 text-electric-indigo',
+    classes: 'bg-mint/20 text-mint',
   },
 }
 

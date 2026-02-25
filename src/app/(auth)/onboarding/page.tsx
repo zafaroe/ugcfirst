@@ -42,7 +42,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-deep-space bg-grid bg-grid-animated flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-cream bg-grid bg-grid-animated flex flex-col relative overflow-hidden">
       {/* Background decorations */}
       <div className="fixed inset-0 pointer-events-none">
         <GradientOrb
@@ -66,7 +66,7 @@ export default function OnboardingPage() {
       {/* Header with logo and progress */}
       <header className="p-6 relative z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Logo variant="light" size="sm" />
+          <Logo variant="colored" size="sm" />
 
           {/* Progress indicator */}
           <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export default function OnboardingPage() {
                 key={step}
                 className={`w-2 h-2 rounded-full transition-colors ${
                   index <= currentStepIndex
-                    ? 'bg-electric-indigo'
+                    ? 'bg-mint'
                     : 'bg-border-default'
                 }`}
                 initial={{ scale: 0.8 }}

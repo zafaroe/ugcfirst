@@ -72,7 +72,7 @@ export function SocialCopyCard({
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-vibrant-fuchsia to-electric-indigo flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center">
               <MessageSquare className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -123,8 +123,8 @@ export function SocialCopyCard({
               className={cn(
                 'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                 activePlatform === platform
-                  ? 'bg-electric-indigo/20 text-electric-indigo border border-electric-indigo/30'
-                  : 'bg-elevated text-text-muted hover:text-text-primary'
+                  ? 'bg-mint/20 text-mint border border-mint/30'
+                  : 'bg-surface-raised text-text-muted hover:text-text-primary'
               )}
             >
               {PLATFORM_CONFIG[platform].label}
@@ -136,13 +136,13 @@ export function SocialCopyCard({
         <div className="relative">
           {isRegenerating && (
             <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
-              <div className="flex items-center gap-2 text-vibrant-fuchsia">
+              <div className="flex items-center gap-2 text-coral">
                 <RefreshCw className="w-5 h-5 animate-spin" />
                 <span className="font-medium">Regenerating post copy...</span>
               </div>
             </div>
           )}
-          <div className="p-4 rounded-lg bg-deep-space border border-border-default">
+          <div className="p-4 rounded-lg bg-cream border border-border-default">
             <p className="text-text-primary text-sm whitespace-pre-wrap leading-relaxed mb-4">
               {socialCopy.text}
             </p>
@@ -150,7 +150,7 @@ export function SocialCopyCard({
               {socialCopy.hashtags.map((hashtag, idx) => (
                 <span
                   key={idx}
-                  className="text-electric-indigo text-sm hover:text-vibrant-fuchsia cursor-pointer transition-colors"
+                  className="text-mint text-sm hover:text-coral cursor-pointer transition-colors"
                 >
                   #{hashtag}
                 </span>
@@ -200,26 +200,26 @@ export function SocialCopyCardSkeleton() {
     <Card className="bg-surface border border-border-default p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-elevated animate-pulse" />
+          <div className="w-8 h-8 rounded-lg bg-surface-raised animate-pulse" />
           <div className="space-y-1">
-            <div className="h-4 w-40 bg-elevated rounded animate-pulse" />
-            <div className="h-3 w-28 bg-elevated rounded animate-pulse" />
+            <div className="h-4 w-40 bg-surface-raised rounded animate-pulse" />
+            <div className="h-3 w-28 bg-surface-raised rounded animate-pulse" />
           </div>
         </div>
       </div>
       <div className="flex gap-2 mb-4">
-        <div className="h-8 w-20 bg-elevated rounded-lg animate-pulse" />
-        <div className="h-8 w-24 bg-elevated rounded-lg animate-pulse" />
-        <div className="h-8 w-20 bg-elevated rounded-lg animate-pulse" />
+        <div className="h-8 w-20 bg-surface-raised rounded-lg animate-pulse" />
+        <div className="h-8 w-24 bg-surface-raised rounded-lg animate-pulse" />
+        <div className="h-8 w-20 bg-surface-raised rounded-lg animate-pulse" />
       </div>
-      <div className="p-4 rounded-lg bg-deep-space space-y-2">
-        <div className="h-4 w-full bg-elevated rounded animate-pulse" />
-        <div className="h-4 w-5/6 bg-elevated rounded animate-pulse" />
-        <div className="h-4 w-4/5 bg-elevated rounded animate-pulse" />
+      <div className="p-4 rounded-lg bg-cream space-y-2">
+        <div className="h-4 w-full bg-surface-raised rounded animate-pulse" />
+        <div className="h-4 w-5/6 bg-surface-raised rounded animate-pulse" />
+        <div className="h-4 w-4/5 bg-surface-raised rounded animate-pulse" />
         <div className="flex gap-2 pt-3 mt-3 border-t border-border-default">
-          <div className="h-5 w-16 bg-elevated rounded animate-pulse" />
-          <div className="h-5 w-20 bg-elevated rounded animate-pulse" />
-          <div className="h-5 w-14 bg-elevated rounded animate-pulse" />
+          <div className="h-5 w-16 bg-surface-raised rounded animate-pulse" />
+          <div className="h-5 w-20 bg-surface-raised rounded animate-pulse" />
+          <div className="h-5 w-14 bg-surface-raised rounded animate-pulse" />
         </div>
       </div>
     </Card>

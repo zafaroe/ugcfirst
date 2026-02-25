@@ -97,7 +97,7 @@ export default function ProfileSettingsPage() {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-electric-indigo flex items-center justify-center hover:bg-electric-indigo/80 transition-colors"
+                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-mint flex items-center justify-center hover:bg-mint/80 transition-colors"
               >
                 <FontAwesomeIcon icon={faCamera} className="w-4 h-4 text-white" />
               </motion.button>

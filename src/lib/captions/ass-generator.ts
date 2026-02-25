@@ -63,7 +63,7 @@ function generateHeader(
   videoHeight: number
 ): string {
   return `[Script Info]
-Title: Vidnary Auto Captions
+Title: UGCFirst Auto Captions
 ScriptType: v4.00+
 PlayResX: ${videoWidth}
 PlayResY: ${videoHeight}
@@ -258,7 +258,7 @@ export const CaptionPresets = {
     fontName: 'Montserrat',
     fontSize: 56,
     primaryColor: hexToASSColor('#FFFFFF'),
-    highlightColor: hexToASSColor('#D946EF'), // Vibrant fuchsia
+    highlightColor: hexToASSColor('#F43F5E'), // Vibrant fuchsia
     outlineColor: hexToASSColor('#000000'),
     outlineWidth: 4,
     bold: true,
@@ -269,7 +269,7 @@ export const CaptionPresets = {
     fontName: 'Inter',
     fontSize: 50,
     primaryColor: hexToASSColor('#FFFFFF'),
-    highlightColor: hexToASSColor('#6366F1'), // Electric indigo
+    highlightColor: hexToASSColor('#10B981'), // Electric indigo
     outlineColor: hexToASSColor('#000000'),
     outlineWidth: 3,
     bold: true,

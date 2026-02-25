@@ -20,7 +20,8 @@ const trustStats = [
   { icon: Users, value: '500+', label: 'Happy Creators' },
 ]
 
-export function TrustBar({ className }: { className?: string }) {
+export function TrustBar({ className, variant = 'dark' }: { className?: string; variant?: 'light' | 'dark' }) {
+  // Dark-only mode: always use dark styles
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -33,9 +34,12 @@ export function TrustBar({ className }: { className?: string }) {
     >
       <div className="relative">
         {/* Glassmorphic Container */}
-        <div className="relative bg-surface/40 backdrop-blur-xl rounded-2xl border border-white/10 p-6 md:p-8">
+        <div className={cn(
+          'relative backdrop-blur-xl rounded-2xl border p-6 md:p-8',
+          'bg-white/5 border-stone-700'
+        )}>
           {/* Subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-electric-indigo/5 via-transparent to-vibrant-fuchsia/5 rounded-2xl pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-mint/3 to-transparent rounded-2xl pointer-events-none" />
 
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
             {/* Left: Avatar Stack + Rating */}
@@ -52,7 +56,8 @@ export function TrustBar({ className }: { className?: string }) {
                       className={cn(
                         'w-10 h-10 rounded-full flex items-center justify-center',
                         'text-white text-xs font-semibold',
-                        'border-2 border-deep-space',
+                        'border-2',
+                        'border-stone-700',
                         'bg-gradient-to-br',
                         avatar.color
                       )}
@@ -68,7 +73,10 @@ export function TrustBar({ className }: { className?: string }) {
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 1.4 }}
-                  className="w-10 h-10 rounded-full bg-surface border-2 border-deep-space flex items-center justify-center text-text-muted text-xs font-medium -ml-3"
+                  className={cn(
+                    'w-10 h-10 rounded-full border-2 flex items-center justify-center text-xs font-medium -ml-3',
+                    'bg-stone-800 border-stone-700 text-stone-400'
+                  )}
                 >
                   +495
                 </motion.div>
@@ -87,14 +95,14 @@ export function TrustBar({ className }: { className?: string }) {
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                     </motion.div>
                   ))}
-                  <span className="ml-1 text-text-primary font-semibold">4.9</span>
+                  <span className="ml-1 font-semibold text-white">4.9</span>
                 </div>
-                <span className="text-text-muted text-sm">Loved by creators</span>
+                <span className="text-sm text-stone-400">Loved by creators</span>
               </div>
             </div>
 
             {/* Divider */}
-            <div className="hidden md:block w-px h-12 bg-border-default/50" />
+            <div className="hidden md:block w-px h-12 bg-stone-700" />
 
             {/* Right: Stats */}
             <div className="flex items-center gap-6 md:gap-8">
@@ -107,10 +115,10 @@ export function TrustBar({ className }: { className?: string }) {
                   className="text-center"
                 >
                   <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <stat.icon className="w-4 h-4 text-electric-indigo" />
+                    <stat.icon className="w-4 h-4 text-mint" />
                     <span className="text-lg md:text-xl font-bold gradient-text">{stat.value}</span>
                   </div>
-                  <span className="text-text-muted text-xs md:text-sm whitespace-nowrap">{stat.label}</span>
+                  <span className="text-xs md:text-sm whitespace-nowrap text-stone-400">{stat.label}</span>
                 </motion.div>
               ))}
             </div>
@@ -118,7 +126,7 @@ export function TrustBar({ className }: { className?: string }) {
         </div>
 
         {/* Glow effect behind */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-electric-indigo/20 to-vibrant-fuchsia/20 rounded-2xl blur-xl opacity-50 -z-10" />
+        <div className="absolute -inset-1 bg-mint/10 rounded-2xl blur-xl opacity-50 -z-10" />
       </div>
     </motion.div>
   )
@@ -141,7 +149,7 @@ export function TrustBarCompact({ className }: { className?: string }) {
             className={cn(
               'w-8 h-8 rounded-full flex items-center justify-center',
               'text-white text-[10px] font-semibold',
-              'border-2 border-deep-space',
+              'border-2 border-cream',
               'bg-gradient-to-br',
               avatar.color
             )}

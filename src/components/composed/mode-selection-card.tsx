@@ -22,19 +22,19 @@ const modeConfig = {
     credits: 10,
     buttonText: 'Create Video',
     href: '/create/diy',
-    gradient: 'from-electric-indigo to-indigo-400',
-    glowColor: 'rgba(99, 102, 241, 0.3)',
-    borderGradient: 'linear-gradient(135deg, #6366F1, #818CF8, #6366F1)',
+    gradient: 'from-mint to-indigo-400',
+    glowColor: 'rgba(16, 185, 129, 0.3)',
+    borderGradient: 'linear-gradient(135deg, #10B981, #34D399, #10B981)',
   },
   concierge: {
-    title: 'Reel It In',
+    title: 'Auto Pilot',
     description: "Cast your topic and we'll reel in a viral video. AI does the heavy lifting.",
     credits: 15,
     buttonText: 'Cast Your Reel',
     href: '/create/concierge',
-    gradient: 'from-vibrant-fuchsia to-pink-400',
-    glowColor: 'rgba(217, 70, 239, 0.3)',
-    borderGradient: 'linear-gradient(135deg, #D946EF, #E879F9, #D946EF)',
+    gradient: 'from-coral to-pink-400',
+    glowColor: 'rgba(244, 63, 94, 0.3)',
+    borderGradient: 'linear-gradient(135deg, #F43F5E, #FB7185, #F43F5E)',
   },
 }
 
@@ -42,121 +42,90 @@ export function ModeSelectionCard({ mode, className }: ModeSelectionCardProps) {
   const config = modeConfig[mode]
 
   return (
-    <motion.div
-      className={cn(
-        'relative rounded-2xl overflow-hidden h-full',
-        'group cursor-pointer',
-        className
-      )}
-      style={{
-        background: `linear-gradient(#1E293B, #1E293B) padding-box, ${config.borderGradient} border-box`,
-        border: '2px solid transparent',
-      }}
-      initial={{ y: 0 }}
-      whileHover={{ y: -8 }}
-      transition={SPRING.bouncy}
-    >
-      {/* Glow effect on hover */}
+    <Link href={config.href}>
       <motion.div
-        className="absolute inset-0 rounded-2xl pointer-events-none"
-        style={{
-          background: config.borderGradient,
-          filter: 'blur(25px)',
-          opacity: 0,
-          zIndex: -1,
+        className={cn(
+          'relative rounded-xl overflow-hidden h-full',
+          'group cursor-pointer',
+          'border border-border-default',
+          'hover:border-transparent',
+          'bg-stone-800',
+          className
+        )}
+        initial={{ y: 0 }}
+        whileHover={{
+          y: -4,
+          boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.15)',
         }}
-        initial={{ opacity: 0 }}
-        whileHover={{ opacity: 0.35 }}
-        transition={{ duration: 0.4 }}
-      />
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      >
+        {/* Gradient border on hover - uses CSS class for theme support */}
+        <div
+          className="absolute inset-0 rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          style={{
+            background: `linear-gradient(var(--color-surface-raised), var(--color-surface-raised)) padding-box, ${config.borderGradient} border-box`,
+            border: '2px solid transparent',
+          }}
+        />
 
-      <div className="relative p-6 h-full flex flex-col">
-        {/* Credit badge */}
-        <motion.div
-          className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface/80 backdrop-blur-sm border border-border-default"
-          whileHover={{ scale: 1.05 }}
-          transition={SPRING.gentle}
-        >
-          <motion.div
-            animate={{ rotate: [0, -10, 10, 0] }}
-            transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
-          >
+        <div className="relative p-6 h-full flex flex-col">
+          {/* Credit badge - simplified */}
+          <div className="flex items-center gap-1.5 mb-4">
             <FontAwesomeIcon
               icon={faBolt}
               className={cn(
                 'w-3.5 h-3.5',
-                mode === 'diy' ? 'text-electric-indigo' : 'text-vibrant-fuchsia'
+                mode === 'diy' ? 'text-mint' : 'text-coral'
               )}
             />
-          </motion.div>
-          <span className="text-sm font-semibold text-text-primary">
-            {config.credits} Credits
-          </span>
-        </motion.div>
-
-        {/* Illustration */}
-        <div className="flex items-center justify-center py-2" style={{ height: '210px' }}>
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            {mode === 'diy' ? (
-              <DIYIllustration size="lg" animated />
-            ) : (
-              <ReelIllustration size="lg" animated />
-            )}
-          </motion.div>
-        </div>
-
-        {/* Content */}
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-xl font-bold text-text-primary mb-2">
-              {config.title}
-            </h3>
-            <p className="text-text-muted text-sm leading-relaxed">
-              {config.description}
-            </p>
+            <span className="text-sm font-medium text-text-muted">
+              {config.credits} Credits
+            </span>
           </div>
 
-          {/* Action button */}
-          <Link href={config.href} className="block">
+          {/* Illustration - reduced height */}
+          <div className="flex items-center justify-center py-4" style={{ height: '160px' }}>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="group-hover:scale-105 transition-transform duration-300"
+            >
+              {mode === 'diy' ? (
+                <DIYIllustration size="lg" animated={false} />
+              ) : (
+                <ReelIllustration size="lg" animated={false} />
+              )}
+            </motion.div>
+          </div>
+
+          {/* Content */}
+          <div className="mt-auto space-y-3">
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary mb-1">
+                {config.title}
+              </h3>
+              <p className="text-text-muted text-sm leading-relaxed">
+                {config.description}
+              </p>
+            </div>
+
+            {/* Action button */}
             <Button
               className={cn(
-                'w-full group/btn',
+                'w-full',
                 mode === 'diy'
-                  ? 'bg-gradient-to-r from-electric-indigo to-indigo-500'
-                  : 'bg-gradient-to-r from-vibrant-fuchsia to-pink-500'
+                  ? 'bg-mint hover:bg-mint-dark'
+                  : 'bg-coral hover:bg-coral-light'
               )}
             >
               {config.buttonText}
-              <motion.span
-                className="ml-2 inline-block"
-                initial={{ x: 0 }}
-                whileHover={{ x: 4 }}
-                transition={SPRING.bouncy}
-              >
-                <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4" />
-              </motion.span>
+              <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
-          </Link>
+          </div>
         </div>
-      </div>
-
-      {/* Shimmer effect on hover */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%)',
-          backgroundSize: '200% 100%',
-        }}
-        initial={{ backgroundPosition: '200% 0' }}
-        whileHover={{ backgroundPosition: '-200% 0' }}
-        transition={{ duration: 1.5, ease: 'easeInOut' }}
-      />
-    </motion.div>
+      </motion.div>
+    </Link>
   )
 }
 
@@ -178,7 +147,7 @@ export function ModeSelectionCardCompact({ mode, className }: ModeSelectionCardP
         <div className="flex items-center gap-4">
           <div className={cn(
             'w-12 h-12 rounded-lg flex items-center justify-center',
-            mode === 'diy' ? 'bg-electric-indigo/20' : 'bg-vibrant-fuchsia/20'
+            mode === 'diy' ? 'bg-mint/20' : 'bg-coral/20'
           )}>
             {mode === 'diy' ? (
               <DIYIllustration size="sm" animated={false} />
@@ -193,7 +162,7 @@ export function ModeSelectionCardCompact({ mode, className }: ModeSelectionCardP
                 icon={faBolt}
                 className={cn(
                   'w-3 h-3',
-                  mode === 'diy' ? 'text-electric-indigo' : 'text-vibrant-fuchsia'
+                  mode === 'diy' ? 'text-mint' : 'text-coral'
                 )}
               />
               <span>{config.credits} Credits</span>

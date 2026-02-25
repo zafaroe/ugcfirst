@@ -23,7 +23,7 @@ export const mockProjects: Project[] = [
     status: 'processing',
     duration: 15,
     creditCost: 15,
-    mode: 'reel-it-in',
+    mode: 'auto-pilot',
     createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
   },

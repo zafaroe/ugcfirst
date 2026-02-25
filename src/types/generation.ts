@@ -435,7 +435,7 @@ export interface PostingTimeRecommendation {
   engagement: 'high' | 'medium' | 'low';
 }
 
-// Wizard step type for Reel It In flow
+// Wizard step type for Auto Pilot flow
 export type ReelItInStep = 1 | 2 | 3 | 4;
 
 export interface ReelItInState {

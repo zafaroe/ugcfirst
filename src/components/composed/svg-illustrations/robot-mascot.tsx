@@ -30,20 +30,20 @@ export function RobotMascot({ size = 'lg', animated = true, className }: RobotMa
         <defs>
           {/* Main gradient */}
           <linearGradient id="robot-body-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#6366F1" />
-            <stop offset="100%" stopColor="#D946EF" />
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="100%" stopColor="#F43F5E" />
           </linearGradient>
 
           {/* Highlight gradient */}
           <linearGradient id="robot-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#818CF8" />
-            <stop offset="100%" stopColor="#6366F1" />
+            <stop offset="0%" stopColor="#34D399" />
+            <stop offset="100%" stopColor="#10B981" />
           </linearGradient>
 
           {/* Eye glow */}
           <radialGradient id="eye-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#00F5FF" />
-            <stop offset="100%" stopColor="#00D4E8" />
+            <stop offset="0%" stopColor="#34D399" />
+            <stop offset="100%" stopColor="#10B981" />
           </radialGradient>
 
           {/* Glow filter */}
@@ -85,7 +85,7 @@ export function RobotMascot({ size = 'lg', animated = true, className }: RobotMa
           <rect x="55" y="45" width="90" height="70" rx="20" fill="url(#robot-body-gradient)" />
 
           {/* Face plate */}
-          <rect x="65" y="55" width="70" height="50" rx="12" fill="#1E293B" opacity="0.9" />
+          <rect x="65" y="55" width="70" height="50" rx="12" fill="#FAFAF9" opacity="0.9" />
 
           {/* Left eye */}
           <motion.ellipse
@@ -114,7 +114,7 @@ export function RobotMascot({ size = 'lg', animated = true, className }: RobotMa
           {/* Smile */}
           <path
             d="M85 95 Q100 105 115 95"
-            stroke="#00F5FF"
+            stroke="#34D399"
             strokeWidth="3"
             strokeLinecap="round"
             fill="none"
@@ -134,7 +134,7 @@ export function RobotMascot({ size = 'lg', animated = true, className }: RobotMa
           <rect x="60" y="120" width="80" height="55" rx="15" fill="url(#robot-body-gradient)" />
 
           {/* Chest panel */}
-          <rect x="75" y="130" width="50" height="35" rx="8" fill="#1E293B" opacity="0.9" />
+          <rect x="75" y="130" width="50" height="35" rx="8" fill="#FAFAF9" opacity="0.9" />
 
           {/* Chest lights */}
           <motion.circle
@@ -149,13 +149,13 @@ export function RobotMascot({ size = 'lg', animated = true, className }: RobotMa
             cx="110"
             cy="145"
             r="5"
-            fill="#6366F1"
+            fill="#10B981"
             animate={animated ? { opacity: [1, 0.5, 1] } : {}}
             transition={{ duration: 1, repeat: Infinity }}
           />
 
           {/* Progress bar on chest */}
-          <rect x="82" y="155" width="36" height="4" rx="2" fill="#0F172A" />
+          <rect x="82" y="155" width="36" height="4" rx="2" fill="#0C0A09" />
           <motion.rect
             x="82"
             y="155"
@@ -198,7 +198,7 @@ export function RobotMascot({ size = 'lg', animated = true, className }: RobotMa
             animate={{ y: [-5, 5, -5], x: [0, 3, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia flex items-center justify-center shadow-lg">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center shadow-lg">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="white">
                 <path d="M2 1L10 6L2 11V1Z" />
               </svg>
@@ -211,8 +211,8 @@ export function RobotMascot({ size = 'lg', animated = true, className }: RobotMa
             animate={{ y: [5, -5, 5], rotate: [-5, 5, -5] }}
             transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <div className="w-10 h-7 rounded border-2 border-vibrant-fuchsia/60 bg-surface/80 flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-vibrant-fuchsia" />
+            <div className="w-10 h-7 rounded border-2 border-coral/60 bg-surface/80 flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-coral" />
             </div>
           </motion.div>
 
@@ -223,7 +223,7 @@ export function RobotMascot({ size = 'lg', animated = true, className }: RobotMa
             transition={{ duration: 2, repeat: Infinity }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 0L9 7L16 8L9 9L8 16L7 9L0 8L7 7L8 0Z" fill="#D946EF" />
+              <path d="M8 0L9 7L16 8L9 9L8 16L7 9L0 8L7 7L8 0Z" fill="#F43F5E" />
             </svg>
           </motion.div>
         </>
@@ -243,15 +243,15 @@ export function RobotIcon({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="robot-icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#6366F1" />
-          <stop offset="100%" stopColor="#D946EF" />
+          <stop offset="0%" stopColor="#10B981" />
+          <stop offset="100%" stopColor="#F43F5E" />
         </linearGradient>
       </defs>
       <rect x="4" y="8" width="16" height="12" rx="3" fill="url(#robot-icon-gradient)" />
       <circle cx="9" cy="14" r="2" fill="white" />
       <circle cx="15" cy="14" r="2" fill="white" />
       <rect x="11" y="3" width="2" height="5" rx="1" fill="url(#robot-icon-gradient)" />
-      <circle cx="12" cy="2" r="2" fill="#00F5FF" />
+      <circle cx="12" cy="2" r="2" fill="#34D399" />
     </svg>
   )
 }

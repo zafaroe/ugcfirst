@@ -85,7 +85,7 @@ export function TabsTrigger({ value, children, className, disabled }: TabsTrigge
       {isActive && (
         <motion.div
           layoutId={`tab-indicator-${layoutId}`}
-          className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia"
+          className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-mint-light to-mint-dark"
           transition={{
             type: 'spring',
             stiffness: 500,

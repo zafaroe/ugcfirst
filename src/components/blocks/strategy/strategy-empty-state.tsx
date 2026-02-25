@@ -36,8 +36,8 @@ const variantConfig: Record<EmptyStateVariant, VariantConfig> = {
       'Phase planning in the editing bay...',
       'Mapping out your path to viral success...',
     ],
-    gradient: 'from-electric-indigo to-vibrant-fuchsia',
-    glowColor: 'bg-electric-indigo/20',
+    gradient: 'from-mint-light to-mint-dark',
+    glowColor: 'bg-mint/20',
   },
   metrics: {
     illustration: FilmReelIllustration,
@@ -72,8 +72,8 @@ const variantConfig: Record<EmptyStateVariant, VariantConfig> = {
       'The spotlight is warming up...',
       'Casting the perfect audience...',
     ],
-    gradient: 'from-vibrant-fuchsia to-pink-500',
-    glowColor: 'bg-vibrant-fuchsia/20',
+    gradient: 'from-coral to-pink-500',
+    glowColor: 'bg-coral/20',
   },
   platforms: {
     illustration: CameraIllustration,

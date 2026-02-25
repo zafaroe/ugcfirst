@@ -104,7 +104,7 @@ export function PublicVideosShowcase({ limit = 6, className }: PublicVideosShowc
         >
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-text-primary">
-              Created with <span className="gradient-text">Vidnary</span>
+              Created with <span className="gradient-text">UGCFirst</span>
             </h2>
             <p className="text-text-muted mt-2">
               See what our community is creating
@@ -126,7 +126,7 @@ export function PublicVideosShowcase({ limit = 6, className }: PublicVideosShowc
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-surface/90 backdrop-blur border border-white/10 flex items-center justify-center text-text-primary hover:bg-surface transition-colors shadow-lg"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-surface/90 backdrop-blur border border-border-default flex items-center justify-center text-text-primary hover:bg-surface transition-colors shadow-lg"
             >
               <FontAwesomeIcon icon={faChevronLeft} className="w-4 h-4" />
             </motion.button>
@@ -136,7 +136,7 @@ export function PublicVideosShowcase({ limit = 6, className }: PublicVideosShowc
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-surface/90 backdrop-blur border border-white/10 flex items-center justify-center text-text-primary hover:bg-surface transition-colors shadow-lg"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-surface/90 backdrop-blur border border-border-default flex items-center justify-center text-text-primary hover:bg-surface transition-colors shadow-lg"
             >
               <FontAwesomeIcon icon={faChevronRight} className="w-4 h-4" />
             </motion.button>
@@ -208,7 +208,7 @@ function ShowcaseCard({ video }: ShowcaseCardProps) {
             transition={{ duration: 0.3 }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface to-deep-space">
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-surface to-cream">
             <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center">
               <FontAwesomeIcon icon={faPlay} className="w-5 h-5 text-text-muted" />
             </div>
@@ -223,7 +223,7 @@ function ShowcaseCard({ video }: ShowcaseCardProps) {
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-12 h-12 rounded-full bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia flex items-center justify-center"
+            className="w-12 h-12 rounded-full bg-gradient-to-r from-mint to-mint-dark flex items-center justify-center"
             animate={{ scale: isHovered ? 1 : 0.8 }}
             transition={{ duration: 0.2 }}
           >
@@ -243,11 +243,11 @@ function ShowcaseCard({ video }: ShowcaseCardProps) {
           <span
             className={`text-xs px-2 py-0.5 rounded-full font-medium ${
               video.mode === 'concierge'
-                ? 'bg-vibrant-fuchsia/90 text-white'
-                : 'bg-electric-indigo/90 text-white'
+                ? 'bg-coral/90 text-white'
+                : 'bg-mint/90 text-white'
             }`}
           >
-            {video.mode === 'concierge' ? 'Reel It In' : 'DIY'}
+            {video.mode === 'concierge' ? 'Drop & Go' : 'Studio'}
           </span>
         </div>
       </div>
@@ -267,11 +267,11 @@ function ShowcaseCardSkeleton() {
   return (
     <GlassCard className="overflow-hidden">
       <motion.div
-        className="aspect-video bg-deep-space"
+        className="aspect-video bg-cream"
         animate={{
           background: [
-            'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-            'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
+            'linear-gradient(90deg, #0C0A09 0%, #FAFAF9 50%, #0C0A09 100%)',
+            'linear-gradient(90deg, #FAFAF9 0%, #0C0A09 50%, #FAFAF9 100%)',
           ],
         }}
         transition={{
@@ -282,11 +282,11 @@ function ShowcaseCardSkeleton() {
       />
       <div className="p-3 space-y-2">
         <motion.div
-          className="h-4 bg-deep-space rounded w-3/4"
+          className="h-4 bg-cream rounded w-3/4"
           animate={{
             background: [
-              'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-              'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
+              'linear-gradient(90deg, #0C0A09 0%, #FAFAF9 50%, #0C0A09 100%)',
+              'linear-gradient(90deg, #FAFAF9 0%, #0C0A09 50%, #FAFAF9 100%)',
             ],
           }}
           transition={{
@@ -297,11 +297,11 @@ function ShowcaseCardSkeleton() {
           }}
         />
         <motion.div
-          className="h-3 bg-deep-space rounded w-1/2"
+          className="h-3 bg-cream rounded w-1/2"
           animate={{
             background: [
-              'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-              'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
+              'linear-gradient(90deg, #0C0A09 0%, #FAFAF9 50%, #0C0A09 100%)',
+              'linear-gradient(90deg, #FAFAF9 0%, #0C0A09 50%, #FAFAF9 100%)',
             ],
           }}
           transition={{

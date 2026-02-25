@@ -131,7 +131,7 @@ export function PlatformCard({ platform, priority, className }: PlatformCardProp
                   key={i}
                   className="flex items-start gap-2 text-xs text-text-muted"
                 >
-                  <span className="text-electric-indigo mt-0.5">•</span>
+                  <span className="text-mint mt-0.5">•</span>
                   {tip}
                 </li>
               ))}

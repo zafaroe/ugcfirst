@@ -1,11 +1,10 @@
 /**
- * High-Voltage Animation Tokens
- * Physics-based animation curves for the "Deep Space" aesthetic
+ * UGCFirst Animation Tokens
+ * Physics-based animation curves for the brand aesthetic
  */
 
 export const ANIMATION_TOKENS = {
   // Physics: Snappy & Elastic (for Entrances)
-  // Use for: Modals, Popups, Icon appearances
   springBouncy: {
     type: "spring" as const,
     stiffness: 300,
@@ -21,11 +20,9 @@ export const ANIMATION_TOKENS = {
   },
 
   // Easing: The "Heartbeat" Pulse (for Glows)
-  // Sharp attack, slow decay.
   easePulse: [0.4, 0, 0.2, 1] as const,
 
   // Easing: Cinematic Snap (for Exits/Transitions)
-  // Fast acceleration, sudden stop.
   easeSnappy: [0.2, 0.8, 0.2, 1] as const,
 
   // Easing: Standard easeOut
@@ -36,12 +33,14 @@ export const ANIMATION_TOKENS = {
 
   // Brand Colors for inline styles
   colors: {
-    indigo: "#6366F1",
-    fuchsia: "#D946EF",
+    mint: "#10B981",
+    mintDark: "#059669",
+    mintLight: "#34D399",
+    coral: "#F43F5E",
     success: "#10B981",
-    white: "#F8FAFC",
-    slate700: "#334155",
-    slate800: "#1E293B"
+    ink: "#0C0A09",
+    surface: "#FAFAF9",
+    border: "#E7E5E4"
   },
 
   // Durations

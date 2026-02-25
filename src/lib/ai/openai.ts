@@ -179,7 +179,7 @@ async function validateImageUrl(imageUrl: string): Promise<boolean> {
     const response = await fetch(imageUrl, {
       method: 'HEAD',
       headers: {
-        'User-Agent': 'Vidnary/1.0',
+        'User-Agent': 'UGCFirst/1.0',
       },
     });
 

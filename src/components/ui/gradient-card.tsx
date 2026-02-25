@@ -49,13 +49,13 @@ export const GradientCard = forwardRef<HTMLDivElement, GradientCardProps>(
     const getGradientStyle = () => {
       switch (variant) {
         case 'indigo':
-          return 'linear-gradient(135deg, #6366F1, #818CF8, #6366F1)'
+          return 'linear-gradient(135deg, #34D399, #10B981, #059669)'
         case 'fuchsia':
-          return 'linear-gradient(135deg, #D946EF, #E879F9, #D946EF)'
+          return 'linear-gradient(135deg, #FB7185, #F43F5E, #E11D48)'
         case 'animated':
-          return 'linear-gradient(var(--gradient-angle, 135deg), #6366F1, #D946EF, #6366F1)'
+          return 'linear-gradient(var(--gradient-angle, 135deg), #34D399, #10B981, #059669)'
         default:
-          return 'linear-gradient(135deg, #6366F1, #D946EF, #6366F1)'
+          return 'linear-gradient(135deg, #34D399, #10B981, #059669)'
       }
     }
 
@@ -64,7 +64,7 @@ export const GradientCard = forwardRef<HTMLDivElement, GradientCardProps>(
         ref={ref}
         className={baseClasses}
         style={{
-          background: `linear-gradient(#1E293B, #1E293B) padding-box, ${getGradientStyle()} border-box`,
+          background: `linear-gradient(var(--color-surface-raised), var(--color-surface-raised)) padding-box, ${getGradientStyle()} border-box`,
           border: '2px solid transparent',
         }}
         initial={{ y: 0 }}
@@ -128,9 +128,9 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
         ref={ref}
         className={cn(
           'relative rounded-2xl',
-          'bg-surface/60',
+          'bg-surface-raised/80',
           blurClasses[blur],
-          'border border-white/10',
+          'border border-border-default',
           paddingClasses[padding],
           className
         )}
@@ -160,9 +160,9 @@ export interface FeatureCardProps extends Omit<HTMLMotionProps<'div'>, 'children
 }
 
 const iconBgClasses = {
-  indigo: 'bg-electric-indigo/20',
-  fuchsia: 'bg-vibrant-fuchsia/20',
-  gradient: 'bg-gradient-to-br from-electric-indigo/20 to-vibrant-fuchsia/20',
+  indigo: 'bg-mint/20',
+  fuchsia: 'bg-coral/20',
+  gradient: 'bg-gradient-to-br from-mint/10 to-mint/20',
 }
 
 export const FeatureCard = forwardRef<HTMLDivElement, FeatureCardProps>(
@@ -251,7 +251,7 @@ export function StatCard({ label, value, icon, trend, className }: StatCardProps
           )}
         </div>
         {icon && (
-          <div className="w-10 h-10 rounded-lg bg-electric-indigo/10 flex items-center justify-center text-electric-indigo">
+          <div className="w-10 h-10 rounded-lg bg-mint/10 flex items-center justify-center text-mint">
             {icon}
           </div>
         )}

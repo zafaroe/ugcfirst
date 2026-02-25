@@ -252,12 +252,12 @@ export const hoverScale = {
 }
 
 export const hoverLift = {
-  whileHover: { y: -4, boxShadow: '0 10px 40px rgba(99, 102, 241, 0.2)' },
+  whileHover: { y: -4, boxShadow: '0 10px 40px rgba(16, 185, 129, 0.2)' },
   transition: { duration: DURATIONS.fast },
 }
 
 export const hoverGlow = {
-  whileHover: { boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)' },
+  whileHover: { boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)' },
   transition: { duration: DURATIONS.fast },
 }
 

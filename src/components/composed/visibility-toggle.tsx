@@ -73,7 +73,7 @@ export function VisibilityToggle({
               {isActive && (
                 <motion.div
                   layoutId="visibility-indicator"
-                  className="absolute inset-0 bg-elevated rounded-md"
+                  className="absolute inset-0 bg-surface-raised rounded-md"
                   transition={{
                     type: 'spring',
                     stiffness: 500,

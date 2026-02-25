@@ -151,8 +151,8 @@ export function FileUpload({
           'relative border-2 border-dashed rounded-lg p-8 transition-all duration-200 cursor-pointer',
           'flex flex-col items-center justify-center text-center',
           isDragging
-            ? 'border-electric-indigo bg-electric-indigo/10'
-            : 'border-border-default hover:border-electric-indigo/50 hover:bg-surface/50',
+            ? 'border-mint bg-mint/10'
+            : 'border-border-default hover:border-mint/50 hover:bg-surface/50',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
@@ -168,11 +168,11 @@ export function FileUpload({
         <div
           className={cn(
             'w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors',
-            isDragging ? 'bg-electric-indigo/20' : 'bg-surface'
+            isDragging ? 'bg-mint/20' : 'bg-surface'
           )}
         >
           {isDragging ? (
-            <FontAwesomeIcon icon={faUpload} className="w-6 h-6 text-electric-indigo" />
+            <FontAwesomeIcon icon={faUpload} className="w-6 h-6 text-mint" />
           ) : (
             <FontAwesomeIcon icon={faImage} className="w-6 h-6 text-text-muted" />
           )}

@@ -15,4 +15,4 @@ Disallow: /settings/*
 Disallow: /onboarding
 Disallow: /api/*
 
-Sitemap: https://vidnary.com/sitemap.xml
+Sitemap: https://ugcfirst.com/sitemap.xml

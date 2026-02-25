@@ -51,11 +51,12 @@ export {
   mockPricingFAQ,
   mockComparisonData,
   mockCompetitorComparison,
+  mockPersonas,
   type ComparisonRow,
   type CompetitorComparisonRow,
 } from './landing'
 
-// Strategy & Reel It In Flow
+// Strategy & Auto Pilot Flow
 export {
   mockFetchedProducts,
   mockGeneratedScripts,

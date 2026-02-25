@@ -57,11 +57,11 @@ export function InsufficientCreditsModal({
 
         {/* Description */}
         <p className="text-text-muted mb-6">
-          You need <span className="font-semibold text-text-primary">{required} credits</span> to generate this {mode === 'concierge' ? 'Reel It In' : 'DIY'} video{captionsEnabled ? ' with captions' : ''}.
+          You need <span className="font-semibold text-text-primary">{required} credits</span> to generate this {mode === 'concierge' ? 'Drop & Go' : 'Studio'} video{captionsEnabled ? ' with captions' : ''}.
         </p>
 
         {/* Credit Breakdown */}
-        <div className="bg-deep-space rounded-lg p-4 mb-6 space-y-3">
+        <div className="bg-cream rounded-lg p-4 mb-6 space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-sm text-text-muted">Current Balance</span>
             <span className={cn(

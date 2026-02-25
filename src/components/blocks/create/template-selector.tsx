@@ -67,7 +67,7 @@ function TemplateCard({ template, isSelected, onSelect }: TemplateCardProps) {
       selected={isSelected}
       className={cn(
         'cursor-pointer transition-all duration-200 p-5',
-        isSelected && 'bg-electric-indigo/5'
+        isSelected && 'bg-mint/5'
       )}
       onClick={() => onSelect(template.id)}
     >
@@ -77,8 +77,8 @@ function TemplateCard({ template, isSelected, onSelect }: TemplateCardProps) {
           className={cn(
             'p-2.5 rounded-xl transition-colors',
             isSelected
-              ? 'bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia'
-              : 'bg-elevated'
+              ? 'bg-gradient-to-br from-mint to-mint-dark'
+              : 'bg-surface-raised'
           )}
         >
           <Icon className="w-5 h-5 text-white" />
@@ -117,7 +117,7 @@ function TemplateCard({ template, isSelected, onSelect }: TemplateCardProps) {
         {template.tags.slice(0, 3).map((tag) => (
           <span
             key={tag}
-            className="text-xs px-2 py-0.5 rounded-full bg-elevated text-text-muted"
+            className="text-xs px-2 py-0.5 rounded-full bg-surface-raised text-text-muted"
           >
             {tag}
           </span>
@@ -129,7 +129,7 @@ function TemplateCard({ template, isSelected, onSelect }: TemplateCardProps) {
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center gap-1.5 mt-4 text-sm font-medium text-electric-indigo"
+          className="flex items-center gap-1.5 mt-4 text-sm font-medium text-mint"
         >
           <span>Selected</span>
           <ChevronRight className="w-4 h-4" />
@@ -203,8 +203,8 @@ export function TemplateSelector({
       </motion.div>
 
       {/* Info Note */}
-      <div className="mt-6 flex items-start gap-2 p-3 rounded-lg bg-elevated/50">
-        <Info className="w-4 h-4 text-electric-indigo mt-0.5 flex-shrink-0" />
+      <div className="mt-6 flex items-start gap-2 p-3 rounded-lg bg-surface-raised/50">
+        <Info className="w-4 h-4 text-mint mt-0.5 flex-shrink-0" />
         <p className="text-xs text-text-muted">
           <span className="font-medium text-text-primary">Pro tip:</span> These
           templates are based on data from millions of viral TikTok and Instagram

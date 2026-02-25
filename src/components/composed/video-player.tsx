@@ -71,7 +71,7 @@ export function VideoPlayer({ src, poster, className, vertical = false }: VideoP
 
   return (
     <div
-      className={cn('relative bg-deep-space rounded-xl overflow-hidden group', className)}
+      className={cn('relative bg-cream rounded-xl overflow-hidden group', className)}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
@@ -100,7 +100,7 @@ export function VideoPlayer({ src, poster, className, vertical = false }: VideoP
           onClick={handleProgressClick}
         >
           <div
-            className="h-full bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia rounded-full"
+            className="h-full bg-gradient-to-r from-mint-light to-mint-dark rounded-full"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -155,7 +155,7 @@ export function VideoPlayer({ src, poster, className, vertical = false }: VideoP
           onClick={togglePlay}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia flex items-center justify-center hover:scale-110 transition-transform">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-mint to-mint-dark flex items-center justify-center hover:scale-110 transition-transform">
             <FontAwesomeIcon icon={faPlay} className="w-7 h-7 text-white ml-1" />
           </div>
         </button>

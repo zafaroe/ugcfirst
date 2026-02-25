@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UGCFirst — Brand Identity Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Satoshi:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* === THE PALETTE === */
+    --mint: #10B981;
+    --mint-light: #34D399;
+    --mint-dark: #059669;
+    --mint-glow: rgba(16, 185, 129, 0.15);
+    
+    --coral: #F43F5E;
+    --coral-light: #FB7185;
+    
+    --cream: #FFF7ED;
+    --cream-warm: #FFFBEB;
+    
+    --ink: #0C0A09;
+    --ink-soft: #1C1917;
+    --ink-muted: #78716C;
+    --ink-faint: #A8A29E;
+    
+    --surface: #FAFAF9;
+    --surface-raised: #FFFFFF;
+    --border: #E7E5E4;
+    --border-subtle: #F5F5F4;
+    
+    /* CTA Gradient */
+    --cta-gradient: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    --cta-hover: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Satoshi', -apple-system, sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === HEADER === */
+  .hero {
+    background: var(--ink);
+    color: white;
+    padding: 80px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--mint-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mint-light);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .hero h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    max-width: 700px;
+  }
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--mint-light), var(--mint));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    margin-top: 24px;
+    font-size: 18px;
+    color: var(--ink-faint);
+    max-width: 580px;
+    line-height: 1.7;
+  }
+
+  /* === SECTIONS === */
+  .section {
+    padding: 80px 60px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--mint-dark);
+    margin-bottom: 12px;
+  }
+  .section h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .section > p {
+    color: var(--ink-muted);
+    font-size: 16px;
+    max-width: 640px;
+    margin-bottom: 48px;
+  }
+
+  /* === RATIONALE === */
+  .rationale {
+    background: var(--cream);
+  }
+  .rationale-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+  .rationale-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid var(--border);
+  }
+  .rationale-card .num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--mint);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .rationale-card h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .rationale-card p {
+    color: var(--ink-muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* === COMPETITOR MAP === */
+  .competitor-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .comp-card {
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  .comp-card.dark { background: #1a1a2e; color: white; border-color: #2a2a4e; }
+  .comp-card.dark .comp-colors span { border-color: rgba(255,255,255,0.2); }
+  .comp-card h4 { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  .comp-card .comp-vibe { font-size: 12px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .comp-card.dark .comp-vibe { color: rgba(255,255,255,0.5); }
+  .comp-colors { display: flex; justify-content: center; gap: 8px; }
+  .comp-colors span { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border); display: block; }
+  
+  .comp-card.ours {
+    background: var(--mint-glow);
+    border: 2px solid var(--mint);
+    position: relative;
+  }
+  .comp-card.ours::after {
+    content: '← UGCFirst';
+    position: absolute;
+    top: -12px;
+    right: 16px;
+    background: var(--mint);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+  }
+
+  /* === COLORS === */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .color-card {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: white;
+  }
+  .color-swatch {
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+  }
+  .color-swatch span {
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Outfit', monospace;
+    opacity: 0.8;
+  }
+  .color-info {
+    padding: 16px;
+  }
+  .color-info h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .color-info p {
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .color-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--border-subtle);
+    color: var(--ink-muted);
+    margin-top: 8px;
+  }
+
+  /* === TYPOGRAPHY === */
+  .type-showcase {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  .type-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid var(--border);
+  }
+  .type-card .font-name {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--mint-dark);
+    margin-bottom: 24px;
+  }
+  .type-card .sample-heading {
+    font-family: 'Outfit', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .type-card .sample-body {
+    font-family: 'Satoshi', sans-serif;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ink-muted);
+  }
+  .type-weights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .type-weights span {
+    padding: 6px 14px;
+    background: var(--border-subtle);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .type-weights span.active {
+    background: var(--ink);
+    color: white;
+  }
+
+  /* === BUTTONS === */
+  .button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--cta-gradient);
+    color: white;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  }
+  .btn-primary:hover {
+    background: var(--cta-hover);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+  }
+  .btn-secondary {
+    background: var(--ink);
+    color: white;
+  }
+  .btn-secondary:hover {
+    background: var(--ink-soft);
+    transform: translateY(-1px);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--ink);
+    border: 2px solid var(--border);
+  }
+  .btn-outline:hover {
+    border-color: var(--ink);
+    transform: translateY(-1px);
+  }
+  .btn-coral {
+    background: var(--coral);
+    color: white;
+  }
+
+  /* === UI MOCKUP === */
+  .mockup-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .mockup {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: white;
+  }
+  .mockup-header {
+    padding: 12px 16px;
+    background: var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mockup-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .mockup-body { padding: 32px; }
+  .mockup.dark-variant .mockup-header { background: #1a1917; border-color: #2a2927; }
+  .mockup.dark-variant .mockup-body { background: var(--ink); color: white; }
+  .mockup.dark-variant { border-color: #2a2927; }
+  
+  .mock-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+  .mock-logo {
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .mock-logo span { color: var(--mint); }
+  .mock-nav-links {
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .dark-variant .mock-nav-links { color: rgba(255,255,255,0.5); }
+  .mock-hero-text {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .mock-hero-sub {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .dark-variant .mock-hero-sub { color: rgba(255,255,255,0.5); }
+  .mock-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--cta-gradient);
+    color: white;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .mock-stats {
+    display: flex;
+    gap: 24px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .dark-variant .mock-stats { border-color: #2a2927; }
+  .mock-stat-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--mint);
+  }
+  .mock-stat-label {
+    font-size: 11px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .dark-variant .mock-stat-label { color: rgba(255,255,255,0.4); }
+
+  /* === LOGO CONCEPTS === */
+  .logo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .logo-concept {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 32px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .logo-concept:hover {
+    border-color: var(--mint);
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.1);
+  }
+  .logo-concept .logo-visual {
+    font-family: 'Outfit', sans-serif;
+    font-size: 36px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    margin-bottom: 16px;
+  }
+  .logo-concept .logo-visual span { color: var(--mint); }
+  .logo-concept .logo-desc {
+    font-size: 13px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+  .logo-concept.dark-bg {
+    background: var(--ink);
+    color: white;
+    border-color: #2a2927;
+  }
+  .logo-concept.dark-bg:hover { border-color: var(--mint); }
+  .logo-concept.dark-bg .logo-desc { color: rgba(255,255,255,0.5); }
+
+  /* === GRADIENT SECTION === */
+  .gradient-strip {
+    height: 8px;
+    background: linear-gradient(90deg, var(--mint-dark), var(--mint), var(--mint-light), var(--coral-light), var(--coral));
+    margin: 0;
+  }
+
+  /* === SIDEBAR NOTES === */
+  .insight-box {
+    background: var(--mint-glow);
+    border-left: 4px solid var(--mint);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 24px;
+    margin: 32px 0;
+  }
+  .insight-box strong {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--mint-dark);
+    margin-bottom: 4px;
+  }
+  .insight-box p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  /* === DO / DON'T === */
+  .do-dont-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .do-card, .dont-card {
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid;
+  }
+  .do-card {
+    background: #F0FDF4;
+    border-color: #BBF7D0;
+  }
+  .dont-card {
+    background: #FFF1F2;
+    border-color: #FECDD3;
+  }
+  .do-card h4, .dont-card h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .do-card h4 { color: var(--mint-dark); }
+  .dont-card h4 { color: var(--coral); }
+  .do-card ul, .dont-card ul {
+    list-style: none;
+    font-size: 14px;
+    line-height: 2;
+  }
+  .do-card ul li::before { content: '✓ '; color: var(--mint); font-weight: 700; }
+  .dont-card ul li::before { content: '✗ '; color: var(--coral); font-weight: 700; }
+
+  /* === DARK MODE SECTION === */
+  .dark-section {
+    background: var(--ink);
+    color: white;
+  }
+  .dark-section .section-label { color: var(--mint-light); }
+  .dark-section > p { color: rgba(255,255,255,0.5); }
+
+  /* === TOKEN TABLE === */
+  .token-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .token-table th {
+    text-align: left;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ink-muted);
+    padding: 12px 0;
+    border-bottom: 2px solid var(--border);
+  }
+  .token-table td {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .token-table code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    background: var(--border-subtle);
+    padding: 3px 8px;
+    border-radius: 6px;
+    color: var(--mint-dark);
+  }
+  .dark-section .token-table th { border-color: #2a2927; color: rgba(255,255,255,0.4); }
+  .dark-section .token-table td { border-color: #2a2927; }
+  .dark-section .token-table code { background: rgba(255,255,255,0.06); color: var(--mint-light); }
+
+  .swatch-inline {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 8px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+
+  /* === FOOTER === */
+  .footer {
+    padding: 40px 60px;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 13px;
+  }
+  .footer strong { color: var(--ink); }
+
+  @media (max-width: 768px) {
+    .hero { padding: 48px 24px; }
+    .hero h1 { font-size: 36px; }
+    .section { padding: 48px 24px; }
+    .rationale-grid, .type-showcase, .mockup-container, .logo-grid, .do-dont-grid { grid-template-columns: 1fr; }
+    .competitor-map { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- GRADIENT STRIP -->
+<div class="gradient-strip"></div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">● Brand Identity Guide v1.0</div>
+  <h1>UGC<span>First</span></h1>
+  <p>A conversion-optimized brand identity designed to stand out in a sea of dark purple AI tools — and convert e-commerce sellers who need results, not aesthetics.</p>
+</div>
+
+<!-- SECTION: WHY THIS DIRECTION -->
+<div class="section rationale">
+  <div class="section-label">Competitive Analysis</div>
+  <h2>Why This Direction Wins</h2>
+  <p>After analyzing MakeUGC, Arcads, Creatify, and 15+ competitors, plus conversion research across high-performing SaaS landing pages, here's what the data says.</p>
+  
+  <div class="rationale-grid">
+    <div class="rationale-card">
+      <div class="num">01</div>
+      <h3>Every Competitor Is Purple + Dark</h3>
+      <p>MakeUGC, Arcads, Creatify, Vidnary, and Zendrop all live in the purple/indigo/dark navy spectrum. Going green + warm light breaks the pattern instantly. When a TikTok seller sees 5 purple tools in a row, the green one gets clicked.</p>
+    </div>
+    <div class="rationale-card">
+      <div class="num">02</div>
+      <h3>Green = Money in E-Commerce</h3>
+      <p>Your audience thinks in profit margins and ROAS. Green subconsciously signals "growth" and "money" — Shopify (green), Stripe (blue-green), Cash App (green). This isn't an aesthetic choice, it's a psychological conversion lever for sellers.</p>
+    </div>
+    <div class="rationale-card">
+      <div class="num">03</div>
+      <h3>Light Mode Default = Approachable</h3>
+      <p>Unbounce data shows pages with clear, clean backgrounds convert 13-15% higher for action-oriented tools. First-time dropshippers need "this is easy" not "this is a hacker dungeon." Dark mode available but light is default.</p>
+    </div>
+  </div>
+
+  <div class="insight-box" style="margin-top: 32px;">
+    <strong>The Conversion Formula</strong>
+    <p>Green (money/growth signal) + Light default (approachable) + Warm accents (human/trustworthy) + Dark mode toggle (power users). This combination is zero overlap with Vidnary's purple/fuchsia/dark-space identity and zero overlap with any UGC competitor.</p>
+  </div>
+</div>
+
+<!-- SECTION: COMPETITOR MAP -->
+<div class="section">
+  <div class="section-label">Market Position</div>
+  <h2>Where UGCFirst Sits</h2>
+  <p>Every major competitor clusters in the same dark purple zone. UGCFirst occupies uncontested visual territory.</p>
+  
+  <div class="competitor-map">
+    <div class="comp-card dark">
+      <h4>MakeUGC</h4>
+      <div class="comp-vibe">Dark + Purple Neon</div>
+      <div class="comp-colors">
+        <span style="background:#1a1a2e"></span>
+        <span style="background:#7c3aed"></span>
+        <span style="background:#c084fc"></span>
+      </div>
+    </div>
+    <div class="comp-card dark">
+      <h4>Arcads</h4>
+      <div class="comp-vibe">Dark + Blue/Violet</div>
+      <div class="comp-colors">
+        <span style="background:#0f0f1a"></span>
+        <span style="background:#6366f1"></span>
+        <span style="background:#818cf8"></span>
+      </div>
+    </div>
+    <div class="comp-card dark">
+      <h4>Creatify</h4>
+      <div class="comp-vibe">Dark + Blue SaaS</div>
+      <div class="comp-colors">
+        <span style="background:#111827"></span>
+        <span style="background:#3b82f6"></span>
+        <span style="background:#60a5fa"></span>
+      </div>
+    </div>
+    <div class="comp-card dark">
+      <h4 style="text-decoration: line-through; opacity:0.5">Vidnary</h4>
+      <div class="comp-vibe">Dark + Purple/Fuchsia</div>
+      <div class="comp-colors">
+        <span style="background:#0F172A"></span>
+        <span style="background:#6366F1"></span>
+        <span style="background:#D946EF"></span>
+      </div>
+    </div>
+    <div class="comp-card ours">
+      <h4>UGCFirst</h4>
+      <div class="comp-vibe">Light + Mint/Coral</div>
+      <div class="comp-colors">
+        <span style="background:#FAFAF9; border-color: #E7E5E4"></span>
+        <span style="background:#10B981"></span>
+        <span style="background:#F43F5E"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: COLOR PALETTE -->
+<div class="section">
+  <div class="section-label">Color System</div>
+  <h2>The Palette</h2>
+  <p>Built around mint green (growth/money) with coral as the urgency accent. Warm stone neutrals replace cold grays — feels human, not robotic.</p>
+
+  <div class="color-grid">
+    <div class="color-card">
+      <div class="color-swatch" style="background: #10B981;">
+        <span style="color: white">#10B981</span>
+      </div>
+      <div class="color-info">
+        <h4>Mint</h4>
+        <p>Primary brand color. CTAs, links, active states, success indicators.</p>
+        <div class="color-tag">Primary</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #059669;">
+        <span style="color: white">#059669</span>
+      </div>
+      <div class="color-info">
+        <h4>Mint Dark</h4>
+        <p>Hover states, pressed buttons, text on light backgrounds.</p>
+        <div class="color-tag">Primary Dark</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #34D399;">
+        <span style="color: #0C0A09">#34D399</span>
+      </div>
+      <div class="color-info">
+        <h4>Mint Light</h4>
+        <p>Highlights, glows, gradient endpoints, dark mode primary.</p>
+        <div class="color-tag">Primary Light</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #F43F5E;">
+        <span style="color: white">#F43F5E</span>
+      </div>
+      <div class="color-info">
+        <h4>Coral</h4>
+        <p>Urgency CTAs ("limited", "sale"), errors, destructive actions, notifications.</p>
+        <div class="color-tag">Accent</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #FFF7ED;">
+        <span style="color: #78716C">#FFF7ED</span>
+      </div>
+      <div class="color-info">
+        <h4>Cream</h4>
+        <p>Warm section backgrounds, highlight panels, featured areas.</p>
+        <div class="color-tag">Background Warm</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #0C0A09;">
+        <span style="color: #A8A29E">#0C0A09</span>
+      </div>
+      <div class="color-info">
+        <h4>Ink</h4>
+        <p>Primary text, dark mode background. Warm black, not cold.</p>
+        <div class="color-tag">Text / Dark BG</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #FAFAF9; border-bottom: 1px solid #E7E5E4;">
+        <span style="color: #78716C">#FAFAF9</span>
+      </div>
+      <div class="color-info">
+        <h4>Surface</h4>
+        <p>Default page background. Stone-50, warm and clean.</p>
+        <div class="color-tag">Page Background</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #E7E5E4;">
+        <span style="color: #78716C">#E7E5E4</span>
+      </div>
+      <div class="color-info">
+        <h4>Border</h4>
+        <p>Card borders, dividers, separators. Warm stone-300.</p>
+        <div class="color-tag">Borders</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <strong>Why Warm Neutrals, Not Cool Grays?</strong>
+    <p>Cool grays (slate, zinc) are what every AI tool uses. Warm stone tones (#78716C, #A8A29E, #E7E5E4) feel human and approachable. Combined with cream backgrounds, this signals "friendly commerce tool" not "intimidating AI platform." Your audience already uses Shopify, which also uses warm neutrals.</p>
+  </div>
+</div>
+
+<!-- SECTION: TYPOGRAPHY -->
+<div class="section">
+  <div class="section-label">Typography</div>
+  <h2>Type System</h2>
+  <p>Outfit for headings — geometric, bold, modern. Satoshi for body — clean, readable, warm. Both are completely different from Vidnary's Syne + Inter stack.</p>
+
+  <div class="type-showcase">
+    <div class="type-card">
+      <div class="font-name">Headings — Outfit</div>
+      <div class="sample-heading">Turn products into viral content.</div>
+      <div class="type-weights">
+        <span>Light 300</span>
+        <span>Regular 400</span>
+        <span class="active">Semi 600</span>
+        <span class="active">Bold 700</span>
+        <span class="active">Extra 800</span>
+        <span>Black 900</span>
+      </div>
+    </div>
+    <div class="type-card">
+      <div class="font-name">Body — Satoshi</div>
+      <div class="sample-body">Generate scroll-stopping UGC videos from a single product image. No creators, no shoots, no waiting. Just paste your product link and get TikTok-ready content in minutes.</div>
+      <div class="type-weights">
+        <span>Light 300</span>
+        <span class="active">Regular 400</span>
+        <span class="active">Medium 500</span>
+        <span>Semi 600</span>
+        <span>Bold 700</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: BUTTONS & COMPONENTS -->
+<div class="section">
+  <div class="section-label">Components</div>
+  <h2>Buttons & Actions</h2>
+  <p>CTAs use the mint gradient for maximum "click me" energy. Coral reserved for urgency and limited offers.</p>
+
+  <div class="button-row">
+    <button class="btn btn-primary">Start Creating Free →</button>
+    <button class="btn btn-secondary">Watch Demo</button>
+    <button class="btn btn-outline">View Pricing</button>
+    <button class="btn btn-coral">🔥 Limited: $1 First Video</button>
+  </div>
+
+  <div class="button-row">
+    <button class="btn btn-primary" style="border-radius: 100px; padding: 12px 24px; font-size: 13px;">Pill Primary</button>
+    <button class="btn btn-outline" style="border-radius: 100px; padding: 12px 24px; font-size: 13px;">Pill Outline</button>
+  </div>
+
+  <div class="insight-box">
+    <strong>CTA Psychology for Dropshippers</strong>
+    <p>Green CTAs on light backgrounds achieve up to 21% higher click-through vs blue or purple (HubSpot CTA study). Coral "urgency" buttons (&dollar;1 first video, limited spots) create FOMO that converts browsers into signups — critical for the TikTok seller mindset.</p>
+  </div>
+</div>
+
+<!-- SECTION: UI MOCKUPS -->
+<div class="section" style="background: var(--cream);">
+  <div class="section-label">Application</div>
+  <h2>Light Mode + Dark Mode</h2>
+  <p>Light mode is the default for landing pages and onboarding. Dark mode available in the app dashboard for late-night editing sessions.</p>
+
+  <div class="mockup-container">
+    <div class="mockup">
+      <div class="mockup-header">
+        <div class="mockup-dot" style="background: #F43F5E"></div>
+        <div class="mockup-dot" style="background: #FBBF24"></div>
+        <div class="mockup-dot" style="background: #10B981"></div>
+      </div>
+      <div class="mockup-body">
+        <div class="mock-nav">
+          <div class="mock-logo">UGC<span>First</span></div>
+          <div class="mock-nav-links">
+            <span>Features</span>
+            <span>Pricing</span>
+            <span>Templates</span>
+          </div>
+        </div>
+        <div class="mock-hero-text">Product to viral<br>video in 2 minutes.</div>
+        <div class="mock-hero-sub">Paste your product link. Pick a template. Get TikTok-ready UGC content — no creators needed.</div>
+        <div class="mock-btn">Start Free →</div>
+        <div class="mock-stats">
+          <div>
+            <div class="mock-stat-num">3.1x</div>
+            <div class="mock-stat-label">Avg ROAS</div>
+          </div>
+          <div>
+            <div class="mock-stat-num">$0.47</div>
+            <div class="mock-stat-label">Per Video</div>
+          </div>
+          <div>
+            <div class="mock-stat-num">2min</div>
+            <div class="mock-stat-label">Gen Time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup dark-variant">
+      <div class="mockup-header">
+        <div class="mockup-dot" style="background: #F43F5E"></div>
+        <div class="mockup-dot" style="background: #FBBF24"></div>
+        <div class="mockup-dot" style="background: #10B981"></div>
+      </div>
+      <div class="mockup-body">
+        <div class="mock-nav">
+          <div class="mock-logo" style="color: white">UGC<span>First</span></div>
+          <div class="mock-nav-links">
+            <span>Features</span>
+            <span>Pricing</span>
+            <span>Templates</span>
+          </div>
+        </div>
+        <div class="mock-hero-text" style="color: white">Product to viral<br>video in 2 minutes.</div>
+        <div class="mock-hero-sub">Paste your product link. Pick a template. Get TikTok-ready UGC content — no creators needed.</div>
+        <div class="mock-btn">Start Free →</div>
+        <div class="mock-stats">
+          <div>
+            <div class="mock-stat-num">3.1x</div>
+            <div class="mock-stat-label">Avg ROAS</div>
+          </div>
+          <div>
+            <div class="mock-stat-num">$0.47</div>
+            <div class="mock-stat-label">Per Video</div>
+          </div>
+          <div>
+            <div class="mock-stat-num">2min</div>
+            <div class="mock-stat-label">Gen Time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: LOGO CONCEPTS -->
+<div class="section">
+  <div class="section-label">Logo Concepts</div>
+  <h2>Wordmark Directions</h2>
+  <p>Clean wordmark with the "First" emphasized in mint. No abstract symbols — the name IS the brand. Three approaches to explore.</p>
+
+  <div class="logo-grid">
+    <div class="logo-concept">
+      <div class="logo-visual">UGC<span>First</span></div>
+      <div class="logo-desc">Clean split. "UGC" in ink, "First" in mint. Simple, scannable, works at any size.</div>
+    </div>
+    <div class="logo-concept dark-bg">
+      <div class="logo-visual" style="color: white">ugc<span>first</span></div>
+      <div class="logo-desc">All lowercase. Casual, modern, TikTok-native energy. Approachable for first-time sellers.</div>
+    </div>
+    <div class="logo-concept">
+      <div class="logo-visual">ugcfirst<span>.</span></div>
+      <div class="logo-desc">Moniker with period. Clean, confident, Stripe-energy. The period adds finality and authority.</div>
+    </div>
+  </div>
+</div>
+
+<!-- DARK SECTION: TAILWIND TOKENS -->
+<div class="section dark-section">
+  <div class="section-label">Implementation</div>
+  <h2 style="color: white">Tailwind CSS Tokens</h2>
+  <p>Direct mapping to your Tailwind v4 config. Drop-in replacement for the current Vidnary tokens.</p>
+
+  <table class="token-table">
+    <thead>
+      <tr>
+        <th>Token</th>
+        <th>Value</th>
+        <th>Tailwind Class</th>
+        <th>Usage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="swatch-inline" style="background:#10B981"></span>Mint</td>
+        <td><code>#10B981</code></td>
+        <td><code>bg-mint / text-mint</code></td>
+        <td>Primary CTAs, links, active states</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#059669"></span>Mint Dark</td>
+        <td><code>#059669</code></td>
+        <td><code>bg-mint-dark</code></td>
+        <td>Hover states, pressed buttons</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#34D399"></span>Mint Light</td>
+        <td><code>#34D399</code></td>
+        <td><code>bg-mint-light</code></td>
+        <td>Glows, dark mode accents</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#F43F5E"></span>Coral</td>
+        <td><code>#F43F5E</code></td>
+        <td><code>bg-coral / text-coral</code></td>
+        <td>Urgency, errors, destructive</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#FB7185"></span>Coral Light</td>
+        <td><code>#FB7185</code></td>
+        <td><code>bg-coral-light</code></td>
+        <td>Hover on coral elements</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#FFF7ED; border-color:#E7E5E4"></span>Cream</td>
+        <td><code>#FFF7ED</code></td>
+        <td><code>bg-cream</code></td>
+        <td>Warm section backgrounds</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#0C0A09"></span>Ink</td>
+        <td><code>#0C0A09</code></td>
+        <td><code>text-ink / bg-ink</code></td>
+        <td>Primary text, dark mode BG</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#1C1917"></span>Ink Soft</td>
+        <td><code>#1C1917</code></td>
+        <td><code>bg-ink-soft</code></td>
+        <td>Dark mode surfaces</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#78716C"></span>Ink Muted</td>
+        <td><code>#78716C</code></td>
+        <td><code>text-ink-muted</code></td>
+        <td>Secondary text, captions</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#FAFAF9; border-color:#E7E5E4"></span>Surface</td>
+        <td><code>#FAFAF9</code></td>
+        <td><code>bg-surface</code></td>
+        <td>Default page background</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#FFFFFF; border-color:#E7E5E4"></span>Surface Raised</td>
+        <td><code>#FFFFFF</code></td>
+        <td><code>bg-surface-raised</code></td>
+        <td>Cards, modals, elevated</td>
+      </tr>
+      <tr>
+        <td><span class="swatch-inline" style="background:#E7E5E4"></span>Border</td>
+        <td><code>#E7E5E4</code></td>
+        <td><code>border-stone-300</code></td>
+        <td>Borders, dividers</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- GRADIENT DEFINITIONS -->
+<div class="section">
+  <div class="section-label">Gradients</div>
+  <h2>Gradient System</h2>
+  <p>Two gradients — one for primary CTAs, one for feature highlights. Replaces Vidnary's purple-to-fuchsia gradient entirely.</p>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px;">
+    <div style="background: linear-gradient(135deg, #10B981, #059669); height: 120px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px;">
+      CTA Gradient → from-mint to-mint-dark
+    </div>
+    <div style="background: linear-gradient(135deg, #10B981, #34D399, #FFF7ED); height: 120px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #0C0A09; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px;">
+      Feature Gradient → mint to cream
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;">
+    <div style="background: linear-gradient(135deg, #0C0A09, #1C1917); height: 120px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px;">
+      <span style="background: linear-gradient(135deg, #34D399, #10B981); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Dark Mode Hero Gradient</span>
+    </div>
+    <div style="background: linear-gradient(135deg, #F43F5E, #FB7185); height: 120px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px;">
+      Urgency Gradient → coral system
+    </div>
+  </div>
+</div>
+
+<!-- DO / DON'T -->
+<div class="section" style="background: var(--cream)">
+  <div class="section-label">Brand Rules</div>
+  <h2>Do's and Don'ts</h2>
+  <p>Hard rules to ensure zero overlap with Vidnary and maximum conversion.</p>
+
+  <div class="do-dont-grid">
+    <div class="do-card">
+      <h4>✓ Do This</h4>
+      <ul>
+        <li>Use mint green as the dominant brand color</li>
+        <li>Default to light mode for all marketing pages</li>
+        <li>Use warm stone neutrals (stone-50 to stone-800)</li>
+        <li>Lead with results ($, ROAS, time saved) in copy</li>
+        <li>Use Outfit + Satoshi typography everywhere</li>
+        <li>Keep CTAs green with coral for urgency only</li>
+        <li>Show product → video transformation as hero</li>
+        <li>Use cream (#FFF7ED) for featured sections</li>
+      </ul>
+    </div>
+    <div class="dont-card">
+      <h4>✗ Never Do This</h4>
+      <ul>
+        <li>Use purple, indigo, or fuchsia anywhere</li>
+        <li>Use dark mode as the default landing page</li>
+        <li>Use cold grays (slate, zinc, neutral)</li>
+        <li>Lead with "AI-powered" or tech-first messaging</li>
+        <li>Use Syne, Inter, or any Vidnary-era fonts</li>
+        <li>Use cosmic/space/futuristic imagery</li>
+        <li>Use gradient borders on cards (Vidnary pattern)</li>
+        <li>Reference "deep space" or dark navy (#0F172A)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE -->
+<div class="section">
+  <div class="section-label">Brand Voice</div>
+  <h2>How UGCFirst Talks</h2>
+  <p>Direct, results-focused, founder-to-founder. Not corporate SaaS, not cringe hustle bro. Think "sharp friend who makes you money."</p>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px;">
+    <div style="background: white; border: 1px solid var(--border); border-radius: 16px; padding: 32px;">
+      <div style="font-size: 12px; font-weight: 700; color: var(--mint-dark); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Headlines That Convert</div>
+      <div style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 12px;">"Product to viral video in 2 minutes."</div>
+      <div style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 12px;">"$0.47 per video. Not $200."</div>
+      <div style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 12px;">"Your competitors already have UGC. Do you?"</div>
+      <div style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.3;">"Stop scrolling. Start selling."</div>
+    </div>
+    <div style="background: white; border: 1px solid var(--border); border-radius: 16px; padding: 32px;">
+      <div style="font-size: 12px; font-weight: 700; color: var(--coral); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Never Say</div>
+      <div style="font-family: 'Satoshi', sans-serif; font-size: 16px; color: var(--ink-muted); line-height: 2;">
+        "Powered by cutting-edge AI technology"<br>
+        "Revolutionary video generation platform"<br>
+        "Leverage the power of artificial intelligence"<br>
+        "Next-generation content creation suite"<br>
+        "Unleash your creativity with AI"
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPLEMENTATION SUMMARY -->
+<div class="section dark-section">
+  <div class="section-label">Quick Reference</div>
+  <h2 style="color: white;">Vidnary → UGCFirst Migration Map</h2>
+  <p>Direct token replacement guide for the codebase rebrand.</p>
+
+  <table class="token-table">
+    <thead>
+      <tr>
+        <th>Vidnary (Old)</th>
+        <th>UGCFirst (New)</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="color: #6366F1">Electric Indigo #6366F1</td>
+        <td style="color: #10B981">Mint #10B981</td>
+        <td>Primary brand → all CTAs, links, active</td>
+      </tr>
+      <tr>
+        <td style="color: #D946EF">Vibrant Fuchsia #D946EF</td>
+        <td style="color: #F43F5E">Coral #F43F5E</td>
+        <td>Accent → urgency only, not secondary</td>
+      </tr>
+      <tr>
+        <td style="color: #64748B">Deep Space #0F172A</td>
+        <td style="color: #78716C">Ink #0C0A09</td>
+        <td>Dark background → warm black, not navy</td>
+      </tr>
+      <tr>
+        <td style="color: #64748B">Surface #1E293B</td>
+        <td style="color: #78716C">Surface #FAFAF9</td>
+        <td>INVERTED — light default now</td>
+      </tr>
+      <tr>
+        <td style="color: #64748B">Border #374151</td>
+        <td style="color: #78716C">Border #E7E5E4</td>
+        <td>Warm stone border, not cold gray</td>
+      </tr>
+      <tr>
+        <td style="color: #64748B">Syne (headings)</td>
+        <td style="color: var(--mint-light)">Outfit (headings)</td>
+        <td>Geometric, bold, modern</td>
+      </tr>
+      <tr>
+        <td style="color: #64748B">Inter (body)</td>
+        <td style="color: var(--mint-light)">Satoshi (body)</td>
+        <td>Clean, warm, readable</td>
+      </tr>
+      <tr>
+        <td style="color: #64748B">from-indigo to-fuchsia</td>
+        <td style="color: var(--mint-light)">from-mint to-mint-dark</td>
+        <td>CTA gradient replacement</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="gradient-strip"></div>
+
+<div class="footer">
+  <strong>UGCFirst Brand Identity Guide</strong> — v1.0 — February 2026<br>
+  Built from competitive analysis of MakeUGC, Arcads, Creatify + conversion research across 50+ SaaS landing pages.
+</div>
+
+</body>
+</html>

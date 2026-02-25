@@ -25,7 +25,7 @@ export function CreditBadge({ amount, size = 'md', showLabel = true, className }
   return (
     <span
       className={cn(
-        'inline-flex items-center bg-electric-indigo/20 text-electric-indigo font-medium rounded-full',
+        'inline-flex items-center bg-mint/20 text-mint font-medium rounded-full',
         sizeClasses[size],
         className
       )}

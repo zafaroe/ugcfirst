@@ -75,7 +75,7 @@ export function HeroVideoShowcase({ className }: { className?: string }) {
     <div className={cn('relative w-full h-[400px] md:h-[500px]', className)}>
       {/* Glow background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[300px] h-[300px] md:w-[400px] md:h-[400px] bg-gradient-to-r from-electric-indigo/20 to-vibrant-fuchsia/20 rounded-full blur-[100px]" />
+        <div className="w-[300px] h-[300px] md:w-[400px] md:h-[400px] bg-mint/15 rounded-full blur-[100px]" />
       </div>
 
       {/* Floating sparkles */}
@@ -103,7 +103,7 @@ export function HeroVideoShowcase({ className }: { className?: string }) {
         transition={{ delay: 1.2 }}
         className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-surface/80 backdrop-blur-sm rounded-full border border-border-default"
       >
-        <Sparkles className="w-4 h-4 text-electric-indigo" />
+        <Sparkles className="w-4 h-4 text-mint" />
         <span className="text-sm text-text-muted">100% AI Generated</span>
       </motion.div>
     </div>
@@ -187,7 +187,7 @@ function VideoCard({
         )}
       >
         {/* Gradient border effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-electric-indigo via-vibrant-fuchsia to-electric-indigo p-[2px] rounded-2xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-mint via-coral to-mint p-[2px] rounded-2xl">
           <div className="w-full h-full bg-surface rounded-[14px] overflow-hidden">
             {/* Video element (when available) */}
             {hasVideo && card.videoSrc && (

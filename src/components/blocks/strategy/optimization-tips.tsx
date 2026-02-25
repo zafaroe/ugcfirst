@@ -37,8 +37,8 @@ const categoryConfig = {
   },
   pro: {
     icon: Rocket,
-    color: 'text-electric-indigo',
-    bg: 'bg-electric-indigo/10',
+    color: 'text-mint',
+    bg: 'bg-mint/10',
   },
 };
 
@@ -137,9 +137,9 @@ export function OptimizationTips({ tips, className }: OptimizationTipsProps) {
           transition={{ delay: 0.3 }}
           className="mt-6"
         >
-          <Card className="p-5 bg-gradient-to-r from-electric-indigo/5 to-vibrant-fuchsia/5 border-electric-indigo/20">
+          <Card className="p-5 bg-mint/5 border-mint/20">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia">
+              <div className="p-2 rounded-lg bg-gradient-to-r from-mint to-mint-dark">
                 <Rocket className="w-5 h-5 text-white" />
               </div>
               <h4 className="text-base font-semibold text-text-primary">

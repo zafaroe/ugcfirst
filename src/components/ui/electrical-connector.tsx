@@ -35,7 +35,7 @@ export function ElectricalConnector({
           animate={{ width: `${progressPercent}%` }}
           transition={{ type: 'spring', stiffness: 120, damping: 20 }}
           style={{
-            background: `linear-gradient(90deg, ${ANIMATION_TOKENS.colors.indigo}, ${ANIMATION_TOKENS.colors.fuchsia})`,
+            background: `linear-gradient(90deg, ${ANIMATION_TOKENS.colors.mint}, ${ANIMATION_TOKENS.colors.coral})`,
           }}
         >
           {/* THE SPARK: Leading edge voltage effect */}
@@ -87,7 +87,7 @@ export function ElectricalConnector({
               {isActive && (
                 <>
                   <motion.div
-                    className="absolute rounded-full border border-electric-indigo"
+                    className="absolute rounded-full border border-mint"
                     initial={{ width: 16, height: 16, opacity: 1 }}
                     animate={{ width: 48, height: 48, opacity: 0 }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
@@ -98,7 +98,7 @@ export function ElectricalConnector({
                     }}
                   />
                   <motion.div
-                    className="absolute rounded-full border border-vibrant-fuchsia"
+                    className="absolute rounded-full border border-coral"
                     initial={{ width: 16, height: 16, opacity: 1 }}
                     animate={{ width: 40, height: 40, opacity: 0 }}
                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.2, ease: 'easeOut' }}
@@ -116,7 +116,7 @@ export function ElectricalConnector({
                 className={cn(
                   'w-4 h-4 rounded-full border-2 transition-colors duration-300 z-10 flex items-center justify-center',
                   isActive || isCompleted
-                    ? 'bg-electric-indigo border-electric-indigo/80 shadow-[0_0_12px_rgba(99,102,241,0.6)]'
+                    ? 'bg-mint border-mint/80 shadow-[0_0_12px_rgba(16,185,129,0.6)]'
                     : 'bg-slate-800 border-slate-600'
                 )}
                 animate={{ scale: isActive ? 1.25 : 1 }}
@@ -139,7 +139,7 @@ export function ElectricalConnector({
                   className={cn(
                     'text-[10px] mt-2 font-medium whitespace-nowrap',
                     isCompleted && 'text-status-success',
-                    isActive && 'text-electric-indigo',
+                    isActive && 'text-mint',
                     !isActive && !isCompleted && 'text-text-muted/50'
                   )}
                   animate={{

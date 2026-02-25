@@ -1,29 +1,32 @@
 import type { Metadata } from 'next'
-import { Syne, DM_Sans } from 'next/font/google'
+import { Outfit } from 'next/font/google'
+import localFont from 'next/font/local'
 import { Analytics } from '@vercel/analytics/next'
 import { ToastProvider } from '@/components/ui'
 import './globals.css'
 
-const syne = Syne({
+const outfit = Outfit({
   subsets: ['latin'],
-  variable: '--font-heading',
+  variable: '--font-outfit',
   display: 'swap',
-  weight: ['700', '800'], // Only bold weights for headings
+  weight: ['600', '700', '800'],
 })
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-sans',
+const satoshi = localFont({
+  src: [
+    { path: '../fonts/Satoshi-Regular.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/Satoshi-Medium.woff2', weight: '500', style: 'normal' },
+  ],
+  variable: '--font-satoshi',
   display: 'swap',
-  weight: ['400', '500'], // Only regular & medium for body
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://vidnary.com'),
+  metadataBase: new URL('https://ugcfirst.com'),
   alternates: {
     canonical: '/',
   },
-  title: 'Vidnary | AI-Powered UGC Videos for E-commerce',
+  title: 'UGCFirst | AI-Powered UGC Videos for E-commerce',
   description: 'Turn product images into viral UGC videos in minutes. AI avatars, viral scripts, no actors needed. Built for dropshippers.',
   icons: {
     icon: [
@@ -37,25 +40,25 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: 'Vidnary | AI-Powered UGC Videos',
+    title: 'UGCFirst | AI-Powered UGC Videos',
     description: 'Turn product images into viral UGC videos in minutes. No actors. No editors. No $200 invoices.',
-    url: 'https://vidnary.com',
-    siteName: 'Vidnary',
+    url: 'https://ugcfirst.com',
+    siteName: 'UGCFirst',
     images: [
       {
-        url: 'https://vidnary.com/og-image.png',
+        url: 'https://ugcfirst.com/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Vidnary - AI UGC Videos',
+        alt: 'UGCFirst - AI UGC Videos',
       },
     ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vidnary | AI-Powered UGC Videos',
+    title: 'UGCFirst | AI-Powered UGC Videos',
     description: 'Turn product images into viral UGC videos in minutes.',
-    images: ['https://vidnary.com/og-image.png'],
+    images: ['https://ugcfirst.com/og-image.png'],
   },
 }
 
@@ -65,7 +68,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`dark ${syne.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`dark ${outfit.variable} ${satoshi.variable}`} suppressHydrationWarning>
       <body className="font-sans">
         <ToastProvider>
           {children}

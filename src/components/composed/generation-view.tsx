@@ -176,7 +176,7 @@ export function GenerationView({
         <motion.div
           className="absolute w-[500px] h-[500px] rounded-full blur-[80px]"
           style={{
-            background: 'radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(16,185,129,0.3) 0%, transparent 70%)',
             left: '-10%',
             top: '-10%',
           }}
@@ -196,7 +196,7 @@ export function GenerationView({
         <motion.div
           className="absolute w-[400px] h-[400px] rounded-full blur-[60px]"
           style={{
-            background: 'radial-gradient(circle, rgba(217,70,239,0.25) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(244,63,94,0.25) 0%, transparent 70%)',
             right: '-10%',
             bottom: '-10%',
           }}
@@ -218,7 +218,7 @@ export function GenerationView({
             key={i}
             className="absolute w-1 h-1 rounded-full"
             style={{
-              background: i % 2 === 0 ? ANIMATION_TOKENS.colors.indigo : ANIMATION_TOKENS.colors.fuchsia,
+              background: i % 2 === 0 ? ANIMATION_TOKENS.colors.mint : ANIMATION_TOKENS.colors.coral,
               left: `${10 + i * 12}%`,
               top: `${15 + (i % 4) * 20}%`,
             }}
@@ -285,7 +285,7 @@ export function GenerationView({
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 1, repeat: Infinity }}
           >
-            <Zap className="w-4 h-4 text-electric-indigo" />
+            <Zap className="w-4 h-4 text-mint" />
           </motion.div>
           <span>Usually takes {estimatedTime}</span>
         </motion.div>
@@ -313,12 +313,12 @@ export function GenerationView({
               animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Sparkles className="w-5 h-5 text-vibrant-fuchsia/60" />
+              <Sparkles className="w-5 h-5 text-coral/60" />
             </motion.div>
 
             <div className="flex items-center justify-center gap-2 text-sm">
               <motion.span
-                className="text-vibrant-fuchsia font-semibold font-mono"
+                className="text-coral font-semibold font-mono"
                 animate={{ opacity: [0.7, 1, 0.7] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
@@ -406,7 +406,7 @@ export function GenerationView({
                   key={`inner-${i}`}
                   className="absolute w-2 h-2 rounded-full"
                   style={{
-                    background: i % 3 === 0 ? '#10B981' : i % 3 === 1 ? '#6366F1' : '#D946EF',
+                    background: i % 3 === 0 ? '#10B981' : i % 3 === 1 ? '#10B981' : '#F43F5E',
                     left: '50%',
                     top: '50%',
                   }}
@@ -431,7 +431,7 @@ export function GenerationView({
                   key={`outer-${i}`}
                   className="absolute w-1.5 h-1.5 rounded-full"
                   style={{
-                    background: i % 3 === 0 ? '#10B981' : i % 3 === 1 ? '#6366F1' : '#D946EF',
+                    background: i % 3 === 0 ? '#10B981' : i % 3 === 1 ? '#10B981' : '#F43F5E',
                     left: '50%',
                     top: '50%',
                   }}
@@ -474,7 +474,7 @@ export function GenerationView({
                   <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
                     <path
                       d="M6 0L7 5L12 6L7 7L6 12L5 7L0 6L5 5L6 0Z"
-                      fill={i % 3 === 0 ? '#10B981' : i % 3 === 1 ? '#6366F1' : '#D946EF'}
+                      fill={i % 3 === 0 ? '#10B981' : i % 3 === 1 ? '#10B981' : '#F43F5E'}
                     />
                   </svg>
                 </motion.div>

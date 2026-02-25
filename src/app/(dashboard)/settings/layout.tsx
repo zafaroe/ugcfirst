@@ -36,7 +36,7 @@ export default function SettingsLayout({
         </FadeIn>
 
         {/* Tabs */}
-        <div className="border-b border-white/10">
+        <div className="border-b border-border-default">
           <nav className="flex gap-1 -mb-px">
             {settingsTabs.map((tab) => {
               const isActive = pathname === tab.href
@@ -55,14 +55,14 @@ export default function SettingsLayout({
                     icon={tab.icon}
                     className={cn(
                       'w-4 h-4 transition-all',
-                      isActive && 'text-electric-indigo drop-shadow-[0_0_6px_rgba(99,102,241,0.5)]'
+                      isActive && 'text-mint drop-shadow-[0_0_6px_rgba(16,185,129,0.5)]'
                     )}
                   />
                   {tab.label}
                   {isActive && (
                     <motion.div
                       layoutId="settings-tab-indicator"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-mint to-mint-dark"
                       transition={SPRING.bouncy}
                     />
                   )}

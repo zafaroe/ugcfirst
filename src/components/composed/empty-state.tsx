@@ -126,7 +126,7 @@ export function EmptyState({
         {IllustrationComponent ? (
           <div className="mb-6 relative">
             {/* Ambient glow behind illustration */}
-            <div className="absolute inset-0 blur-2xl bg-gradient-to-br from-electric-indigo/20 to-vibrant-fuchsia/10 rounded-full scale-150" />
+            <div className="absolute inset-0 blur-2xl bg-mint/10 rounded-full scale-150" />
             <div className="relative">
               <IllustrationComponent size={config.illustration} />
             </div>
@@ -134,7 +134,7 @@ export function EmptyState({
         ) : icon ? (
           <div
             className={cn(
-              'rounded-2xl bg-gradient-to-br from-electric-indigo/10 to-vibrant-fuchsia/10 flex items-center justify-center',
+              'rounded-2xl bg-mint/10 flex items-center justify-center',
               config.iconWrapper
             )}
           >

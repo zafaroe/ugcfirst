@@ -27,7 +27,7 @@ export function ProductCard({ product, isSelected = false, onSelect, className }
       onClick={() => onSelect?.(product)}
     >
       {/* Image */}
-      <div className="relative aspect-square bg-deep-space">
+      <div className="relative aspect-square bg-cream">
         <img
           src={product.image}
           alt={product.name}
@@ -36,8 +36,8 @@ export function ProductCard({ product, isSelected = false, onSelect, className }
 
         {/* Selected checkmark */}
         {isSelected && (
-          <div className="absolute inset-0 bg-electric-indigo/20 flex items-center justify-center">
-            <div className="w-10 h-10 rounded-full bg-electric-indigo flex items-center justify-center">
+          <div className="absolute inset-0 bg-mint/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-mint flex items-center justify-center">
               <FontAwesomeIcon icon={faCheck} className="w-5 h-5 text-white" />
             </div>
           </div>
@@ -67,7 +67,7 @@ export function AddProductCard({ onClick }: { onClick?: () => void }) {
     <Card
       hoverable
       padding="none"
-      className="overflow-hidden cursor-pointer border-2 border-dashed border-border-default hover:border-electric-indigo"
+      className="overflow-hidden cursor-pointer border-2 border-dashed border-border-default hover:border-mint"
       onClick={onClick}
     >
       <div className="aspect-square flex flex-col items-center justify-center gap-2 text-text-muted hover:text-text-primary transition-colors">

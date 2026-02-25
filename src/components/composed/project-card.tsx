@@ -34,7 +34,7 @@ export function ProjectCard({
       onClick={() => onView?.(project)}
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video bg-deep-space overflow-hidden">
+      <div className="relative aspect-video bg-cream overflow-hidden">
         {project.thumbnail ? (
           <motion.img
             src={project.thumbnail}
@@ -60,7 +60,7 @@ export function ProjectCard({
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="w-14 h-14 rounded-full bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia flex items-center justify-center"
+              className="w-14 h-14 rounded-full bg-gradient-to-r from-mint to-mint-dark flex items-center justify-center"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               transition={SPRING.bouncy}
@@ -156,11 +156,11 @@ export function ProjectCardSkeleton() {
   return (
     <Card padding="none" className="overflow-hidden">
       <motion.div
-        className="aspect-video bg-deep-space"
+        className="aspect-video bg-cream"
         animate={{
           background: [
-            'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-            'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
+            'linear-gradient(90deg, #0C0A09 0%, #FAFAF9 50%, #0C0A09 100%)',
+            'linear-gradient(90deg, #FAFAF9 0%, #0C0A09 50%, #FAFAF9 100%)',
           ],
         }}
         transition={{
@@ -171,11 +171,11 @@ export function ProjectCardSkeleton() {
       />
       <div className="p-4 space-y-3">
         <motion.div
-          className="h-5 bg-deep-space rounded w-3/4"
+          className="h-5 bg-cream rounded w-3/4"
           animate={{
             background: [
-              'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-              'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
+              'linear-gradient(90deg, #0C0A09 0%, #FAFAF9 50%, #0C0A09 100%)',
+              'linear-gradient(90deg, #FAFAF9 0%, #0C0A09 50%, #FAFAF9 100%)',
             ],
           }}
           transition={{
@@ -186,11 +186,11 @@ export function ProjectCardSkeleton() {
           }}
         />
         <motion.div
-          className="h-4 bg-deep-space rounded w-1/2"
+          className="h-4 bg-cream rounded w-1/2"
           animate={{
             background: [
-              'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-              'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
+              'linear-gradient(90deg, #0C0A09 0%, #FAFAF9 50%, #0C0A09 100%)',
+              'linear-gradient(90deg, #FAFAF9 0%, #0C0A09 50%, #FAFAF9 100%)',
             ],
           }}
           transition={{

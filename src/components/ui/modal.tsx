@@ -90,7 +90,7 @@ export function Modal({
         <div className="fixed inset-0 z-50">
           {/* Overlay */}
           <motion.div
-            className="fixed inset-0 bg-deep-space/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-cream/80 backdrop-blur-sm"
             variants={overlayVariants}
             initial="hidden"
             animate="visible"
@@ -103,7 +103,8 @@ export function Modal({
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <motion.div
               className={cn(
-                'bg-surface rounded-xl shadow-2xl w-full p-6 relative',
+                'bg-surface rounded-2xl w-full p-6 relative overflow-hidden',
+                'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(16,185,129,0.1)]',
                 sizeClasses[size],
                 className
               )}
@@ -114,6 +115,15 @@ export function Modal({
               transition={SPRING.bouncy}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Subtle gradient border glow */}
+              <motion.div
+                className="absolute inset-0 rounded-2xl pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, transparent 50%, rgba(16, 185, 129, 0.05) 100%)',
+                }}
+              />
               {/* Close button */}
               {showCloseButton && (
                 <motion.button

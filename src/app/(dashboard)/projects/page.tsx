@@ -312,7 +312,7 @@ export default function ProjectsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 leftIcon={<FontAwesomeIcon icon={faMagnifyingGlass} className="w-4 h-4" />}
-                className="focus:shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-shadow"
+                className="focus:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-shadow"
               />
             </div>
             <div className="flex gap-2">

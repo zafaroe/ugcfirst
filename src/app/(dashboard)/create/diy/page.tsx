@@ -160,8 +160,8 @@ export default function DIYCreatePage() {
             </Button>
           </Link>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-text-primary">DIY Mode</h1>
-            <p className="text-text-muted">Create your video step by step</p>
+            <h1 className="text-2xl font-bold text-text-primary">Studio</h1>
+            <p className="text-text-muted">Direct your video, step by step</p>
           </div>
           <CreditBadge amount={totalCreditCost} size="lg" />
         </div>
@@ -187,9 +187,9 @@ export default function DIYCreatePage() {
                   <span className={cn(
                     'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300',
                     index < currentStepIndex
-                      ? 'bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]'
+                      ? 'bg-gradient-to-r from-mint to-mint-dark text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]'
                       : index === currentStepIndex
-                      ? 'bg-electric-indigo/20 text-electric-indigo ring-2 ring-electric-indigo/50'
+                      ? 'bg-mint/20 text-mint ring-2 ring-mint/50'
                       : 'bg-surface text-text-muted'
                   )}>
                     {step.icon}
@@ -314,8 +314,8 @@ export default function DIYCreatePage() {
                           className={cn(
                             'rounded-xl border transition-all duration-200',
                             isActive
-                              ? 'border-electric-indigo/50 bg-electric-indigo/5'
-                              : 'border-border-default bg-deep-space'
+                              ? 'border-mint/50 bg-mint/5'
+                              : 'border-border-default bg-cream'
                           )}
                         >
                           <div
@@ -361,7 +361,7 @@ export default function DIYCreatePage() {
 
                     {/* Hook Examples */}
                     {activeSection && (
-                      <div className="p-4 rounded-xl bg-elevated/50">
+                      <div className="p-4 rounded-xl bg-surface-raised/50">
                         <div className="flex items-center gap-2 mb-3">
                           <Lightbulb className="w-4 h-4 text-amber-500" />
                           <span className="text-sm font-medium text-text-primary">
@@ -377,7 +377,7 @@ export default function DIYCreatePage() {
                               <button
                                 key={i}
                                 onClick={() => useHookExample(personalizedHook)}
-                                className="text-xs px-3 py-1.5 rounded-full bg-surface border border-border-default text-text-muted hover:text-text-primary hover:border-electric-indigo/50 transition-colors"
+                                className="text-xs px-3 py-1.5 rounded-full bg-surface border border-border-default text-text-muted hover:text-text-primary hover:border-mint/50 transition-colors"
                               >
                                 {personalizedHook.substring(0, 40)}...
                               </button>
@@ -437,13 +437,13 @@ export default function DIYCreatePage() {
                 </CardDescription>
               </div>
               <div className="space-y-4">
-                <div className="p-4 bg-deep-space rounded-lg">
+                <div className="p-4 bg-cream rounded-lg">
                   <h4 className="text-sm font-medium text-text-muted mb-2">Product</h4>
                   <p className="text-text-primary">
                     {mockProducts.find(p => p.id === selectedProduct)?.name || 'No product selected'}
                   </p>
                 </div>
-                <div className="p-4 bg-deep-space rounded-lg">
+                <div className="p-4 bg-cream rounded-lg">
                   <h4 className="text-sm font-medium text-text-muted mb-2">Template</h4>
                   <p className="text-text-primary">
                     {selectedTemplate?.name || 'No template selected'}
@@ -454,13 +454,13 @@ export default function DIYCreatePage() {
                     </p>
                   )}
                 </div>
-                <div className="p-4 bg-deep-space rounded-lg">
+                <div className="p-4 bg-cream rounded-lg">
                   <h4 className="text-sm font-medium text-text-muted mb-2">Avatar</h4>
                   <p className="text-text-primary">
                     {mockAvatars.find(a => a.id === selectedAvatar)?.name || 'No avatar selected'}
                   </p>
                 </div>
-                <div className="p-4 bg-deep-space rounded-lg">
+                <div className="p-4 bg-cream rounded-lg">
                   <h4 className="text-sm font-medium text-text-muted mb-2">Script</h4>
                   {selectedTemplate && script ? (
                     <div className="space-y-2">
@@ -485,12 +485,12 @@ export default function DIYCreatePage() {
                     </p>
                   )}
                 </div>
-                <div className="p-4 bg-deep-space rounded-lg">
+                <div className="p-4 bg-cream rounded-lg">
                   <h4 className="text-sm font-medium text-text-muted mb-2">Options</h4>
                   <div className="flex items-center gap-2">
                     <Sparkles className={cn(
                       'w-4 h-4',
-                      captionsEnabled ? 'text-electric-indigo' : 'text-text-muted'
+                      captionsEnabled ? 'text-mint' : 'text-text-muted'
                     )} />
                     <span className="text-text-primary">
                       Auto Captions: {captionsEnabled ? 'Enabled (+1 credit)' : 'Disabled'}

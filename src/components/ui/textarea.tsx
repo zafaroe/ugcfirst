@@ -37,13 +37,13 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             maxLength={maxLength}
             onChange={handleChange}
             className={cn(
-              'w-full min-h-[120px] bg-deep-space border rounded-lg px-4 py-3',
+              'w-full min-h-[120px] bg-cream border rounded-lg px-4 py-3',
               'text-text-primary placeholder:text-text-muted',
               'transition-colors duration-200 resize-y',
-              'focus:outline-none focus:ring-2 focus:ring-electric-indigo/50',
+              'focus:outline-none focus:ring-2 focus:ring-mint/50',
               error
                 ? 'border-status-error focus:border-status-error'
-                : 'border-border-default focus:border-electric-indigo',
+                : 'border-border-default focus:border-mint',
               className
             )}
             {...props}

@@ -33,8 +33,8 @@ function TimelineItem({
       className={cn(
         'relative w-full text-left p-3 rounded-lg transition-all duration-200',
         isActive
-          ? 'bg-surface border border-electric-indigo/50'
-          : 'hover:bg-elevated/50'
+          ? 'bg-surface border border-mint/50'
+          : 'hover:bg-surface-raised/50'
       )}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
@@ -66,7 +66,7 @@ function TimelineItem({
           </div>
 
           {/* Progress bar */}
-          <div className="mt-1.5 h-1 bg-elevated rounded-full overflow-hidden">
+          <div className="mt-1.5 h-1 bg-surface-raised rounded-full overflow-hidden">
             <motion.div
               className={cn('h-full rounded-full', section.color)}
               initial={{ width: 0 }}

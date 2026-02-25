@@ -59,7 +59,7 @@ export function ScriptPreview({
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center">
               <FileText className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -110,10 +110,10 @@ export function ScriptPreview({
         </div>
 
         {/* Hook Line Highlight */}
-        <div className="mb-4 p-3 rounded-lg bg-electric-indigo/10 border border-electric-indigo/20">
+        <div className="mb-4 p-3 rounded-lg bg-mint/10 border border-mint/20">
           <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-electric-indigo" />
-            <span className="text-xs font-medium text-electric-indigo uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-mint" />
+            <span className="text-xs font-medium text-mint uppercase tracking-wider">
               Hook Line
             </span>
           </div>
@@ -133,7 +133,7 @@ export function ScriptPreview({
               <Textarea
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
-                className="min-h-[200px] bg-deep-space text-text-primary"
+                className="min-h-[200px] bg-cream text-text-primary"
                 placeholder="Edit your script..."
               />
             </motion.div>
@@ -148,13 +148,13 @@ export function ScriptPreview({
             >
               {isRegenerating && (
                 <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
-                  <div className="flex items-center gap-2 text-electric-indigo">
+                  <div className="flex items-center gap-2 text-mint">
                     <RefreshCw className="w-5 h-5 animate-spin" />
                     <span className="font-medium">Regenerating script...</span>
                   </div>
                 </div>
               )}
-              <div className="p-4 rounded-lg bg-deep-space border border-border-default">
+              <div className="p-4 rounded-lg bg-cream border border-border-default">
                 <pre className="whitespace-pre-wrap font-sans text-sm text-text-primary leading-relaxed">
                   {scriptContent}
                 </pre>
@@ -189,27 +189,27 @@ export function ScriptPreviewSkeleton() {
     <Card className="bg-surface border border-border-default p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-elevated animate-pulse" />
+          <div className="w-8 h-8 rounded-lg bg-surface-raised animate-pulse" />
           <div className="space-y-1">
-            <div className="h-4 w-32 bg-elevated rounded animate-pulse" />
-            <div className="h-3 w-24 bg-elevated rounded animate-pulse" />
+            <div className="h-4 w-32 bg-surface-raised rounded animate-pulse" />
+            <div className="h-3 w-24 bg-surface-raised rounded animate-pulse" />
           </div>
         </div>
       </div>
-      <div className="p-3 rounded-lg bg-elevated/50 mb-4">
-        <div className="h-3 w-16 bg-elevated rounded animate-pulse mb-2" />
-        <div className="h-5 w-3/4 bg-elevated rounded animate-pulse" />
+      <div className="p-3 rounded-lg bg-surface-raised/50 mb-4">
+        <div className="h-3 w-16 bg-surface-raised rounded animate-pulse mb-2" />
+        <div className="h-5 w-3/4 bg-surface-raised rounded animate-pulse" />
       </div>
-      <div className="p-4 rounded-lg bg-deep-space space-y-2">
-        <div className="h-4 w-full bg-elevated rounded animate-pulse" />
-        <div className="h-4 w-5/6 bg-elevated rounded animate-pulse" />
-        <div className="h-4 w-full bg-elevated rounded animate-pulse" />
-        <div className="h-4 w-3/4 bg-elevated rounded animate-pulse" />
-        <div className="h-4 w-2/3 bg-elevated rounded animate-pulse" />
+      <div className="p-4 rounded-lg bg-cream space-y-2">
+        <div className="h-4 w-full bg-surface-raised rounded animate-pulse" />
+        <div className="h-4 w-5/6 bg-surface-raised rounded animate-pulse" />
+        <div className="h-4 w-full bg-surface-raised rounded animate-pulse" />
+        <div className="h-4 w-3/4 bg-surface-raised rounded animate-pulse" />
+        <div className="h-4 w-2/3 bg-surface-raised rounded animate-pulse" />
       </div>
       <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border-default">
-        <div className="h-4 w-20 bg-elevated rounded animate-pulse" />
-        <div className="h-4 w-24 bg-elevated rounded animate-pulse" />
+        <div className="h-4 w-20 bg-surface-raised rounded animate-pulse" />
+        <div className="h-4 w-24 bg-surface-raised rounded animate-pulse" />
       </div>
     </Card>
   );

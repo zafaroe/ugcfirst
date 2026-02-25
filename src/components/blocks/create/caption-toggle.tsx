@@ -24,8 +24,8 @@ export function CaptionToggle({ enabled, onToggle, className }: CaptionTogglePro
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-elevated">
-            <Type className="w-5 h-5 text-electric-indigo" />
+          <div className="p-2 rounded-lg bg-surface-raised">
+            <Type className="w-5 h-5 text-mint" />
           </div>
           <div>
             <p className="text-sm font-medium text-text-primary">Auto Subtitles</p>
@@ -37,7 +37,7 @@ export function CaptionToggle({ enabled, onToggle, className }: CaptionTogglePro
           <span
             className={cn(
               'text-xs font-medium transition-colors',
-              enabled ? 'text-electric-indigo' : 'text-text-muted'
+              enabled ? 'text-mint' : 'text-text-muted'
             )}
           >
             {enabled ? '+1 credit' : 'Off'}
@@ -48,8 +48,8 @@ export function CaptionToggle({ enabled, onToggle, className }: CaptionTogglePro
             className={cn(
               'relative w-12 h-6 rounded-full transition-colors',
               enabled
-                ? 'bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia'
-                : 'bg-elevated'
+                ? 'bg-gradient-to-r from-mint to-mint-dark'
+                : 'bg-surface-raised'
             )}
           >
             <motion.div
@@ -75,7 +75,7 @@ export function CaptionToggle({ enabled, onToggle, className }: CaptionTogglePro
               Hormozi-Style Subtitles
             </span>
           </div>
-          <div className="bg-elevated rounded-lg p-3">
+          <div className="bg-surface-raised rounded-lg p-3">
             <p className="text-center text-sm">
               <span className="text-white">I was </span>
               <span className="text-amber-400 font-bold">SO</span>
@@ -121,8 +121,8 @@ export function CaptionToggleCompact({
         className={cn(
           'relative w-10 h-5 rounded-full transition-colors',
           enabled
-            ? 'bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia'
-            : 'bg-elevated'
+            ? 'bg-gradient-to-r from-mint to-mint-dark'
+            : 'bg-surface-raised'
         )}
       >
         <motion.div
@@ -135,7 +135,7 @@ export function CaptionToggleCompact({
         <Type className="w-4 h-4 text-text-muted" />
         <span className="text-sm text-text-primary">Subtitles</span>
         {enabled && (
-          <span className="text-xs text-electric-indigo font-medium">+1</span>
+          <span className="text-xs text-mint font-medium">+1</span>
         )}
       </div>
     </label>

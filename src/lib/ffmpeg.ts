@@ -337,14 +337,14 @@ function generateTempPath(prefix: string, extension: string): string {
   const tempDir = os.tmpdir();
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(7);
-  return path.join(tempDir, `vidnary_${prefix}_${timestamp}_${random}${extension}`);
+  return path.join(tempDir, `ugcfirst_${prefix}_${timestamp}_${random}${extension}`);
 }
 
 /**
  * Clean up a temporary file
  */
 export function cleanupTempFile(filePath: string): void {
-  if (filePath.includes('vidnary_') && fs.existsSync(filePath)) {
+  if (filePath.includes('ugcfirst_') && fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
   }
 }

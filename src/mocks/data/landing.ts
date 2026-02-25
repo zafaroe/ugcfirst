@@ -10,7 +10,7 @@ export const mockTestimonials: Testimonial[] = [
     name: 'Sarah Chen',
     role: 'Dropshipper, 6-figure store',
     avatar: '', // Will use initials fallback
-    quote: 'I went from posting 2 videos a week to 2 per day. My engagement tripled and sales followed. Vidnary paid for itself in the first week.',
+    quote: 'I went from posting 2 videos a week to 2 per day. My engagement tripled and sales followed. UGCFirst paid for itself in the first week.',
     rating: 5,
   },
   {
@@ -36,7 +36,7 @@ export const mockLandingFAQ: AccordionItem[] = [
   {
     id: 'faq_1',
     question: 'How fast can I create a video?',
-    answer: 'Under 5 minutes. Paste your product link, pick an avatar, and our AI handles the script, voice, and editing. While competitors like MakeUGC take 10+ minutes and Creatify requires manual tweaking, Vidnary is truly hands-off.',
+    answer: 'Under 5 minutes. Paste your product link, pick an avatar, and our AI handles the script, voice, and editing. While competitors like MakeUGC take 10+ minutes and Creatify requires manual tweaking, UGCFirst is truly hands-off.',
   },
   {
     id: 'faq_2',
@@ -46,7 +46,7 @@ export const mockLandingFAQ: AccordionItem[] = [
   {
     id: 'faq_3',
     question: 'Do I need video editing skills?',
-    answer: 'Zero. Unlike Creatify where most users need post-production editing, Vidnary outputs polished, ready-to-post videos. Just upload and watch your engagement grow.',
+    answer: 'Zero. Unlike Creatify where most users need post-production editing, UGCFirst outputs polished, ready-to-post videos. Just upload and watch your engagement grow.',
   },
   {
     id: 'faq_4',
@@ -58,6 +58,52 @@ export const mockLandingFAQ: AccordionItem[] = [
     question: 'What if I need changes?',
     answer: 'Instant regeneration at a fraction of the cost. Change avatars, tweak scripts, or try new hooks—all without starting over. Most edits take under 2 minutes.',
   },
+  {
+    id: 'faq_6',
+    question: 'Is there a free plan?',
+    answer: 'Yes! Get 1 video completely free on signup. No credit card required. Just sign up and start creating — upgrade when you need more.',
+  },
+  {
+    id: 'faq_7',
+    question: 'What platforms do you support?',
+    answer: 'TikTok, Instagram Reels, YouTube Shorts, and Facebook. All videos are optimized for vertical 9:16 format with captions, hooks, and CTAs that drive engagement on each platform.',
+  },
+]
+
+// Use case personas for landing page
+export const mockPersonas = [
+  {
+    id: 'dropshippers',
+    title: 'Dropshippers',
+    icon: 'Package',
+    description: 'Test products faster with instant video ads. No need to wait for samples or hire creators.',
+    stat: '3.1x avg. ROAS',
+    benefits: ['Test 10 products/week', 'No product samples needed', 'TikTok Shop optimized'],
+  },
+  {
+    id: 'ecommerce',
+    title: 'E-commerce Brands',
+    icon: 'Store',
+    description: 'Scale your content library. Create 20+ unique videos per month from your existing product catalog.',
+    stat: '20+ videos/month',
+    benefits: ['Paste any product URL', 'Bulk video creation', 'A/B test creatives'],
+  },
+  {
+    id: 'agencies',
+    title: 'Agencies',
+    icon: 'Building2',
+    description: 'Deliver UGC videos to clients in hours, not weeks. Scale across multiple brands.',
+    stat: '90% cost savings',
+    benefits: ['Multi-brand support', 'Client-ready exports', 'White-label options'],
+  },
+  {
+    id: 'creators',
+    title: 'Content Creators',
+    icon: 'Camera',
+    description: 'Monetize your audience with product review videos. Auto-generated scripts from viral hooks.',
+    stat: '50x faster output',
+    benefits: ['Viral hook library', 'Multiple avatar styles', 'Cross-platform ready'],
+  },
 ]
 
 // FAQ Items for Pricing Page - Value-focused with competitor comparison
@@ -65,12 +111,12 @@ export const mockPricingFAQ: AccordionItem[] = [
   {
     id: 'pricing_faq_1',
     question: 'How do credits work?',
-    answer: '10 credits = 1 full video. Unlike Creatify where unused credits expire monthly, your Vidnary credits roll over for 12 months. We believe you shouldn\'t lose what you paid for.',
+    answer: '10 credits = 1 full video. Unlike Creatify where unused credits expire monthly, your UGCFirst credits roll over for 12 months. We believe you shouldn\'t lose what you paid for.',
   },
   {
     id: 'pricing_faq_2',
-    question: 'How does Vidnary compare to MakeUGC and Creatify?',
-    answer: 'The biggest difference? Your credits don\'t disappear. MakeUGC and Creatify expire unused credits monthly—you lose what you paid for. Vidnary credits roll over for 12 months. Plus, we\'re built specifically for dropshippers with natural lip-sync and zero post-production needed.',
+    question: 'How does UGCFirst compare to MakeUGC and Creatify?',
+    answer: 'The biggest difference? Your credits don\'t disappear. MakeUGC and Creatify expire unused credits monthly—you lose what you paid for. UGCFirst credits roll over for 12 months. Plus, we\'re built specifically for dropshippers with natural lip-sync and zero post-production needed.',
   },
   {
     id: 'pricing_faq_3',
@@ -80,19 +126,19 @@ export const mockPricingFAQ: AccordionItem[] = [
   {
     id: 'pricing_faq_4',
     question: 'Is there a free trial?',
-    answer: 'Better—3 free videos on signup. No credit card required. MakeUGC and Creatify both require payment upfront. We let you test first.',
+    answer: 'Better—1 free video on signup. No credit card required. MakeUGC and Creatify both require payment upfront. We let you test first.',
   },
   {
     id: 'pricing_faq_5',
-    question: 'Why is Vidnary better for dropshippers?',
+    question: 'Why is UGCFirst better for dropshippers?',
     answer: 'Built specifically for e-commerce. Paste any product URL, and our AI creates videos in one click. Trained on what converts on TikTok Shop. Competitors are generic video tools—we\'re laser-focused on helping you sell.',
   },
 ]
 
-// Comparison data for pricing page - Vidnary vs alternatives
+// Comparison data for pricing page - UGCFirst vs alternatives
 export interface ComparisonRow {
   feature: string
-  vidnary: string
+  ugcfirst: string
   diy: string
   freelancer: string
   agency: string
@@ -101,98 +147,98 @@ export interface ComparisonRow {
 export const mockComparisonData: ComparisonRow[] = [
   {
     feature: 'Cost per video',
-    vidnary: '$1.67-$2.95',
+    ugcfirst: '$1.67-$2.95',
     diy: '$0 (your time)',
     freelancer: '$150-300',
     agency: '$500-2000',
   },
   {
     feature: 'Time to create',
-    vidnary: '5 minutes',
+    ugcfirst: '5 minutes',
     diy: '4-8 hours',
     freelancer: '3-7 days',
     agency: '1-2 weeks',
   },
   {
     feature: 'Videos per month',
-    vidnary: 'Unlimited*',
+    ugcfirst: 'Unlimited*',
     diy: '2-4 (time limited)',
     freelancer: '4-8 (budget limited)',
     agency: '10-20',
   },
   {
     feature: 'Script writing',
-    vidnary: 'AI-powered',
+    ugcfirst: 'AI-powered',
     diy: 'You write',
     freelancer: 'Extra cost',
     agency: 'Included',
   },
   {
     feature: 'Revisions',
-    vidnary: 'Instant',
+    ugcfirst: 'Instant',
     diy: 'Re-do yourself',
     freelancer: '1-2 included',
     agency: '2-3 included',
   },
   {
     feature: 'Scale quickly',
-    vidnary: 'Yes',
+    ugcfirst: 'Yes',
     diy: 'No',
     freelancer: 'Difficult',
     agency: 'Expensive',
   },
 ]
 
-// Competitor comparison data - Vidnary vs MakeUGC vs Creatify
+// Competitor comparison data - UGCFirst vs MakeUGC vs Creatify
 export interface CompetitorComparisonRow {
   feature: string
-  vidnary: string
+  ugcfirst: string
   makeugc: string
   creatify: string
-  vidnaryWins?: boolean
+  ugcfirstWins?: boolean
 }
 
 export const mockCompetitorComparison: CompetitorComparisonRow[] = [
   {
     feature: 'Unused Credits',
-    vidnary: 'Roll over 12 months',
+    ugcfirst: 'Roll over 12 months',
     makeugc: 'Lost monthly',
     creatify: 'Lost monthly',
-    vidnaryWins: true,
+    ugcfirstWins: true,
   },
   {
     feature: 'Free Trial',
-    vidnary: '3 free videos',
+    ugcfirst: '1 free video',
     makeugc: 'No free trial',
     creatify: 'Watermarked only',
-    vidnaryWins: true,
+    ugcfirstWins: true,
   },
   {
     feature: 'Video Creation Time',
-    vidnary: '< 5 minutes',
+    ugcfirst: '< 5 minutes',
     makeugc: '2-10 minutes',
     creatify: '5-15 min + editing',
-    vidnaryWins: true,
+    ugcfirstWins: true,
   },
   {
     feature: 'Lip-Sync Quality',
-    vidnary: 'Natural',
+    ugcfirst: 'Natural',
     makeugc: 'Issues reported',
     creatify: 'Inconsistent',
-    vidnaryWins: true,
+    ugcfirstWins: true,
   },
   {
     feature: 'Post-Production Needed',
-    vidnary: 'No',
+    ugcfirst: 'No',
     makeugc: 'Sometimes',
     creatify: 'Often required',
-    vidnaryWins: true,
+    ugcfirstWins: true,
   },
   {
     feature: 'Built for Dropshippers',
-    vidnary: 'Yes',
+    ugcfirst: 'Yes',
     makeugc: 'No',
     creatify: 'No',
-    vidnaryWins: true,
+    ugcfirstWins: true,
   },
 ]

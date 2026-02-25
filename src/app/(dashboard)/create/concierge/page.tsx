@@ -63,7 +63,7 @@ const mapStatusToStage = (status: GenerationStatus): GenerationStage => {
 
 type InputMode = 'url' | 'manual'
 
-// Reel It In generation stages
+// Drop & Go generation stages
 const reelItInStages: GenerationStage[] = [
   'analyzing',
   'writing',
@@ -110,8 +110,8 @@ function StepIndicator({ currentStep }: { currentStep: ReelItInStep }) {
                   isCompleted
                     ? 'bg-status-success text-white'
                     : isCurrent
-                    ? 'bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia text-white shadow-lg shadow-electric-indigo/30'
-                    : 'bg-elevated text-text-muted'
+                    ? 'bg-gradient-to-r from-mint to-mint-dark text-white shadow-lg shadow-mint/30'
+                    : 'bg-surface-raised text-text-muted'
                 )}
                 initial={false}
                 animate={{
@@ -748,7 +748,7 @@ export default function ConciergePage() {
             className={cn(
               'flex-1 flex items-center justify-center gap-2.5 py-3.5 px-5 rounded-xl text-sm font-medium transition-all duration-300',
               inputMode === 'url'
-                ? 'bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia text-white shadow-lg shadow-electric-indigo/25'
+                ? 'bg-gradient-to-r from-mint to-mint-dark text-white shadow-lg shadow-mint/25'
                 : 'text-text-muted hover:text-text-primary hover:bg-surface/50'
             )}
           >
@@ -760,7 +760,7 @@ export default function ConciergePage() {
             className={cn(
               'flex-1 flex items-center justify-center gap-2.5 py-3.5 px-5 rounded-xl text-sm font-medium transition-all duration-300',
               inputMode === 'manual'
-                ? 'bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia text-white shadow-lg shadow-electric-indigo/25'
+                ? 'bg-gradient-to-r from-mint to-mint-dark text-white shadow-lg shadow-mint/25'
                 : 'text-text-muted hover:text-text-primary hover:bg-surface/50'
             )}
           >
@@ -788,12 +788,12 @@ export default function ConciergePage() {
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 >
                   <motion.div
-                    className="absolute inset-0 rounded-2xl bg-vibrant-fuchsia/30 blur-xl"
+                    className="absolute inset-0 rounded-2xl bg-coral/30 blur-xl"
                     animate={{ opacity: [0.4, 0.6, 0.4] }}
                     transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                   />
                   <motion.div
-                    className="relative w-full h-full rounded-2xl bg-gradient-to-br from-vibrant-fuchsia to-pink-500 flex items-center justify-center shadow-lg shadow-vibrant-fuchsia/25"
+                    className="relative w-full h-full rounded-2xl bg-gradient-to-br from-coral to-pink-500 flex items-center justify-center shadow-lg shadow-coral/25"
                     whileHover={{ scale: 1.08, rotate: 3 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -831,7 +831,7 @@ export default function ConciergePage() {
                 />
 
                 <Button
-                  className="w-full shadow-lg shadow-electric-indigo/25"
+                  className="w-full shadow-lg shadow-mint/25"
                   size="lg"
                   onClick={handleContinueToReview}
                   disabled={!isValidUrl(productUrl) || isFetchingProduct || isCheckingCredits || hasInsufficientCredits}
@@ -870,7 +870,7 @@ export default function ConciergePage() {
                       You need at least {creditCost} credits to create a video.{' '}
                       <button
                         onClick={() => setShowInsufficientCreditsModal(true)}
-                        className="text-electric-indigo hover:underline"
+                        className="text-mint hover:underline"
                       >
                         Buy credits or upgrade your plan
                       </button>
@@ -891,13 +891,13 @@ export default function ConciergePage() {
 
               {/* How it works */}
               <motion.div
-                className="pt-6 border-t border-white/10"
+                className="pt-6 border-t border-border-default"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.35 }}
               >
                 <h4 className="text-sm font-semibold text-text-primary mb-5 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-electric-indigo" />
+                  <Sparkles className="w-4 h-4 text-mint" />
                   How it works
                 </h4>
                 <div className="space-y-4">
@@ -914,7 +914,7 @@ export default function ConciergePage() {
                       transition={{ duration: 0.4, delay: 0.45 + i * 0.1 }}
                     >
                       <motion.div
-                        className="w-8 h-8 rounded-full bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia text-white text-sm font-semibold flex items-center justify-center flex-shrink-0 shadow-md"
+                        className="w-8 h-8 rounded-full bg-gradient-to-br from-mint to-mint-dark text-white text-sm font-semibold flex items-center justify-center flex-shrink-0 shadow-md"
                         whileHover={{ scale: 1.1 }}
                         transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                       >
@@ -938,12 +938,12 @@ export default function ConciergePage() {
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 >
                   <motion.div
-                    className="absolute inset-0 rounded-2xl bg-electric-indigo/30 blur-xl"
+                    className="absolute inset-0 rounded-2xl bg-mint/30 blur-xl"
                     animate={{ opacity: [0.4, 0.6, 0.4] }}
                     transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                   />
                   <motion.div
-                    className="relative w-full h-full rounded-2xl bg-gradient-to-br from-electric-indigo to-blue-500 flex items-center justify-center shadow-lg shadow-electric-indigo/25"
+                    className="relative w-full h-full rounded-2xl bg-gradient-to-br from-mint to-blue-500 flex items-center justify-center shadow-lg shadow-mint/25"
                     whileHover={{ scale: 1.08, rotate: 3 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -973,7 +973,7 @@ export default function ConciergePage() {
               <ManualProductForm onChange={setManualProduct} />
 
               <Button
-                className="w-full shadow-lg shadow-electric-indigo/25"
+                className="w-full shadow-lg shadow-mint/25"
                 size="lg"
                 onClick={handleContinueToReview}
                 disabled={!canStartManual || isCheckingCredits || hasInsufficientCredits}
@@ -1007,7 +1007,7 @@ export default function ConciergePage() {
                     You need at least {creditCost} credits to create a video.{' '}
                     <button
                       onClick={() => setShowInsufficientCreditsModal(true)}
-                      className="text-electric-indigo hover:underline"
+                      className="text-mint hover:underline"
                     >
                       Buy credits or upgrade your plan
                     </button>
@@ -1078,7 +1078,7 @@ export default function ConciergePage() {
             Back
           </Button>
           <Button
-            className="flex-1 shadow-lg shadow-electric-indigo/25"
+            className="flex-1 shadow-lg shadow-mint/25"
             size="lg"
             onClick={handleStartGeneration}
             isLoading={isStartingGeneration}
@@ -1133,7 +1133,7 @@ export default function ConciergePage() {
               <h4 className="text-sm font-medium text-text-primary">Video Version</h4>
               <p className="text-xs text-text-muted">Choose which version to preview</p>
             </div>
-            <div className="flex items-center gap-1 p-1 bg-elevated rounded-lg">
+            <div className="flex items-center gap-1 p-1 bg-surface-raised rounded-lg">
               <button
                 onClick={() => setShowSubtitledVideo(true)}
                 className={cn(
@@ -1174,7 +1174,7 @@ export default function ConciergePage() {
             if (displayVideoUrl) {
               const link = document.createElement('a')
               link.href = displayVideoUrl
-              link.download = `vidnary-video${showSubtitledVideo ? '-subtitled' : ''}.mp4`
+              link.download = `ugcfirst-video${showSubtitledVideo ? '-subtitled' : ''}.mp4`
               document.body.appendChild(link)
               link.click()
               document.body.removeChild(link)
@@ -1234,9 +1234,9 @@ export default function ConciergePage() {
           </Link>
           <div className="flex-1">
             <h1 className="text-2xl font-bold">
-              <span className="gradient-text">Reel It In</span>
+              <span className="gradient-text">Drop & Go</span>
             </h1>
-            <p className="text-text-muted text-sm">AI-powered video creation service</p>
+            <p className="text-text-muted text-sm">Paste a link, get a viral video</p>
           </div>
           {step < 4 && <CreditBadge amount={creditCost} size="lg" />}
         </div>

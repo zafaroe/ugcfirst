@@ -11,8 +11,8 @@ interface IconProps {
 // Design System Colors - High contrast for visibility on gradient backgrounds
 const COLORS = {
   // Vibrant accents
-  indigo: '#6366F1',
-  fuchsia: '#D946EF',
+  indigo: '#10B981',
+  fuchsia: '#F43F5E',
   success: '#10B981',
   successDark: '#059669',
 
@@ -806,7 +806,7 @@ export function CompleteIcon({ size = 64, className }: IconProps) {
 export function SparkleIcon({ size = 64, className }: IconProps) {
   return (
     <svg
-      className={cn('text-electric-indigo', className)}
+      className={cn('text-mint', className)}
       width={size}
       height={size}
       viewBox="0 0 64 64"

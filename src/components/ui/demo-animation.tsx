@@ -35,7 +35,7 @@ export function DemoAnimation({ className }: { className?: string }) {
         {/* Phone Bezel */}
         <div className="relative bg-surface rounded-[2.5rem] p-3 shadow-2xl border border-border-default">
           {/* Screen */}
-          <div className="relative bg-deep-space rounded-[2rem] overflow-hidden aspect-[9/16]">
+          <div className="relative bg-cream rounded-[2rem] overflow-hidden aspect-[9/16]">
             <AnimatePresence mode="wait">
               {state === 'input' && <InputState key="input" />}
               {state === 'processing' && <ProcessingState key="processing" />}
@@ -64,7 +64,7 @@ function StepDot({ label, active }: { label: string; active: boolean }) {
       <motion.div
         className={cn(
           'w-2.5 h-2.5 rounded-full transition-colors duration-300',
-          active ? 'bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia' : 'bg-border-default'
+          active ? 'bg-gradient-to-r from-mint to-mint-dark' : 'bg-border-default'
         )}
         animate={active ? { scale: [1, 1.2, 1] } : { scale: 1 }}
         transition={{ duration: 0.5, repeat: active ? Infinity : 0, repeatDelay: 0.5 }}
@@ -99,7 +99,7 @@ function InputState() {
 
       {/* URL Input Animation */}
       <div className="p-4">
-        <div className="bg-elevated rounded-lg p-3 border border-border-default">
+        <div className="bg-surface-raised rounded-lg p-3 border border-border-default">
           <TypewriterText text="amazon.com/dp/B08N5..." />
         </div>
       </div>
@@ -111,10 +111,10 @@ function InputState() {
         transition={{ delay: 0.8, duration: 0.4 }}
         className="flex-1 p-4"
       >
-        <div className="bg-elevated rounded-xl p-3 border border-border-default h-full">
+        <div className="bg-surface-raised rounded-xl p-3 border border-border-default h-full">
           {/* Product Image Placeholder */}
-          <div className="bg-gradient-to-br from-electric-indigo/20 to-vibrant-fuchsia/20 rounded-lg aspect-square mb-3 flex items-center justify-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-electric-indigo/40 to-vibrant-fuchsia/40 rounded-lg" />
+          <div className="bg-gradient-to-br from-mint/20 to-coral/20 rounded-lg aspect-square mb-3 flex items-center justify-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-mint/40 to-coral/40 rounded-lg" />
           </div>
           {/* Product Info */}
           <div className="space-y-2">
@@ -141,7 +141,7 @@ function ProcessingState() {
       {/* Shimmer Background */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-electric-indigo/10 to-transparent"
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-mint/10 to-transparent"
           animate={{ x: ['-100%', '100%'] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
         />
@@ -151,7 +151,7 @@ function ProcessingState() {
       {[...Array(8)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-2 h-2 rounded-full bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia"
+          className="absolute w-2 h-2 rounded-full bg-gradient-to-r from-mint to-mint-dark"
           style={{
             left: `${20 + (i % 4) * 20}%`,
             top: `${20 + Math.floor(i / 4) * 40}%`,
@@ -178,7 +178,7 @@ function ProcessingState() {
           transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
           className="mb-4"
         >
-          <Sparkles className="w-12 h-12 text-electric-indigo mx-auto" />
+          <Sparkles className="w-12 h-12 text-mint mx-auto" />
         </motion.div>
         <p className="text-text-primary font-medium mb-2">AI is creating your video</p>
         <p className="text-text-muted text-sm">Analyzing product...</p>
@@ -186,7 +186,7 @@ function ProcessingState() {
         {/* Progress Bar */}
         <div className="mt-4 w-48 h-1.5 bg-border-default rounded-full overflow-hidden mx-auto">
           <motion.div
-            className="h-full bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia rounded-full"
+            className="h-full bg-gradient-to-r from-mint to-mint-dark rounded-full"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
             transition={{ duration: 2.2, ease: 'easeInOut' }}
@@ -210,7 +210,7 @@ function OutputState() {
       {/* Video Player Mockup */}
       <div className="flex-1 relative">
         {/* Video Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-deep-space via-surface to-deep-space" />
+        <div className="absolute inset-0 bg-gradient-to-br from-cream via-surface to-cream" />
 
         {/* Avatar in Video */}
         <motion.div
@@ -221,7 +221,7 @@ function OutputState() {
         >
           {/* Avatar Circle */}
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center">
               <User className="w-12 h-12 text-white" />
             </div>
             {/* Speaking Animation */}
@@ -238,9 +238,9 @@ function OutputState() {
           initial={{ x: 50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.4 }}
-          className="absolute bottom-20 right-4 w-16 h-16 bg-elevated rounded-lg border border-border-default overflow-hidden"
+          className="absolute bottom-20 right-4 w-16 h-16 bg-surface-raised rounded-lg border border-border-default overflow-hidden"
         >
-          <div className="w-full h-full bg-gradient-to-br from-electric-indigo/30 to-vibrant-fuchsia/30" />
+          <div className="w-full h-full bg-gradient-to-br from-mint/30 to-coral/30" />
         </motion.div>
 
         {/* Play Button Overlay */}
@@ -262,7 +262,7 @@ function OutputState() {
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xs text-text-muted">0:00</span>
           <div className="flex-1 h-1 bg-border-default rounded-full overflow-hidden">
-            <div className="w-0 h-full bg-electric-indigo rounded-full" />
+            <div className="w-0 h-full bg-mint rounded-full" />
           </div>
           <span className="text-xs text-text-muted">0:32</span>
         </div>
@@ -283,7 +283,7 @@ function OutputState() {
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.9 }}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia rounded-lg text-white text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-mint to-mint-dark rounded-lg text-white text-sm font-medium"
           >
             <Download className="w-4 h-4" />
             Download
@@ -315,7 +315,7 @@ function TypewriterText({ text }: { text: string }) {
       <motion.span
         animate={{ opacity: [1, 0] }}
         transition={{ duration: 0.5, repeat: Infinity }}
-        className="text-electric-indigo"
+        className="text-mint"
       >
         |
       </motion.span>

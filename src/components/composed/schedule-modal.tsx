@@ -194,7 +194,7 @@ export function ScheduleModal({
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center">
                     <Calendar className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -208,7 +208,7 @@ export function ScheduleModal({
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg hover:bg-elevated transition-colors"
+                  className="p-2 rounded-lg hover:bg-surface-raised transition-colors"
                 >
                   <X className="w-5 h-5 text-text-muted" />
                 </button>
@@ -250,8 +250,8 @@ export function ScheduleModal({
                             className={cn(
                               'p-3 rounded-xl border-2 transition-all',
                               isSelected
-                                ? 'border-electric-indigo bg-electric-indigo/10'
-                                : 'border-border-default hover:border-electric-indigo/50'
+                                ? 'border-mint bg-mint/10'
+                                : 'border-border-default hover:border-mint/50'
                             )}
                           >
                             <div
@@ -300,12 +300,12 @@ export function ScheduleModal({
                         className={cn(
                           'p-4 rounded-xl border-2 transition-all text-left',
                           scheduleType === 'now'
-                            ? 'border-electric-indigo bg-electric-indigo/10'
-                            : 'border-border-default hover:border-electric-indigo/50'
+                            ? 'border-mint bg-mint/10'
+                            : 'border-border-default hover:border-mint/50'
                         )}
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <CheckCircle2 className="w-4 h-4 text-electric-indigo" />
+                          <CheckCircle2 className="w-4 h-4 text-mint" />
                           <span className="font-medium text-text-primary">
                             Post Now
                           </span>
@@ -319,12 +319,12 @@ export function ScheduleModal({
                         className={cn(
                           'p-4 rounded-xl border-2 transition-all text-left',
                           scheduleType === 'later'
-                            ? 'border-electric-indigo bg-electric-indigo/10'
-                            : 'border-border-default hover:border-electric-indigo/50'
+                            ? 'border-mint bg-mint/10'
+                            : 'border-border-default hover:border-mint/50'
                         )}
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <Clock className="w-4 h-4 text-electric-indigo" />
+                          <Clock className="w-4 h-4 text-mint" />
                           <span className="font-medium text-text-primary">
                             Schedule
                           </span>
@@ -354,7 +354,7 @@ export function ScheduleModal({
                             value={scheduledDate}
                             onChange={(e) => setScheduledDate(e.target.value)}
                             min={today}
-                            className="w-full px-4 py-2.5 bg-deep-space border border-border-default rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-electric-indigo/50"
+                            className="w-full px-4 py-2.5 bg-cream border border-border-default rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-mint/50"
                           />
                         </div>
                         <div>
@@ -365,7 +365,7 @@ export function ScheduleModal({
                             type="time"
                             value={scheduledTime}
                             onChange={(e) => setScheduledTime(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-deep-space border border-border-default rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-electric-indigo/50"
+                            className="w-full px-4 py-2.5 bg-cream border border-border-default rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-mint/50"
                           />
                         </div>
                       </div>

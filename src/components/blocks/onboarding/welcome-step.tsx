@@ -14,7 +14,7 @@ const features = [
     icon: Video,
     title: 'AI Avatars',
     desc: 'Realistic presenters for your products',
-    gradient: 'from-electric-indigo to-blue-500',
+    gradient: 'from-mint to-blue-500',
   },
   {
     icon: Zap,
@@ -26,7 +26,7 @@ const features = [
     icon: TrendingUp,
     title: 'Viral Ready',
     desc: 'Optimized for TikTok & Reels',
-    gradient: 'from-vibrant-fuchsia to-pink-500',
+    gradient: 'from-coral to-pink-500',
   },
 ]
 
@@ -51,7 +51,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         Welcome to{' '}
-        <span className="gradient-text">Vidnary</span>
+        <span className="gradient-text">UGCFirst</span>
       </motion.h1>
 
       {/* Subtitle */}
@@ -71,9 +71,9 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
       >
-        <Sparkles className="w-4 h-4 text-electric-indigo" />
+        <Sparkles className="w-4 h-4 text-mint" />
         <span>Hey there, ready to create your first winner?</span>
-        <Sparkles className="w-4 h-4 text-vibrant-fuchsia" />
+        <Sparkles className="w-4 h-4 text-coral" />
       </motion.div>
 
       {/* CTA Buttons */}
@@ -86,7 +86,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
         <Button
           size="lg"
           onClick={onNext}
-          className="shadow-lg shadow-electric-indigo/25"
+          className="shadow-lg shadow-mint/25"
         >
           Get Started
           <ArrowRight className="w-4 h-4 ml-2" />

@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1E293B"/>
-      <stop offset="100%" style="stop-color:#0F172A"/>
+      <stop offset="0%" style="stop-color:#F5F5F4"/>
+      <stop offset="100%" style="stop-color:#E7E5E4"/>
     </linearGradient>
   </defs>
   <rect width="600" height="600" fill="url(#bg)"/>
-  <rect x="200" y="100" width="200" height="300" rx="20" fill="#374151" stroke="#6366F1" stroke-width="4"/>
-  <rect x="270" y="400" width="60" height="100" fill="#6366F1"/>
-  <circle cx="300" cy="520" r="40" fill="#374151" stroke="#6366F1" stroke-width="4"/>
+  <rect x="200" y="100" width="200" height="300" rx="20" fill="#374151" stroke="#10B981" stroke-width="4"/>
+  <rect x="270" y="400" width="60" height="100" fill="#10B981"/>
+  <circle cx="300" cy="520" r="40" fill="#374151" stroke="#10B981" stroke-width="4"/>
   <text x="300" y="450" text-anchor="middle" fill="#F8FAFC" font-family="system-ui" font-size="28" font-weight="600">Phone Mount Ultra</text>
   <text x="300" y="500" text-anchor="middle" fill="#10B981" font-family="system-ui" font-size="32" font-weight="600">$24.99</text>
 </svg>

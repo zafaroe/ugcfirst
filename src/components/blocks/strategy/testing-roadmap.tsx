@@ -52,17 +52,17 @@ const phaseConfig = [
     icon: Rocket,
     emoji: '🚀',
     label: 'LAUNCH',
-    gradient: 'from-electric-indigo via-purple-500 to-vibrant-fuchsia',
-    glowColor: 'shadow-electric-indigo/40',
-    bgGlow: 'bg-electric-indigo/5',
-    borderGlow: 'hover:border-electric-indigo/50',
-    nodeColor: 'bg-electric-indigo',
+    gradient: 'from-mint-light to-mint-dark',
+    glowColor: 'shadow-mint/40',
+    bgGlow: 'bg-mint/5',
+    borderGlow: 'hover:border-mint/50',
+    nodeColor: 'bg-mint',
   },
   {
     icon: TrendingUp,
     emoji: '📈',
     label: 'SCALE',
-    gradient: 'from-amber-400 via-orange-500 to-red-500',
+    gradient: 'from-amber-400 to-amber-600',
     glowColor: 'shadow-amber-500/40',
     bgGlow: 'bg-amber-500/5',
     borderGlow: 'hover:border-amber-500/50',
@@ -72,7 +72,7 @@ const phaseConfig = [
     icon: Target,
     emoji: '🎯',
     label: 'OPTIMIZE',
-    gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
+    gradient: 'from-emerald-400 to-emerald-600',
     glowColor: 'shadow-emerald-500/40',
     bgGlow: 'bg-emerald-500/5',
     borderGlow: 'hover:border-emerald-500/50',
@@ -111,7 +111,7 @@ function TimelineNode({
         className={cn(
           'relative w-4 h-4 rounded-full',
           config.nodeColor,
-          'ring-4 ring-deep-space'
+          'ring-4 ring-cream'
         )}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
@@ -356,20 +356,20 @@ export function TestingRoadmap({ phases, className }: TestingRoadmapProps) {
         transition={{ delay: 0.8 }}
         className={cn(
           'mt-8 p-5 rounded-xl',
-          'bg-gradient-to-r from-electric-indigo/10 via-vibrant-fuchsia/5 to-electric-indigo/10',
-          'border border-electric-indigo/20',
+          'bg-mint/5',
+          'border border-mint/20',
           'relative overflow-hidden'
         )}
       >
         {/* Decorative glow */}
-        <div className="absolute top-0 left-1/4 w-32 h-32 bg-electric-indigo/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/4 w-32 h-32 bg-mint/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center flex-shrink-0">
             <Lightbulb className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-electric-indigo mb-1">Pro tip</p>
+            <p className="text-sm font-semibold text-mint mb-1">Pro tip</p>
             <p className="text-sm text-text-primary leading-relaxed">
               Don&apos;t skip Phase 1. Testing all 3 hooks first ensures you find
               your best performer before scaling spend.

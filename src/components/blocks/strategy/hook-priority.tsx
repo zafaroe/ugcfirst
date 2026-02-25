@@ -58,7 +58,7 @@ function HookCard({ hook, rank, className }: HookCardProps) {
         </div>
 
         {/* Hook Preview */}
-        <div className="mb-4 p-3 rounded-lg bg-deep-space border border-border-default">
+        <div className="mb-4 p-3 rounded-lg bg-cream border border-border-default">
           <p className="text-sm text-text-primary italic">
             &ldquo;{hook.openingLine}&rdquo;
           </p>
@@ -68,7 +68,7 @@ function HookCard({ hook, rank, className }: HookCardProps) {
         <div className="space-y-3">
           <div>
             <p className="text-xs font-medium text-text-muted mb-1.5 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-electric-indigo" />
+              <Sparkles className="w-3 h-3 text-mint" />
               Why This Works
             </p>
             <p className="text-sm text-text-primary">{hook.reasoning}</p>
@@ -89,7 +89,7 @@ function HookCard({ hook, rank, className }: HookCardProps) {
         {/* Play preview button */}
         {hook.scriptIndex !== undefined && (
           <div className="mt-4 pt-4 border-t border-border-default">
-            <button className="flex items-center gap-2 text-sm text-electric-indigo hover:text-vibrant-fuchsia transition-colors">
+            <button className="flex items-center gap-2 text-sm text-mint hover:text-coral transition-colors">
               <Play className="w-4 h-4" />
               Preview Script #{hook.scriptIndex + 1}
             </button>

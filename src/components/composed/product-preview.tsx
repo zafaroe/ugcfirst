@@ -36,7 +36,7 @@ export function ProductPreview({
           {/* Product Image */}
           <div
             className={cn(
-              'relative rounded-lg overflow-hidden bg-elevated flex-shrink-0',
+              'relative rounded-lg overflow-hidden bg-surface-raised flex-shrink-0',
               compact ? 'w-20 h-20' : 'w-full md:w-48 h-48'
             )}
           >
@@ -77,7 +77,7 @@ export function ProductPreview({
                   {product.name}
                 </h3>
                 {product.price && (
-                  <p className="text-electric-indigo font-medium mt-1">{product.price}</p>
+                  <p className="text-mint font-medium mt-1">{product.price}</p>
                 )}
               </div>
               {onEdit && (
@@ -131,7 +131,7 @@ export function ProductPreview({
                 href={product.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-electric-indigo hover:text-vibrant-fuchsia transition-colors mt-4"
+                className="inline-flex items-center gap-1 text-sm text-mint hover:text-coral transition-colors mt-4"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>View original product</span>
@@ -160,23 +160,23 @@ export function ProductPreviewSkeleton({ compact = false }: { compact?: boolean 
       <div className={cn('flex gap-5', compact ? 'flex-row items-start' : 'flex-col md:flex-row')}>
         <div
           className={cn(
-            'rounded-lg bg-elevated animate-pulse flex-shrink-0',
+            'rounded-lg bg-surface-raised animate-pulse flex-shrink-0',
             compact ? 'w-20 h-20' : 'w-full md:w-48 h-48'
           )}
         />
         <div className="flex-1 space-y-3">
-          <div className="h-6 bg-elevated rounded animate-pulse w-3/4" />
-          <div className="h-4 bg-elevated rounded animate-pulse w-1/4" />
+          <div className="h-6 bg-surface-raised rounded animate-pulse w-3/4" />
+          <div className="h-4 bg-surface-raised rounded animate-pulse w-1/4" />
           {!compact && (
             <>
-              <div className="h-4 bg-elevated rounded animate-pulse w-full" />
-              <div className="h-4 bg-elevated rounded animate-pulse w-2/3" />
+              <div className="h-4 bg-surface-raised rounded animate-pulse w-full" />
+              <div className="h-4 bg-surface-raised rounded animate-pulse w-2/3" />
             </>
           )}
           <div className="space-y-2 mt-4">
-            <div className="h-4 bg-elevated rounded animate-pulse w-1/2" />
-            <div className="h-4 bg-elevated rounded animate-pulse w-2/3" />
-            <div className="h-4 bg-elevated rounded animate-pulse w-1/2" />
+            <div className="h-4 bg-surface-raised rounded animate-pulse w-1/2" />
+            <div className="h-4 bg-surface-raised rounded animate-pulse w-2/3" />
+            <div className="h-4 bg-surface-raised rounded animate-pulse w-1/2" />
           </div>
         </div>
       </div>

@@ -28,7 +28,7 @@ export function Avatar({ src, alt, fallback, size = 'md', className }: AvatarPro
   return (
     <div
       className={cn(
-        'relative rounded-full overflow-hidden bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia',
+        'relative rounded-full overflow-hidden bg-gradient-to-br from-mint to-mint-dark',
         sizeClasses[size],
         className
       )}

@@ -31,7 +31,7 @@ export function AvatarCard({ avatar, isSelected = false, onSelect, className }: 
         <div
           className={cn(
             'w-full h-full rounded-full overflow-hidden',
-            isSelected && 'ring-2 ring-electric-indigo ring-offset-2 ring-offset-surface'
+            isSelected && 'ring-2 ring-mint ring-offset-2 ring-offset-surface'
           )}
         >
           <img
@@ -50,7 +50,7 @@ export function AvatarCard({ avatar, isSelected = false, onSelect, className }: 
 
         {/* Selected checkmark */}
         {isSelected && (
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-electric-indigo flex items-center justify-center">
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-mint flex items-center justify-center">
             <FontAwesomeIcon icon={faCheck} className="w-3 h-3 text-white" />
           </div>
         )}

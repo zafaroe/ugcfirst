@@ -18,7 +18,7 @@ const storeOptions = [
     name: 'URL Import',
     icon: Link2,
     description: 'Paste any product URL and our AI will extract the details automatically.',
-    gradient: 'from-electric-indigo to-blue-500',
+    gradient: 'from-mint to-blue-500',
     recommended: true,
   },
   {
@@ -26,7 +26,7 @@ const storeOptions = [
     name: 'Manual Entry',
     icon: PenLine,
     description: 'Manually add products one by one to generate videos.',
-    gradient: 'from-vibrant-fuchsia to-pink-500',
+    gradient: 'from-coral to-pink-500',
     recommended: false,
   },
 ]
@@ -83,7 +83,7 @@ export function ConnectStoreStep({ onNext, onBack }: ConnectStoreStepProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
                 >
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia text-white rounded-full shadow-lg shadow-electric-indigo/25">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-gradient-to-r from-mint to-mint-dark text-white rounded-full shadow-lg shadow-mint/25">
                     <Sparkles className="w-3 h-3" />
                     Recommended
                   </span>
@@ -96,13 +96,13 @@ export function ConnectStoreStep({ onNext, onBack }: ConnectStoreStepProps) {
                 glowOnHover
                 padding="lg"
                 className={`cursor-pointer text-left h-full transition-all duration-300 ${
-                  isSelected ? 'ring-2 ring-electric-indigo/50' : ''
+                  isSelected ? 'ring-2 ring-mint/50' : ''
                 }`}
               >
                 {/* Selected indicator */}
                 {isSelected && (
                   <motion.div
-                    className="absolute top-4 right-4 w-7 h-7 rounded-full bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia flex items-center justify-center shadow-lg"
+                    className="absolute top-4 right-4 w-7 h-7 rounded-full bg-gradient-to-r from-mint to-mint-dark flex items-center justify-center shadow-lg"
                     initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={SPRING.bouncy}
@@ -132,7 +132,7 @@ export function ConnectStoreStep({ onNext, onBack }: ConnectStoreStepProps) {
 
                 {/* Selection indicator line */}
                 <motion.div
-                  className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia rounded-b-2xl"
+                  className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-mint to-mint-dark rounded-b-2xl"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: isSelected ? 1 : 0 }}
                   transition={SPRING.bouncy}
@@ -153,7 +153,7 @@ export function ConnectStoreStep({ onNext, onBack }: ConnectStoreStepProps) {
           size="lg"
           onClick={onNext}
           disabled={!selectedStore}
-          className="min-w-[200px] shadow-lg shadow-electric-indigo/25"
+          className="min-w-[200px] shadow-lg shadow-mint/25"
         >
           Continue
         </Button>
@@ -161,7 +161,7 @@ export function ConnectStoreStep({ onNext, onBack }: ConnectStoreStepProps) {
 
       {/* Skip option */}
       <motion.button
-        className="mt-5 text-sm text-text-muted hover:text-electric-indigo transition-colors duration-200"
+        className="mt-5 text-sm text-text-muted hover:text-mint transition-colors duration-200"
         onClick={onNext}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

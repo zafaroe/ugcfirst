@@ -59,17 +59,17 @@ export function ImageSelector({
               className={cn(
                 'relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden',
                 'transition-all duration-200',
-                'focus:outline-none focus:ring-2 focus:ring-electric-indigo focus:ring-offset-2 focus:ring-offset-deep-space',
+                'focus:outline-none focus:ring-2 focus:ring-mint focus:ring-offset-2 focus:ring-offset-cream',
                 isSelected
-                  ? 'ring-2 ring-electric-indigo shadow-glow'
-                  : 'ring-1 ring-border-default hover:ring-electric-indigo/50'
+                  ? 'ring-2 ring-mint shadow-glow'
+                  : 'ring-1 ring-border-default hover:ring-mint/50'
               )}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               {/* Loading placeholder */}
               {!isLoaded && (
-                <div className="absolute inset-0 bg-elevated animate-pulse flex items-center justify-center">
+                <div className="absolute inset-0 bg-surface-raised animate-pulse flex items-center justify-center">
                   <ImageIcon className="w-6 h-6 text-text-muted" />
                 </div>
               )}
@@ -88,8 +88,8 @@ export function ImageSelector({
 
               {/* Selected indicator */}
               {isSelected && (
-                <div className="absolute inset-0 bg-electric-indigo/20">
-                  <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-electric-indigo flex items-center justify-center">
+                <div className="absolute inset-0 bg-mint/20">
+                  <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-mint flex items-center justify-center">
                     <Check className="w-3 h-3 text-white" />
                   </div>
                 </div>
@@ -97,7 +97,7 @@ export function ImageSelector({
 
               {/* Image number badge */}
               {!isSelected && (
-                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-deep-space/80 text-[10px] text-text-muted">
+                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-cream/80 text-[10px] text-text-muted">
                   {idx + 1}
                 </div>
               )}
@@ -120,12 +120,12 @@ export function ImageSelector({
 export function ImageSelectorSkeleton() {
   return (
     <div className="mt-4">
-      <div className="h-4 w-40 bg-elevated rounded animate-pulse mb-3" />
+      <div className="h-4 w-40 bg-surface-raised rounded animate-pulse mb-3" />
       <div className="flex gap-2">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="w-20 h-20 rounded-lg bg-elevated animate-pulse flex-shrink-0"
+            className="w-20 h-20 rounded-lg bg-surface-raised animate-pulse flex-shrink-0"
           />
         ))}
       </div>

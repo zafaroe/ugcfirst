@@ -9,6 +9,7 @@ export {
   type ComparisonRow,
   type CompetitorComparisonRow,
 } from './comparison-table'
+export { ComparisonArena } from './comparison-arena'
 export { CreditBadge, type CreditBadgeProps } from './credit-badge'
 export { StatusBadge, type StatusBadgeProps } from './status-badge'
 export { ProjectCard, ProjectCardSkeleton, type ProjectCardProps } from './project-card'
@@ -32,10 +33,10 @@ export { VideoPlayer, type VideoPlayerProps } from './video-player'
 export { GenerationView, type GenerationViewProps, type GenerationStage } from './generation-view'
 export { ManualProductForm, isManualProductValid, type ManualProductFormProps, type ManualProductData } from './manual-product-form'
 
-// New Mode Selection Cards
-export { ModeSelectionCard, ModeSelectionCardCompact, type ModeSelectionCardProps } from './mode-selection-card'
+// Mode Selection Cards (v2 — Drop & Go + Studio)
+export { ModeSelectionCard, ModeSelectionCardCompact, type ModeSelectionCardProps } from './mode-selection-card-v2'
 
-// Reel It In Flow Components
+// Drop & Go Flow Components
 export { ProductPreview, ProductPreviewSkeleton, type ProductPreviewProps } from './product-preview'
 export { ScriptPreview, ScriptPreviewSkeleton, type ScriptPreviewProps } from './script-preview'
 export { SocialCopyCard, SocialCopyCardSkeleton, type SocialCopyCardProps } from './social-copy-card'
@@ -51,4 +52,10 @@ export { InsufficientCreditsModal, LowCreditsBanner, type InsufficientCreditsMod
 export { RobotMascot, RobotIcon } from './svg-illustrations/robot-mascot'
 export { DIYIllustration } from './svg-illustrations/diy-illustration'
 export { ReelIllustration } from './svg-illustrations/reel-illustration'
+export { DropAndGoIllustration } from './svg-illustrations/drop-and-go-illustration'
+export { StudioIllustration } from './svg-illustrations/studio-illustration'
 export { EmptyStateArt } from './svg-illustrations/empty-state-art'
+export { StudioAnimation } from './svg-illustrations/studio-animation'
+export { DropAndGoAnimation } from './svg-illustrations/drop-and-go-animation'
+export { StudioIcon } from './svg-illustrations/studio-icon'
+export { DropAndGoIcon } from './svg-illustrations/drop-and-go-icon'

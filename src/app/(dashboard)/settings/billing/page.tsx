@@ -123,7 +123,7 @@ export default function BillingSettingsPage() {
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case 'subscription':
-        return <FontAwesomeIcon icon={faRotate} className="w-4 h-4 text-electric-indigo" />
+        return <FontAwesomeIcon icon={faRotate} className="w-4 h-4 text-mint" />
       case 'purchase':
         return <FontAwesomeIcon icon={faPlus} className="w-4 h-4 text-status-success" />
       case 'usage':
@@ -158,11 +158,11 @@ export default function BillingSettingsPage() {
 
           <div className="flex items-center gap-4 mb-6">
             <motion.div
-              className="w-16 h-16 rounded-xl bg-gradient-to-br from-electric-indigo/30 to-vibrant-fuchsia/30 flex items-center justify-center"
+              className="w-16 h-16 rounded-xl bg-gradient-to-br from-mint/30 to-coral/30 flex items-center justify-center"
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <FontAwesomeIcon icon={faBolt} className="w-8 h-8 text-electric-indigo" />
+              <FontAwesomeIcon icon={faBolt} className="w-8 h-8 text-mint" />
             </motion.div>
             <div>
               {isLoading ? (
@@ -226,8 +226,8 @@ export default function BillingSettingsPage() {
             {mockCreditPacks.map(pack => (
               <StaggerItem key={pack.id}>
                 <motion.div
-                  className="p-5 rounded-xl border border-white/10 bg-surface/50 backdrop-blur-sm hover:border-electric-indigo/50 transition-all cursor-pointer"
-                  whileHover={{ y: -4, boxShadow: '0 0 20px rgba(99, 102, 241, 0.2)' }}
+                  className="p-5 rounded-xl border border-border-default bg-surface/50 backdrop-blur-sm hover:border-mint/50 transition-all cursor-pointer"
+                  whileHover={{ y: -4, boxShadow: '0 0 20px rgba(16, 185, 129, 0.2)' }}
                 >
                   <h4 className="font-medium text-text-primary mb-1">{pack.name}</h4>
                   <p className="text-2xl font-bold text-text-primary">
@@ -273,7 +273,7 @@ export default function BillingSettingsPage() {
             <StaggerContainer className="space-y-4" staggerDelay={0.05}>
               {transactions.map(transaction => (
                 <StaggerItem key={transaction.id}>
-                  <div className="flex items-center justify-between py-3 border-b border-white/10 last:border-0">
+                  <div className="flex items-center justify-between py-3 border-b border-border-default last:border-0">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-surface/80 flex items-center justify-center">
                         {getTransactionIcon(transaction.type)}
@@ -322,7 +322,7 @@ export default function BillingSettingsPage() {
             )}
           </div>
           {hasPaymentMethod ? (
-            <div className="flex items-center gap-4 p-4 rounded-lg border border-white/10 bg-surface/30">
+            <div className="flex items-center gap-4 p-4 rounded-lg border border-border-default bg-surface/30">
               <div className="w-12 h-8 rounded bg-surface/80 flex items-center justify-center">
                 <FontAwesomeIcon icon={faCreditCard} className="w-5 h-5 text-text-muted" />
               </div>

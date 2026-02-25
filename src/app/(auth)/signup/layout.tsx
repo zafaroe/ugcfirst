@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign Up | Vidnary - Start Creating UGC Videos',
+  title: 'Sign Up | UGCFirst - Start Creating UGC Videos',
   description:
-    'Create your Vidnary account and start making viral UGC videos with AI in minutes. Get 10 free credits.',
+    'Create your UGCFirst account and start making viral UGC videos with AI in minutes. Get 10 free credits.',
   alternates: {
     canonical: '/signup',
   },

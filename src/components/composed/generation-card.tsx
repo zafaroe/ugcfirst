@@ -53,7 +53,7 @@ const statusConfig: Record<DisplayStatus, { icon: IconDefinition; label: string;
   queued: {
     icon: faClock,
     label: 'Queued',
-    classes: 'bg-electric-indigo/20 text-electric-indigo',
+    classes: 'bg-mint/20 text-mint',
   },
 };
 
@@ -89,7 +89,7 @@ export function GenerationCard({
       onClick={() => onView?.(generation)}
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video bg-deep-space overflow-hidden">
+      <div className="relative aspect-video bg-cream overflow-hidden">
         {thumbnail ? (
           <motion.img
             src={thumbnail}
@@ -115,7 +115,7 @@ export function GenerationCard({
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="w-14 h-14 rounded-full bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia flex items-center justify-center"
+              className="w-14 h-14 rounded-full bg-gradient-to-r from-mint to-mint-dark flex items-center justify-center"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               transition={SPRING.bouncy}
@@ -227,11 +227,11 @@ export function GenerationCard({
             className={cn(
               'text-xs px-2 py-0.5 rounded-full',
               generation.mode === 'concierge'
-                ? 'bg-vibrant-fuchsia/20 text-vibrant-fuchsia'
-                : 'bg-electric-indigo/20 text-electric-indigo'
+                ? 'bg-coral/20 text-coral'
+                : 'bg-mint/20 text-mint'
             )}
           >
-            {generation.mode === 'concierge' ? 'Reel It In' : 'DIY'}
+            {generation.mode === 'concierge' ? 'Drop & Go' : 'Studio'}
           </span>
         </div>
       </div>
@@ -243,51 +243,11 @@ export function GenerationCard({
 export function GenerationCardSkeleton() {
   return (
     <Card padding="none" className="overflow-hidden">
-      <motion.div
-        className="aspect-video bg-deep-space"
-        animate={{
-          background: [
-            'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-            'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
-          ],
-        }}
-        transition={{
-          duration: 1.5,
-          repeat: Infinity,
-          ease: 'linear',
-        }}
-      />
+      {/* Use CSS skeleton class which handles dark mode properly */}
+      <div className="aspect-video skeleton" />
       <div className="p-4 space-y-3">
-        <motion.div
-          className="h-5 bg-deep-space rounded w-3/4"
-          animate={{
-            background: [
-              'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-              'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
-            ],
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            ease: 'linear',
-            delay: 0.2,
-          }}
-        />
-        <motion.div
-          className="h-4 bg-deep-space rounded w-1/2"
-          animate={{
-            background: [
-              'linear-gradient(90deg, #0F172A 0%, #1E293B 50%, #0F172A 100%)',
-              'linear-gradient(90deg, #1E293B 0%, #0F172A 50%, #1E293B 100%)',
-            ],
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            ease: 'linear',
-            delay: 0.4,
-          }}
-        />
+        <div className="h-5 skeleton rounded w-3/4" />
+        <div className="h-4 skeleton rounded w-1/2" />
       </div>
     </Card>
   );

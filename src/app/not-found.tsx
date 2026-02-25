@@ -63,7 +63,7 @@ export default function NotFound() {
   }
 
   return (
-    <div className="min-h-screen bg-deep-space text-text-primary overflow-hidden relative">
+    <div className="min-h-screen bg-cream text-text-primary overflow-hidden relative">
       {/* Film Grain Overlay */}
       <div
         className="fixed inset-0 z-[1000] pointer-events-none opacity-[0.04]"
@@ -80,12 +80,12 @@ export default function NotFound() {
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute -top-[200px] -right-[200px] w-[600px] h-[600px] rounded-full blur-[100px] bg-vibrant-fuchsia/20"
+        className="absolute -top-[200px] -right-[200px] w-[600px] h-[600px] rounded-full blur-[100px] bg-coral/20"
         animate={{ scale: [1.1, 1, 1.1], opacity: [0.2, 0.15, 0.2] }}
         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute -bottom-[200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[100px] bg-electric-indigo/20"
+        className="absolute -bottom-[200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[100px] bg-mint/20"
         animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.2, 0.15] }}
         transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -115,7 +115,7 @@ export default function NotFound() {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-[100] px-4 md:px-8 py-4 flex items-center justify-between">
         <Link href="/">
-          <Logo variant="light" size="sm" />
+          <Logo variant="colored" size="sm" />
         </Link>
 
         {/* REC Indicator */}
@@ -228,7 +228,7 @@ export default function NotFound() {
             Looks like this scene didn&apos;t survive the editing room.
             <br />
             Our AI must have gone{' '}
-            <em className="text-vibrant-fuchsia">completely off-script</em> again.
+            <em className="text-coral">completely off-script</em> again.
           </p>
         </div>
 
@@ -282,7 +282,7 @@ export default function NotFound() {
 
       {/* Footer */}
       <footer className="fixed bottom-4 left-0 right-0 text-center opacity-50">
-        <code className="bg-electric-indigo/20 text-electric-indigo px-2 py-1 rounded text-xs font-mono">
+        <code className="bg-mint/20 text-mint px-2 py-1 rounded text-xs font-mono">
           ERR_SCENE_NOT_FOUND
         </code>
         <p className="text-text-muted text-xs mt-2">

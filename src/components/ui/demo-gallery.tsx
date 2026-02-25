@@ -63,8 +63,8 @@ const demoVideos = [
 // Stats data
 const stats = [
   { icon: TrendingUp, value: '3.1x', label: 'Average ROAS', color: 'text-status-success' },
-  { icon: Users, value: '47%', label: 'More Engagement', color: 'text-electric-indigo' },
-  { icon: DollarSign, value: '$2M+', label: 'In Ad Spend Saved', color: 'text-vibrant-fuchsia' },
+  { icon: Users, value: '47%', label: 'More Engagement', color: 'text-mint' },
+  { icon: DollarSign, value: '$2M+', label: 'In Ad Spend Saved', color: 'text-coral' },
   { icon: Zap, value: '5min', label: 'Average Creation Time', color: 'text-status-warning' },
 ]
 
@@ -114,10 +114,10 @@ export function DemoGallery({ className }: { className?: string }) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-electric-indigo/10 border border-electric-indigo/20 mb-6"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-mint/10 border border-mint/20 mb-6"
         >
-          <Play className="w-4 h-4 text-electric-indigo" />
-          <span className="text-sm font-medium text-electric-indigo">Real Results</span>
+          <Play className="w-4 h-4 text-mint" />
+          <span className="text-sm font-medium text-mint">Real Results</span>
         </motion.div>
 
         <motion.h2
@@ -144,8 +144,8 @@ export function DemoGallery({ className }: { className?: string }) {
       {/* Horizontal Scroll Gallery */}
       <div className="relative">
         {/* Gradient Fade Edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-deep-space to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-deep-space to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-surface to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-surface to-transparent z-10 pointer-events-none" />
 
         {/* Scroll Container */}
         <div
@@ -227,9 +227,9 @@ function VideoCard({
         className={cn(
           'relative w-[280px] md:w-[320px] rounded-2xl overflow-hidden',
           'bg-surface/50 backdrop-blur-xl',
-          'border border-white/10',
+          'border border-border-default',
           'transition-all duration-500',
-          isHovered && 'shadow-glow-lg border-electric-indigo/30'
+          isHovered && 'shadow-glow-lg border-mint/30'
         )}
       >
         {/* Video Thumbnail */}
@@ -257,7 +257,7 @@ function VideoCard({
           />
 
           {/* Animated Overlay Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-t from-deep-space/80 via-transparent to-transparent z-20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/30 z-20" />
 
           {/* Play Button Overlay (only shown when no video) */}
           <motion.div
@@ -265,18 +265,18 @@ function VideoCard({
             animate={isHovered && !hasVideo ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
             className="absolute inset-0 flex items-center justify-center z-30"
           >
-            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+            <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20">
               <Play className="w-7 h-7 text-white fill-white ml-1" />
             </div>
           </motion.div>
 
           {/* Duration Badge */}
-          <div className="absolute bottom-3 right-3 px-2 py-1 bg-deep-space/80 backdrop-blur-sm rounded-md text-xs font-medium z-30">
+          <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/60 backdrop-blur-sm rounded-md text-xs font-semibold text-white z-30">
             {video.duration}
           </div>
 
           {/* Category Badge */}
-          <div className="absolute top-3 left-3 px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium border border-white/20 z-30">
+          <div className="absolute top-3 left-3 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-xs font-semibold text-white border border-white/15 z-30">
             {video.category}
           </div>
         </div>
@@ -345,7 +345,7 @@ function StatItem({ stat, index }: { stat: typeof stats[0]; index: number }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="text-center p-6 rounded-2xl bg-surface/50 border border-border-default hover:border-electric-indigo/30 transition-colors"
+      className="text-center p-6 rounded-2xl bg-surface/50 border border-border-default hover:border-mint/30 transition-colors"
     >
       <stat.icon className={cn('w-8 h-8 mx-auto mb-3', stat.color)} />
       <div className="text-3xl md:text-4xl font-bold mb-1">

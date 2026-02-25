@@ -21,9 +21,9 @@ export interface TestimonialCardProps {
 
 export function TestimonialCard({ testimonial, className }: TestimonialCardProps) {
   return (
-    <GlassCard padding="lg" className={cn('relative h-full transition-all duration-300 hover:translate-y-[-4px] hover:shadow-[0_15px_40px_-15px_rgba(99,102,241,0.25)]', className)}>
+    <GlassCard padding="lg" className={cn('relative h-full transition-all duration-300 hover:translate-y-[-4px] hover:shadow-[0_15px_40px_-15px_rgba(16,185,129,0.25)]', className)}>
       {/* Quote icon */}
-      <Quote className="absolute top-4 right-4 w-8 h-8 text-electric-indigo/10" />
+      <Quote className="absolute top-4 right-4 w-8 h-8 text-mint/10" />
 
       {/* Rating */}
       <div className="flex gap-1 mb-4">
@@ -47,7 +47,7 @@ export function TestimonialCard({ testimonial, className }: TestimonialCardProps
 
       {/* Author */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia">
+        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-mint to-mint-dark">
           {testimonial.avatar ? (
             <img
               src={testimonial.avatar}

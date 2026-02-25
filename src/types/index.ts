@@ -36,7 +36,7 @@ export interface CreditTransaction {
 // PROJECT TYPES
 // ============================================
 export type ProjectStatus = 'queued' | 'processing' | 'ready' | 'failed'
-export type ProjectMode = 'diy' | 'reel-it-in'
+export type ProjectMode = 'diy' | 'auto-pilot'
 
 export interface Project {
   id: string

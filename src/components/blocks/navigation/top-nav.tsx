@@ -160,7 +160,7 @@ export function TopNav() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-surface/60 backdrop-blur-md border-b border-white/10">
+    <header className="sticky top-0 z-50 bg-stone-900/95 backdrop-blur-md border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/dashboard">
@@ -169,7 +169,7 @@ export function TopNav() {
             whileTap={{ scale: 0.98 }}
             transition={SPRING.bouncy}
           >
-            <Logo variant="light" size="sm" />
+            <Logo variant="colored" size="sm" />
           </motion.div>
         </Link>
 
@@ -183,10 +183,10 @@ export function TopNav() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={cn(
-                    'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                    'px-4 py-2 text-sm font-semibold rounded-lg transition-colors',
                     isActive
-                      ? 'text-text-primary bg-surface'
-                      : 'text-text-muted hover:text-text-primary hover:bg-surface/50'
+                      ? 'text-mint bg-mint/10'
+                      : 'text-stone-300 hover:text-white hover:bg-stone-800'
                   )}
                 >
                   {item.label}
@@ -201,9 +201,9 @@ export function TopNav() {
           {/* Credits - Enhanced gradient badge */}
           <Link href="/settings/billing">
             <motion.div
-              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(99, 102, 241, 0.5)' }}
+              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(16, 185, 129, 0.5)' }}
               whileTap={{ scale: 0.95 }}
-              className="relative flex items-center gap-2 bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia text-white px-4 py-2 rounded-full shadow-lg overflow-hidden"
+              className="relative flex items-center gap-2 bg-gradient-to-r from-mint to-mint-dark text-white px-4 py-2 rounded-full shadow-[0_4px_14px_rgba(16,185,129,0.3)] overflow-hidden"
             >
               {/* Shimmer effect */}
               <motion.div
@@ -261,14 +261,14 @@ export function TopNav() {
                     onClick={() => setIsUserMenuOpen(false)}
                   />
                   <motion.div
-                    className="absolute right-0 mt-2 w-56 bg-surface/80 backdrop-blur-lg rounded-xl shadow-xl border border-white/10 py-1 z-50 origin-top-right"
+                    className="absolute right-0 mt-2 w-56 bg-surface-dark-raised/95 backdrop-blur-lg rounded-xl shadow-xl border border-border-default py-1 z-50 origin-top-right"
                     variants={dropdownVariants}
                     initial="hidden"
                     animate="visible"
                     exit="exit"
                   >
                     <motion.div
-                      className="px-4 py-3 border-b border-white/10"
+                      className="px-4 py-3 border-b border-border-default"
                       variants={menuItemVariants}
                     >
                       <p className="text-sm font-medium text-text-primary">{user?.name || 'User'}</p>
@@ -277,7 +277,7 @@ export function TopNav() {
                     <motion.div variants={menuItemVariants}>
                       <Link
                         href="/settings"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-deep-space transition-colors"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-surface transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <FontAwesomeIcon icon={faUser} className="w-4 h-4" />
@@ -287,7 +287,7 @@ export function TopNav() {
                     <motion.div variants={menuItemVariants}>
                       <Link
                         href="/settings/billing"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-deep-space transition-colors"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-surface transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <FontAwesomeIcon icon={faGear} className="w-4 h-4" />
@@ -295,12 +295,12 @@ export function TopNav() {
                       </Link>
                     </motion.div>
                     <motion.div
-                      className="border-t border-white/10 mt-1 pt-1"
+                      className="border-t border-border-default mt-1 pt-1"
                       variants={menuItemVariants}
                     >
                       <button
                         onClick={handleSignOut}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-status-error hover:bg-deep-space transition-colors w-full text-left"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-status-error hover:bg-surface transition-colors w-full text-left"
                       >
                         <FontAwesomeIcon icon={faRightFromBracket} className="w-4 h-4" />
                         Sign Out

@@ -179,7 +179,7 @@ export default function StrategyPage() {
   return (
     <div className="min-h-screen pb-12">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-deep-space/95 backdrop-blur-sm border-b border-border-default">
+      <div className="sticky top-0 z-10 bg-cream/95 backdrop-blur-sm border-b border-border-default">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -247,7 +247,7 @@ export default function StrategyPage() {
                       <button
                         onClick={() => setShowCaptions(!showCaptions)}
                         className={`relative w-11 h-6 rounded-full transition-colors ${
-                          showCaptions ? 'bg-electric-indigo' : 'bg-elevated'
+                          showCaptions ? 'bg-mint' : 'bg-surface-raised'
                         }`}
                         aria-label={showCaptions ? 'Hide captions' : 'Show captions'}
                       >
@@ -259,7 +259,7 @@ export default function StrategyPage() {
                       </button>
                     </div>
                   )}
-                  <Card className="overflow-hidden bg-deep-space w-full">
+                  <Card className="overflow-hidden bg-cream w-full">
                     <div className="aspect-[9/16] relative bg-black">
                       {displayVideoUrl ? (
                         <VideoPlayer
@@ -300,7 +300,7 @@ export default function StrategyPage() {
                       variant={generation.mode === 'concierge' ? 'purple' : 'default'}
                       size="sm"
                     >
-                      {generation.mode === 'concierge' ? 'Reel It In' : 'DIY'}
+                      {generation.mode === 'concierge' ? 'Drop & Go' : 'Studio'}
                     </Badge>
                     <span className="text-sm text-text-muted">
                       {generation.videos?.[0]?.duration
@@ -590,7 +590,7 @@ export default function StrategyPage() {
               {/* Best Posting Times */}
               <Card className="mt-6 p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <Clock className="w-5 h-5 text-electric-indigo" />
+                  <Clock className="w-5 h-5 text-mint" />
                   <h4 className="text-base font-semibold text-text-primary">
                     Best Posting Times
                   </h4>

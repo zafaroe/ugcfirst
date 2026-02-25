@@ -98,7 +98,7 @@ export type Events = {
 const isDev = !process.env.INNGEST_EVENT_KEY || process.env.INNGEST_EVENT_KEY.trim() === '';
 
 export const inngest = new Inngest({
-  id: 'vidnary',
+  id: 'ugcfirst',
   // In dev mode, use the local dev server
   // In production, use the configured keys
   ...(isDev

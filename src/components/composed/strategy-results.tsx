@@ -92,7 +92,7 @@ export function StrategyResults({
         transition={{ delay: 0.1 }}
       >
         <Card className="p-6 bg-surface border border-border-default">
-          <div className="aspect-[9/16] max-w-sm mx-auto bg-deep-space rounded-xl overflow-hidden relative">
+          <div className="aspect-[9/16] max-w-sm mx-auto bg-cream rounded-xl overflow-hidden relative">
             {videoUrl ? (
               <>
                 <video
@@ -112,7 +112,7 @@ export function StrategyResults({
                     className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors"
                   >
                     <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center">
-                      <Play className="w-8 h-8 text-deep-space ml-1" />
+                      <Play className="w-8 h-8 text-cream ml-1" />
                     </div>
                   </button>
                 )}
@@ -178,7 +178,7 @@ export function StrategyResults({
         >
           <Card className="p-6 bg-surface border border-border-default">
             <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -300,10 +300,10 @@ function BestPostingTimes({ times, className }: BestPostingTimesProps) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="p-4 hover:border-electric-indigo/30 transition-colors">
+            <Card className="p-4 hover:border-mint/30 transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-electric-indigo/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-electric-indigo" />
+                <div className="w-10 h-10 rounded-lg bg-mint/10 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-mint" />
                 </div>
                 <p className="text-text-primary">{time}</p>
               </div>
@@ -316,10 +316,10 @@ function BestPostingTimes({ times, className }: BestPostingTimesProps) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="mt-6 p-4 rounded-lg bg-vibrant-fuchsia/10 border border-vibrant-fuchsia/20"
+        className="mt-6 p-4 rounded-lg bg-coral/10 border border-coral/20"
       >
         <p className="text-sm text-text-primary">
-          <span className="font-semibold text-vibrant-fuchsia">Tip:</span>{' '}
+          <span className="font-semibold text-coral">Tip:</span>{' '}
           Consistency matters more than perfect timing. Pick a schedule you can
           stick to and post at least 3-5 times per week.
         </p>
@@ -334,17 +334,17 @@ export function StrategyResultsSkeleton() {
     <div className="space-y-8">
       {/* Header skeleton */}
       <div className="text-center">
-        <div className="w-16 h-16 rounded-full bg-elevated animate-pulse mx-auto mb-4" />
-        <div className="h-8 w-64 bg-elevated rounded animate-pulse mx-auto mb-2" />
-        <div className="h-4 w-96 bg-elevated rounded animate-pulse mx-auto" />
+        <div className="w-16 h-16 rounded-full bg-surface-raised animate-pulse mx-auto mb-4" />
+        <div className="h-8 w-64 bg-surface-raised rounded animate-pulse mx-auto mb-2" />
+        <div className="h-4 w-96 bg-surface-raised rounded animate-pulse mx-auto" />
       </div>
 
       {/* Video skeleton */}
       <Card className="p-6">
-        <div className="aspect-[9/16] max-w-sm mx-auto bg-elevated rounded-xl animate-pulse" />
+        <div className="aspect-[9/16] max-w-sm mx-auto bg-surface-raised rounded-xl animate-pulse" />
         <div className="flex gap-3 mt-6 max-w-sm mx-auto">
-          <div className="h-12 flex-1 bg-elevated rounded-lg animate-pulse" />
-          <div className="h-12 flex-1 bg-elevated rounded-lg animate-pulse" />
+          <div className="h-12 flex-1 bg-surface-raised rounded-lg animate-pulse" />
+          <div className="h-12 flex-1 bg-surface-raised rounded-lg animate-pulse" />
         </div>
       </Card>
 
@@ -352,9 +352,9 @@ export function StrategyResultsSkeleton() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
           <Card key={i} className="p-4">
-            <div className="h-5 w-5 bg-elevated rounded mx-auto mb-2 animate-pulse" />
-            <div className="h-6 w-16 bg-elevated rounded mx-auto mb-1 animate-pulse" />
-            <div className="h-3 w-12 bg-elevated rounded mx-auto animate-pulse" />
+            <div className="h-5 w-5 bg-surface-raised rounded mx-auto mb-2 animate-pulse" />
+            <div className="h-6 w-16 bg-surface-raised rounded mx-auto mb-1 animate-pulse" />
+            <div className="h-3 w-12 bg-surface-raised rounded mx-auto animate-pulse" />
           </Card>
         ))}
       </div>
@@ -362,18 +362,18 @@ export function StrategyResultsSkeleton() {
       {/* Tabs skeleton */}
       <Card className="p-6">
         <div className="flex gap-2 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-elevated animate-pulse" />
+          <div className="w-8 h-8 rounded-lg bg-surface-raised animate-pulse" />
           <div className="space-y-1">
-            <div className="h-5 w-32 bg-elevated rounded animate-pulse" />
-            <div className="h-3 w-48 bg-elevated rounded animate-pulse" />
+            <div className="h-5 w-32 bg-surface-raised rounded animate-pulse" />
+            <div className="h-3 w-48 bg-surface-raised rounded animate-pulse" />
           </div>
         </div>
         <div className="flex gap-4 mb-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-10 w-28 bg-elevated rounded animate-pulse" />
+            <div key={i} className="h-10 w-28 bg-surface-raised rounded animate-pulse" />
           ))}
         </div>
-        <div className="h-64 bg-elevated rounded-lg animate-pulse" />
+        <div className="h-64 bg-surface-raised rounded-lg animate-pulse" />
       </Card>
     </div>
   );

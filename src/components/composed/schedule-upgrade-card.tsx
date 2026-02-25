@@ -44,15 +44,15 @@ export function ScheduleUpgradeCard({
         animate={{ opacity: 1, y: 0 }}
         className={cn(
           'relative overflow-hidden rounded-xl',
-          'bg-gradient-to-r from-electric-indigo/10 via-vibrant-fuchsia/10 to-electric-indigo/10',
-          'border border-electric-indigo/20',
+          'bg-gradient-to-r from-mint/10 via-coral/10 to-mint/10',
+          'border border-mint/20',
           'p-4',
           className
         )}
       >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center flex-shrink-0">
               <Calendar className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -80,21 +80,21 @@ export function ScheduleUpgradeCard({
       transition={{ duration: 0.5 }}
       className={cn('relative', className)}
     >
-      <Card className="relative overflow-hidden border-2 border-electric-indigo/30 bg-gradient-to-br from-surface via-surface to-electric-indigo/5">
+      <Card className="relative overflow-hidden border-2 border-mint/30 bg-gradient-to-br from-surface via-surface to-mint/5">
         {/* Decorative gradient orb */}
-        <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-electric-indigo/20 to-vibrant-fuchsia/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-mint/20 to-coral/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               <motion.div
-                className="w-12 h-12 rounded-xl bg-gradient-to-br from-electric-indigo to-vibrant-fuchsia flex items-center justify-center shadow-lg shadow-electric-indigo/25"
+                className="w-12 h-12 rounded-xl bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center shadow-lg shadow-mint/25"
                 animate={{
                   boxShadow: [
-                    '0 10px 15px -3px rgba(99, 102, 241, 0.25)',
-                    '0 10px 20px -3px rgba(217, 70, 239, 0.3)',
-                    '0 10px 15px -3px rgba(99, 102, 241, 0.25)',
+                    '0 10px 15px -3px rgba(16, 185, 129, 0.25)',
+                    '0 10px 20px -3px rgba(244, 63, 94, 0.3)',
+                    '0 10px 15px -3px rgba(16, 185, 129, 0.25)',
                   ],
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
@@ -105,7 +105,7 @@ export function ScheduleUpgradeCard({
                 <h3 className="text-lg font-bold text-text-primary">
                   Schedule to Social Media
                 </h3>
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-electric-indigo">
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-mint">
                   <Sparkles className="w-3 h-3" />
                   Pro Feature
                 </span>
@@ -133,7 +133,7 @@ export function ScheduleUpgradeCard({
             </div>
             <div className="flex items-center gap-3 text-sm text-text-secondary">
               <div className="w-6 h-6 rounded-full bg-surface border border-border-default flex items-center justify-center">
-                <Clock className="w-3 h-3 text-electric-indigo" />
+                <Clock className="w-3 h-3 text-mint" />
               </div>
               <span>Schedule weeks in advance</span>
             </div>

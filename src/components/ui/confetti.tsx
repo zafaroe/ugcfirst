@@ -18,7 +18,7 @@ interface Particle {
   scale: number
 }
 
-const colors = ['#6366F1', '#D946EF', '#818CF8', '#E879F9', '#F59E0B', '#10B981']
+const colors = ['#10B981', '#F43F5E', '#34D399', '#FB7185', '#F59E0B', '#10B981']
 
 export function Confetti({ isActive, duration = 3000, particleCount = 50 }: ConfettiProps) {
   const [particles, setParticles] = useState<Particle[]>([])
@@ -106,7 +106,7 @@ interface ConfettiBurstProps {
 }
 
 export function ConfettiBurst({ trigger, colors: customColors, className }: ConfettiBurstProps) {
-  const burstColors = customColors || ['#6366F1', '#D946EF', '#818CF8', '#E879F9']
+  const burstColors = customColors || ['#10B981', '#F43F5E', '#34D399', '#FB7185']
 
   if (!trigger) return null
 

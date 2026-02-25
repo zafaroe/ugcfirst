@@ -104,13 +104,13 @@ export function Dropdown({
           disabled={disabled}
           whileTap={!disabled ? { scale: 0.99 } : undefined}
           className={cn(
-            'w-full bg-deep-space border rounded-lg px-4 py-2.5',
+            'w-full bg-cream border rounded-lg px-4 py-2.5',
             'flex items-center justify-between',
             'text-left transition-colors duration-200',
-            'focus:outline-none focus:ring-2 focus:ring-electric-indigo/50',
+            'focus:outline-none focus:ring-2 focus:ring-mint/50',
             error
               ? 'border-status-error'
-              : 'border-border-default focus:border-electric-indigo',
+              : 'border-border-default focus:border-mint',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
         >
@@ -144,12 +144,12 @@ export function Dropdown({
                   onClick={() => !option.disabled && handleSelect(option.value)}
                   disabled={option.disabled}
                   variants={itemVariants}
-                  whileHover={!option.disabled ? { backgroundColor: 'rgba(99, 102, 241, 0.1)' } : undefined}
+                  whileHover={!option.disabled ? { backgroundColor: 'rgba(16, 185, 129, 0.1)' } : undefined}
                   transition={{ duration: DURATIONS.fast }}
                   className={cn(
                     'w-full px-4 py-2.5 text-left flex items-center gap-2',
                     option.value === value
-                      ? 'bg-electric-indigo/15 text-text-primary'
+                      ? 'bg-mint/15 text-text-primary'
                       : 'text-text-primary',
                     option.disabled && 'opacity-50 cursor-not-allowed'
                   )}

@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
             Didn&apos;t receive the email? Check your spam folder or{' '}
             <button
               onClick={() => setIsSubmitted(false)}
-              className="text-electric-indigo hover:text-vibrant-fuchsia transition-colors"
+              className="text-mint hover:text-coral transition-colors"
             >
               try again
             </button>
@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
       <p className="text-center text-sm text-text-muted mt-6">
         <Link
           href="/login"
-          className="text-electric-indigo hover:text-vibrant-fuchsia transition-colors font-medium inline-flex items-center gap-2"
+          className="text-mint hover:text-coral transition-colors font-medium inline-flex items-center gap-2"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
           Back to Sign In

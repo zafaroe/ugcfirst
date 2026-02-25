@@ -78,6 +78,11 @@ export {
   SparkleBurst,
   CornerStar,
   WaveDecoration,
+  FloatingOrbs,
+  GlowingGrid,
+  WaveLines,
+  AmbientParticles,
+  PulseRings,
 } from './background-effects'
 
 // Enhanced Cards
@@ -91,6 +96,9 @@ export {
   type FeatureCardProps,
   type StatCardProps,
 } from './gradient-card'
+
+// Theme Toggle
+export { ThemeToggle } from './theme-toggle'
 
 // Confetti & Celebrations
 export { Confetti, ConfettiBurst, EmojiConfetti } from './confetti'
@@ -110,7 +118,16 @@ export { TrustBar, TrustBarCompact } from './trust-bar'
 // Hero Video Showcase (Floating cards)
 export { HeroVideoShowcase } from './hero-video-showcase'
 
+// Rotating Headline (Animated word cycling)
+export { RotatingHeadline } from './rotating-headline'
+
+// Platform Badges (Social platform icons)
+export { PlatformBadges } from './platform-badges'
+
 // High-Voltage Animation Components
 export { ElectricalConnector, type ElectricalConnectorProps } from './electrical-connector'
 export { GlitchText, type GlitchTextProps } from './glitch-text'
 export { StageIcon, type StageType } from './stage-icon'
+
+// Hero Phone Animation
+export { HeroPhoneAnimation } from './hero-phone-animation'

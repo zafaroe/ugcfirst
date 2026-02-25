@@ -31,13 +31,13 @@ async function updateTestUser() {
     return
   }
 
-  const testUser = users.users.find((u) => u.email === 'test@vidnary.com')
+  const testUser = users.users.find((u) => u.email === 'test@ugcfirst.com')
 
   if (!testUser) {
     console.log('Test user not found. Creating one...')
 
     const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-      email: 'test@vidnary.com',
+      email: 'test@ugcfirst.com',
       password: 'TestPassword123!',
       email_confirm: true,
       user_metadata: {
@@ -51,7 +51,7 @@ async function updateTestUser() {
     }
 
     console.log('Created test user:', newUser.user?.id)
-    console.log('Email: test@vidnary.com')
+    console.log('Email: test@ugcfirst.com')
     console.log('Password: TestPassword123!')
     return
   }
@@ -69,7 +69,7 @@ async function updateTestUser() {
 
   console.log('Updated test user password!')
   console.log('User ID:', testUser.id)
-  console.log('Email: test@vidnary.com')
+  console.log('Email: test@ugcfirst.com')
   console.log('Password: TestPassword123!')
 }
 

@@ -35,7 +35,7 @@ export const mockTransactions: CreditTransaction[] = [
     id: 'txn_3',
     type: 'usage',
     amount: -15,
-    description: 'Reel It In - Smart Watch Feature',
+    description: 'Auto Pilot - Smart Watch Feature',
     createdAt: '2024-12-04T09:15:00Z',
   },
   {

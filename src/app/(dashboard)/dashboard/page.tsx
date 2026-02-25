@@ -5,13 +5,17 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faVideo, faArrowRight, faBookOpen, faTrophy, faStore } from '@fortawesome/free-solid-svg-icons'
+import { faVideo, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { createClient } from '@supabase/supabase-js'
 import { DashboardLayout } from '@/components/layouts/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { ConfirmModal } from '@/components/ui/modal'
 import { useToast } from '@/components/ui/toast'
-import { CornerStar, StaggerContainer, StaggerItem, EASINGS } from '@/components/ui'
+import {
+  StaggerContainer,
+  StaggerItem,
+  EASINGS,
+} from '@/components/ui'
 import {
   ModeSelectionCard,
   GenerationCard,
@@ -29,18 +33,6 @@ const headerVariants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: EASINGS.easeOut,
-    },
-  },
-}
-
-const quickActionVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.4,
       ease: EASINGS.easeOut,
     },
   },
@@ -169,28 +161,24 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      {/* Corner decoration */}
-      <CornerStar position="bottom-right" />
-
       <div className="relative z-10 space-y-10">
-        {/* Header */}
+        {/* Header Section - Clean and focused */}
         <motion.div
           variants={headerVariants}
           initial="hidden"
           animate="visible"
-          className="text-center md:text-left"
         >
           <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-2">
             Create Your Next{' '}
-            <span className="gradient-text">Winner</span>
+            <span className="gradient-text">Video</span>
           </h1>
-          <p className="text-text-muted text-lg">
+          <p className="text-text-muted text-base md:text-lg max-w-lg">
             Choose your generation mode to get started.
           </p>
         </motion.div>
 
-        {/* Mode Selection Cards */}
-        <StaggerContainer className="grid md:grid-cols-2 gap-6" staggerDelay={0.15} initialDelay={0.3}>
+        {/* Mode Selection Cards - Clean grid */}
+        <StaggerContainer className="grid md:grid-cols-2 gap-6" staggerDelay={0.1} initialDelay={0.2}>
           <StaggerItem>
             <ModeSelectionCard mode="diy" />
           </StaggerItem>
@@ -199,14 +187,17 @@ export default function DashboardPage() {
           </StaggerItem>
         </StaggerContainer>
 
+        {/* Subtle divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-border-default to-transparent" />
+
         {/* Recent Activity Section */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.4, ease: EASINGS.easeOut }}
+          transition={{ delay: 0.4, duration: 0.4, ease: EASINGS.easeOut }}
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-text-primary">Recent Activity</h2>
+            <h2 className="text-xl md:text-2xl font-semibold text-text-primary">Recent Activity</h2>
             {hasGenerations && (
               <Link href="/projects">
                 <Button variant="ghost" size="sm">
@@ -265,100 +256,24 @@ export default function DashboardPage() {
   )
 }
 
-// Enhanced Empty State with film-themed illustration and quick actions
+// Simple Empty State
 function EnhancedEmptyState() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
-      className="py-8"
+      transition={{ delay: 0.2, duration: 0.4 }}
+      className="py-12"
     >
-      {/* Film-themed Empty State */}
       <EmptyState
         {...emptyStatePresets.noProjects}
-        size="lg"
+        size="md"
         action={{
-          label: 'Create Video',
+          label: 'Create Your First Video',
           href: '/create/diy',
           icon: <FontAwesomeIcon icon={faVideo} className="w-4 h-4" />,
         }}
-        secondaryAction={{
-          label: 'Watch Tutorial',
-          href: '/templates',
-          variant: 'secondary',
-        }}
       />
-
-      {/* Quick Action Cards */}
-      <motion.div
-        className="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto mt-8"
-        variants={quickActionVariants}
-        initial="hidden"
-        animate="visible"
-        transition={{ delay: 0.6 }}
-      >
-        <QuickActionCard
-          icon={faStore}
-          label="Create from URL"
-          href="/create/concierge"
-          color="indigo"
-        />
-        <QuickActionCard
-          icon={faBookOpen}
-          label="Browse Templates"
-          href="/templates"
-          color="fuchsia"
-        />
-        <QuickActionCard
-          icon={faTrophy}
-          label="Read Success Stories"
-          href="/success-stories"
-          color="gradient"
-        />
-      </motion.div>
     </motion.div>
-  )
-}
-
-interface QuickActionCardProps {
-  icon: typeof faVideo
-  label: string
-  href: string
-  color: 'indigo' | 'fuchsia' | 'gradient'
-}
-
-function QuickActionCard({ icon, label, href, color }: QuickActionCardProps) {
-  const iconColorClass = {
-    indigo: 'text-electric-indigo',
-    fuchsia: 'text-vibrant-fuchsia',
-    gradient: 'gradient-text',
-  }[color]
-
-  const bgColorClass = {
-    indigo: 'bg-electric-indigo/10 group-hover:bg-electric-indigo/20',
-    fuchsia: 'bg-vibrant-fuchsia/10 group-hover:bg-vibrant-fuchsia/20',
-    gradient: 'bg-gradient-to-br from-electric-indigo/10 to-vibrant-fuchsia/10 group-hover:from-electric-indigo/20 group-hover:to-vibrant-fuchsia/20',
-  }[color]
-
-  return (
-    <Link href={href}>
-      <motion.div
-        className="group flex items-center gap-3 p-4 rounded-xl bg-surface/50 backdrop-blur-sm border border-white/10 hover:border-electric-indigo/50 transition-all cursor-pointer"
-        whileHover={{ y: -4, scale: 1.02, boxShadow: '0 0 20px rgba(99, 102, 241, 0.2)' }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <div className={`w-10 h-10 rounded-lg ${bgColorClass} flex items-center justify-center transition-colors`}>
-          <FontAwesomeIcon icon={icon} className={`w-5 h-5 ${iconColorClass}`} />
-        </div>
-        <span className="text-sm font-medium text-text-primary group-hover:text-white transition-colors">
-          {label}
-        </span>
-        <FontAwesomeIcon
-          icon={faArrowRight}
-          className="w-4 h-4 text-text-muted ml-auto opacity-0 group-hover:opacity-100 transform translate-x-[-4px] group-hover:translate-x-0 transition-all"
-        />
-      </motion.div>
-    </Link>
   )
 }

@@ -30,7 +30,7 @@ function AudienceCard({ audience, index, isPrimary = false, className }: Audienc
       <Card
         className={cn(
           'p-5 h-full relative overflow-hidden',
-          isPrimary && 'ring-2 ring-electric-indigo'
+          isPrimary && 'ring-2 ring-mint'
         )}
       >
         {/* Primary indicator */}
@@ -52,7 +52,7 @@ function AudienceCard({ audience, index, isPrimary = false, className }: Audienc
             className={cn(
               'p-2.5 rounded-xl',
               isPrimary
-                ? 'bg-electric-indigo/20 text-electric-indigo'
+                ? 'bg-mint/20 text-mint'
                 : 'bg-surface text-text-muted'
             )}
           >

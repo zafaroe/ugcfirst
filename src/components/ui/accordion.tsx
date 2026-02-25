@@ -57,12 +57,12 @@ function AccordionItemComponent({ item, isOpen, onToggle }: AccordionItemCompone
     <div className={cn(
       "rounded-xl bg-surface border overflow-hidden transition-all duration-300",
       isOpen
-        ? "border-l-2 border-l-electric-indigo border-t-border-default border-r-border-default border-b-border-default bg-electric-indigo/5"
+        ? "border-l-2 border-l-mint border-t-border-default border-r-border-default border-b-border-default bg-mint/5"
         : "border-border-default"
     )}>
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-elevated/50 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-surface-raised/50 transition-colors"
       >
         <span className={cn(
           "font-medium pr-4 transition-colors",
@@ -75,7 +75,7 @@ function AccordionItemComponent({ item, isOpen, onToggle }: AccordionItemCompone
         >
           <ChevronDown className={cn(
             "w-5 h-5 transition-colors",
-            isOpen ? "text-electric-indigo" : "text-text-muted"
+            isOpen ? "text-mint" : "text-text-muted"
           )} />
         </motion.span>
       </button>

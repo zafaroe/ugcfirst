@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 
 export interface ComparisonRow {
   feature: string
-  vidnary: string
+  ugcfirst: string
   diy: string
   freelancer: string
   agency: string
@@ -14,10 +14,10 @@ export interface ComparisonRow {
 
 export interface CompetitorComparisonRow {
   feature: string
-  vidnary: string
+  ugcfirst: string
   makeugc: string
   creatify: string
-  vidnaryWins?: boolean
+  ugcfirstWins?: boolean
 }
 
 export interface ComparisonTableProps {
@@ -31,14 +31,14 @@ export interface CompetitorComparisonTableProps {
 }
 
 const columns = [
-  { key: 'vidnary', label: 'Vidnary', highlight: true },
+  { key: 'ugcfirst', label: 'UGCFirst', highlight: true },
   { key: 'diy', label: 'DIY' },
   { key: 'freelancer', label: 'Freelancer' },
   { key: 'agency', label: 'Agency' },
 ]
 
 const competitorColumns = [
-  { key: 'vidnary', label: 'Vidnary', highlight: true },
+  { key: 'ugcfirst', label: 'UGCFirst', highlight: true },
   { key: 'makeugc', label: 'MakeUGC' },
   { key: 'creatify', label: 'Creatify' },
 ]
@@ -68,12 +68,12 @@ export function ComparisonTable({ data, className }: ComparisonTableProps) {
                 className={cn(
                   'py-4 px-4 text-center font-semibold text-sm',
                   col.highlight
-                    ? 'text-electric-indigo bg-electric-indigo/10 rounded-t-xl'
+                    ? 'text-mint bg-mint/10 rounded-t-xl'
                     : 'text-text-muted'
                 )}
               >
                 {col.highlight && (
-                  <span className="block text-xs font-normal text-electric-indigo mb-1">
+                  <span className="block text-xs font-normal text-mint mb-1">
                     Recommended
                   </span>
                 )}
@@ -104,7 +104,7 @@ export function ComparisonTable({ data, className }: ComparisonTableProps) {
                     className={cn(
                       'py-4 px-4 text-center text-sm',
                       col.highlight
-                        ? 'bg-electric-indigo/10 text-text-primary font-medium'
+                        ? 'bg-mint/10 text-text-primary font-medium'
                         : 'text-text-muted'
                     )}
                   >
@@ -120,7 +120,7 @@ export function ComparisonTable({ data, className }: ComparisonTableProps) {
   )
 }
 
-// Competitor Comparison Table - Vidnary vs MakeUGC vs Creatify
+// Competitor Comparison Table - UGCFirst vs MakeUGC vs Creatify
 export function CompetitorComparisonTable({ data, className }: CompetitorComparisonTableProps) {
   return (
     <div className={cn('overflow-x-auto', className)}>
@@ -136,7 +136,7 @@ export function CompetitorComparisonTable({ data, className }: CompetitorCompari
                 className={cn(
                   'py-4 px-4 text-center font-semibold text-sm w-1/4',
                   col.highlight
-                    ? 'text-white bg-gradient-to-b from-electric-indigo to-vibrant-fuchsia rounded-t-xl'
+                    ? 'text-white bg-gradient-to-b from-mint to-mint-dark rounded-t-xl'
                     : 'text-text-muted bg-surface/50'
                 )}
               >
@@ -161,7 +161,7 @@ export function CompetitorComparisonTable({ data, className }: CompetitorCompari
               transition={{ delay: index * 0.05 }}
               className={cn(
                 'border-t border-border-default',
-                row.vidnaryWins && 'bg-electric-indigo/5'
+                row.ugcfirstWins && 'bg-mint/5'
               )}
             >
               <td className="py-4 px-4 text-text-primary font-medium text-sm">
@@ -170,16 +170,16 @@ export function CompetitorComparisonTable({ data, className }: CompetitorCompari
               {competitorColumns.map((col) => {
                 const value = row[col.key as keyof CompetitorComparisonRow] as string
                 const icon = getCellIcon(value)
-                const isVidnary = col.key === 'vidnary'
-                const isWinningRow = row.vidnaryWins && isVidnary
+                const isUGCFirst = col.key === 'ugcfirst'
+                const isWinningRow = row.ugcfirstWins && isUGCFirst
 
                 return (
                   <td
                     key={col.key}
                     className={cn(
                       'py-4 px-4 text-center text-sm',
-                      isVidnary
-                        ? 'bg-electric-indigo/10 text-text-primary font-semibold'
+                      isUGCFirst
+                        ? 'bg-mint/10 text-text-primary font-semibold'
                         : 'text-text-muted',
                       isWinningRow && 'text-status-success'
                     )}

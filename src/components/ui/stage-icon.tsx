@@ -73,7 +73,7 @@ export function StageIcon({ stage, size = 48, className }: StageIconProps) {
       <motion.div
         className={cn(
           'absolute inset-[-12px] rounded-2xl blur-2xl',
-          isComplete ? 'bg-status-success/25' : 'bg-electric-indigo/20'
+          isComplete ? 'bg-status-success/25' : 'bg-mint/20'
         )}
         animate={{ opacity: [0.3, 0.5, 0.3] }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
@@ -85,12 +85,12 @@ export function StageIcon({ stage, size = 48, className }: StageIconProps) {
           'relative z-10 w-20 h-20 rounded-2xl flex items-center justify-center',
           isComplete
             ? 'bg-gradient-to-br from-status-success to-emerald-400'
-            : 'bg-gradient-to-br from-electric-indigo via-purple-500 to-vibrant-fuchsia'
+            : 'bg-gradient-to-br from-mint-light to-mint-dark'
         )}
         style={{
           boxShadow: isComplete
             ? '0 8px 32px rgba(16, 185, 129, 0.3)'
-            : '0 8px 32px rgba(99, 102, 241, 0.25)',
+            : '0 8px 32px rgba(16, 185, 129, 0.25)',
         }}
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

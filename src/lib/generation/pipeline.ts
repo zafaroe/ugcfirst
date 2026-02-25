@@ -513,7 +513,7 @@ export interface CompletedVideo {
   videoSignedUrl: string;
   duration: number;
   // NOTE: videoBuffer removed - now written to temp file directly to avoid Inngest serialization limits
-  // Temp file path: os.tmpdir()/vidnary_buffer_{generationId}_{scriptIndex}.mp4
+  // Temp file path: os.tmpdir()/ugcfirst_buffer_{generationId}_{scriptIndex}.mp4
 }
 
 /**
@@ -658,7 +658,7 @@ export async function stepGenerateSubtitles(
       const videoBuffer = await downloadVideo(generationId, video.scriptIndex);
 
       // Write to temp for FFmpeg processing (unique filename to avoid conflicts)
-      tempVideoPath = path.join(os.tmpdir(), `vidnary_subtitle_input_${generationId}_${video.scriptIndex}_${Date.now()}.mp4`);
+      tempVideoPath = path.join(os.tmpdir(), `ugcfirst_subtitle_input_${generationId}_${video.scriptIndex}_${Date.now()}.mp4`);
       fs.writeFileSync(tempVideoPath, videoBuffer);
       console.log(`[Pipeline] Subtitle ${video.scriptIndex}: Using video from ${tempVideoPath}`);
 
@@ -768,7 +768,7 @@ export async function stepBurnSubtitles(
       const videoBuffer = await downloadVideo(generationId, video.scriptIndex);
 
       // Write to temp for FFmpeg processing (unique filename to avoid conflicts)
-      const tempVideoPath = path.join(os.tmpdir(), `vidnary_burn_input_${generationId}_${video.scriptIndex}_${Date.now()}.mp4`);
+      const tempVideoPath = path.join(os.tmpdir(), `ugcfirst_burn_input_${generationId}_${video.scriptIndex}_${Date.now()}.mp4`);
       fs.writeFileSync(tempVideoPath, videoBuffer);
       tempFiles.push(tempVideoPath); // Clean up after processing
 
@@ -780,7 +780,7 @@ export async function stepBurnSubtitles(
       }));
 
       // 3. Generate ASS file
-      const assPath = path.join(os.tmpdir(), `vidnary_subtitles_${generationId}_${video.scriptIndex}.ass`);
+      const assPath = path.join(os.tmpdir(), `ugcfirst_subtitles_${generationId}_${video.scriptIndex}.ass`);
       generateASSFile(wordTimestamps, assPath, {
         wordsPerGroup: 3,
         smoothTransitions: true,

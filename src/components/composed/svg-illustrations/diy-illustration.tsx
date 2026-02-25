@@ -85,14 +85,14 @@ export function DIYIllustration({ size = 'lg', animated = true, className }: DIY
         <defs>
           {/* Primary neon gradient */}
           <linearGradient id="diyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#6366F1" />
-            <stop offset="100%" stopColor="#D946EF" />
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="100%" stopColor="#F43F5E" />
           </linearGradient>
 
           {/* Secondary gradient (reversed) */}
           <linearGradient id="diyGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#D946EF" />
-            <stop offset="100%" stopColor="#6366F1" />
+            <stop offset="0%" stopColor="#F43F5E" />
+            <stop offset="100%" stopColor="#10B981" />
           </linearGradient>
 
           {/* Glow filter for neon effect */}
@@ -206,7 +206,7 @@ export function DIYIllustration({ size = 'lg', animated = true, className }: DIY
           <motion.circle
             cy="50"
             r="4"
-            fill="#1E293B"
+            fill="#FAFAF9"
             initial={{ cx: 70 }}
             animate={animated ? { cx: [70, 130, 70] } : { cx: 100 }}
             transition={slider1Transition}
@@ -277,7 +277,7 @@ export function DIYIllustration({ size = 'lg', animated = true, className }: DIY
           <motion.circle
             cy="80"
             r="4"
-            fill="#1E293B"
+            fill="#FAFAF9"
             initial={{ cx: 130 }}
             animate={animated ? { cx: [130, 70, 130] } : { cx: 100 }}
             transition={slider2Transition}
@@ -295,7 +295,7 @@ export function DIYIllustration({ size = 'lg', animated = true, className }: DIY
                 width="28"
                 height="16"
                 rx="8"
-                fill={toggle.initialOn ? "rgba(99, 102, 241, 0.3)" : "#334155"}
+                fill={toggle.initialOn ? "rgba(16, 185, 129, 0.3)" : "#334155"}
                 stroke={toggle.initialOn ? "url(#diyGrad)" : "#475569"}
                 strokeWidth="1.5"
               />
@@ -450,7 +450,7 @@ export function DIYIllustration({ size = 'lg', animated = true, className }: DIY
               cx="45"
               cy="35"
               r="1.5"
-              fill="#D946EF"
+              fill="#F43F5E"
               initial={{ opacity: 0, scale: 0 }}
               animate={{
                 opacity: [0, 1, 0],
@@ -467,7 +467,7 @@ export function DIYIllustration({ size = 'lg', animated = true, className }: DIY
               cx="155"
               cy="65"
               r="1.5"
-              fill="#6366F1"
+              fill="#10B981"
               initial={{ opacity: 0, scale: 0 }}
               animate={{
                 opacity: [0, 1, 0],
@@ -484,7 +484,7 @@ export function DIYIllustration({ size = 'lg', animated = true, className }: DIY
               cx="100"
               cy="175"
               r="2"
-              fill="#D946EF"
+              fill="#F43F5E"
               initial={{ opacity: 0, scale: 0 }}
               animate={{
                 opacity: [0, 0.8, 0],
@@ -502,7 +502,7 @@ export function DIYIllustration({ size = 'lg', animated = true, className }: DIY
               cx="70"
               cy="95"
               r="1"
-              fill="#818CF8"
+              fill="#34D399"
               initial={{ opacity: 0, scale: 0 }}
               animate={{
                 opacity: [0, 0.9, 0],

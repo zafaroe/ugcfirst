@@ -3,11 +3,11 @@
 import { motion } from 'framer-motion'
 
 const COLORS = {
-  indigo: '#6366F1',
-  fuchsia: '#D946EF',
+  indigo: '#10B981',
+  fuchsia: '#F43F5E',
   light: '#F8FAFC',
   muted: '#94A3B8',
-  surface: '#1E293B',
+  surface: '#FAFAF9',
 }
 
 // Floating animation for all illustrations

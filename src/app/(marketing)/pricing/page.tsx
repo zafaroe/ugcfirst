@@ -3,27 +3,33 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faXmark, faBolt } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons'
 import {
   Logo,
   Button,
   GradientOrb,
   FloatingStars,
+  FloatingOrbs,
+  AmbientParticles,
+  WaveLines,
+  GlowingGrid,
   StaggerContainer,
   StaggerItem,
   Accordion,
 } from '@/components/ui'
-import { ComparisonTable, CompetitorComparisonTable } from '@/components/composed'
-import { mockPricingPlans, mockCreditPacks, mockPricingFAQ, mockComparisonData, mockCompetitorComparison } from '@/mocks/data'
+import { ComparisonArena } from '@/components/composed'
+import { mockPricingPlans, mockCreditPacks, mockPricingFAQ } from '@/mocks/data'
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-deep-space bg-grid bg-grid-animated relative overflow-hidden">
+    <div className="min-h-screen bg-cream bg-grid bg-grid-animated relative overflow-hidden">
       {/* Background decorations */}
       <div className="fixed inset-0 pointer-events-none">
         <GradientOrb color="indigo" size="xl" position={{ top: '-15%', right: '-10%' }} animated />
         <GradientOrb color="fuchsia" size="lg" position={{ bottom: '5%', left: '-5%' }} animated />
         <FloatingStars count={6} />
+        <FloatingOrbs count={3} className="opacity-30" />
+        <AmbientParticles count={10} className="opacity-25" />
       </div>
 
       {/* Noise texture overlay */}
@@ -32,18 +38,21 @@ export default function PricingPage() {
       {/* Gradient mesh background */}
       <div className="gradient-mesh" />
 
-      {/* Header */}
+      {/* Header - High Contrast Design */}
       <header className="relative z-10 p-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/">
-            <Logo variant="light" size="sm" />
+            <Logo variant="colored" size="sm" />
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-text-muted hover:text-text-primary text-sm transition-colors">
+            <Link
+              href="/"
+              className="text-stone-300 hover:text-white text-sm font-semibold transition-colors"
+            >
               Back to Home
             </Link>
             <Link href="/login">
-              <Button variant="secondary" size="sm">
+              <Button variant="secondary" size="sm" className="border-stone-600 text-stone-200 hover:bg-stone-800">
                 Sign In
               </Button>
             </Link>
@@ -69,128 +78,102 @@ export default function PricingPage() {
         </motion.div>
 
         {/* Pricing cards */}
-        <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-16" staggerDelay={0.1}>
+        <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-16 items-stretch" staggerDelay={0.1}>
           {mockPricingPlans.map((plan) => (
-            <StaggerItem key={plan.id}>
+            <StaggerItem key={plan.id} className="flex">
               <motion.div
-                className={`relative h-full p-6 rounded-2xl transition-all flex flex-col ${
+                className={`relative w-full rounded-2xl transition-all flex flex-col ${
                   plan.isPopular
-                    ? 'gradient-border-glow shadow-glow scale-105'
-                    : 'border-2 border-border-default bg-surface/50 hover:border-electric-indigo/50'
+                    ? 'gradient-border-glow shadow-glow'
+                    : 'border border-border-default bg-surface-raised hover:border-mint/40 hover:shadow-glow-sm'
                 }`}
-                whileHover={{ y: -6, transition: { duration: 0.3 } }}
+                whileHover={{ y: -4, transition: { duration: 0.25 } }}
               >
-                {/* Popular badge - enhanced */}
+                {/* Popular badge */}
                 {plan.isPopular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                    <motion.span
-                      className="inline-block whitespace-nowrap px-5 py-1.5 text-sm font-bold bg-gradient-to-r from-electric-indigo to-vibrant-fuchsia text-white rounded-full shadow-lg"
-                      animate={{ scale: [1, 1.05, 1] }}
-                      transition={{ repeat: Infinity, duration: 2 }}
-                    >
-                      MOST POPULAR
-                    </motion.span>
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
+                    <span className="inline-block whitespace-nowrap px-4 py-1 text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-mint to-mint-dark text-white rounded-full shadow-md">
+                      Most Popular
+                    </span>
                   </div>
                 )}
 
-                {/* Plan name */}
-                <h3 className="text-lg font-semibold text-text-primary mb-2 mt-2">{plan.name}</h3>
+                {/* === Fixed-height header zone === */}
+                <div className="p-5 pb-0">
+                  <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-3">
+                    {plan.name}
+                  </h3>
 
-                {/* Price */}
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-text-primary">${plan.price}</span>
-                  <span className="text-text-muted">/month</span>
-                </div>
-
-                {/* Credits info */}
-                <div className="mb-6 p-3 rounded-lg bg-deep-space/50">
-                  <div className="flex items-center gap-2 text-sm mb-1">
-                    <FontAwesomeIcon icon={faBolt} className="w-4 h-4 text-electric-indigo" />
-                    <span className="text-text-primary font-medium">{plan.credits} Monthly Credits</span>
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-4xl font-extrabold text-text-primary tracking-tight">
+                      ${plan.price}
+                    </span>
+                    <span className="text-text-muted text-sm">/mo</span>
                   </div>
-                  <p className="text-xs text-text-muted">
-                    {plan.videoCount} Video Equivalent
-                  </p>
-                  <p className="text-xs text-status-success font-medium">
-                    ${plan.costPerVideo.toFixed(2)}/video
-                  </p>
+
+                  <div className="text-sm text-text-muted mb-4">
+                    {plan.credits} credits &middot; {plan.videoCount} videos
+                    {plan.costPerVideo > 0 && (
+                      <span className="text-mint font-medium ml-1">
+                        · ${plan.costPerVideo.toFixed(2)}/vid
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Features */}
-                <ul className="space-y-3 mb-4 flex-grow">
+                {/* === Divider === */}
+                <div className="mx-5 border-t border-border-default" />
+
+                {/* === Features zone (flex-grow) === */}
+                <ul className="p-5 space-y-2.5 flex-grow">
                   {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm">
+                    <li key={index} className="flex items-start gap-2.5 text-sm">
                       <FontAwesomeIcon
                         icon={faCheck}
-                        className="w-4 h-4 text-status-success mt-0.5 flex-shrink-0"
+                        className="w-3.5 h-3.5 text-mint mt-0.5 flex-shrink-0"
                       />
-                      <span className="text-text-muted">{feature}</span>
+                      <span className="text-text-primary">{feature}</span>
+                    </li>
+                  ))}
+                  {plan.limitations && plan.limitations.map((limitation, index) => (
+                    <li key={`lim-${index}`} className="flex items-start gap-2.5 text-sm">
+                      <FontAwesomeIcon
+                        icon={faXmark}
+                        className="w-3.5 h-3.5 text-text-disabled mt-0.5 flex-shrink-0"
+                      />
+                      <span className="text-text-disabled">{limitation}</span>
                     </li>
                   ))}
                 </ul>
 
-                {/* Limitations */}
-                {plan.limitations && plan.limitations.length > 0 && (
-                  <ul className="space-y-2 mb-6 pt-3 border-t border-border-default/50">
-                    {plan.limitations.map((limitation, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <FontAwesomeIcon
-                          icon={faXmark}
-                          className="w-4 h-4 text-text-disabled mt-0.5 flex-shrink-0"
-                        />
-                        <span className="text-text-disabled">{limitation}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {/* CTA - pushed to bottom with mt-auto */}
-                <Button
-                  className="w-full mt-auto"
-                  variant={plan.isPopular ? 'primary' : 'secondary'}
-                  size={plan.isPopular ? 'lg' : 'md'}
-                >
-                  {plan.price === 0 ? 'Get Started Free' : 'Subscribe Now'}
-                </Button>
+                {/* === CTA zone (always at bottom) === */}
+                <div className="p-5 pt-0">
+                  <Button
+                    className="w-full"
+                    variant={plan.isPopular ? 'primary' : 'secondary'}
+                    size="md"
+                  >
+                    {plan.price === 0 ? 'Get Started Free' : 'Subscribe Now'}
+                  </Button>
+                </div>
               </motion.div>
             </StaggerItem>
           ))}
         </StaggerContainer>
 
-        {/* Competitor Comparison Section */}
-        <motion.div
-          className="mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-2xl md:text-3xl font-bold text-text-primary text-center mb-4">
-            Vidnary vs. <span className="gradient-text">The Competition</span>
-          </h2>
-          <p className="text-text-muted text-center mb-8 max-w-2xl mx-auto">
-            See why dropshippers are switching from MakeUGC and Creatify
-          </p>
-          <div className="bg-surface/50 rounded-2xl border border-border-default p-4 md:p-6">
-            <CompetitorComparisonTable data={mockCompetitorComparison} />
-          </div>
-        </motion.div>
+        {/* Wave decoration */}
+        <div className="relative h-16 -mb-8">
+          <WaveLines position="bottom" className="opacity-40" />
+        </div>
 
-        {/* Alternative Comparison Section */}
+        {/* Comparison Arena Section */}
         <motion.div
-          className="mb-16"
+          className="mb-16 relative"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-2xl md:text-3xl font-bold text-text-primary text-center mb-4">
-            AI vs. Traditional Options
-          </h2>
-          <p className="text-text-muted text-center mb-8 max-w-2xl mx-auto">
-            Compare Vidnary to DIY, freelancers, and agencies
-          </p>
-          <div className="bg-surface/50 rounded-2xl border border-border-default p-4 md:p-6">
-            <ComparisonTable data={mockComparisonData} />
-          </div>
+          <ComparisonArena />
         </motion.div>
 
         {/* Credit Packs Section */}
@@ -198,20 +181,24 @@ export default function PricingPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-16"
+          className="mb-16 relative"
         >
-          <h2 className="text-2xl font-bold text-text-primary text-center mb-2">
-            Pay-As-You-Go <span className="gradient-text">Credit Packs</span>
-          </h2>
-          <p className="text-text-muted text-center mb-8">
-            Need more credits? Top up anytime with our credit packs.
-          </p>
+          {/* Subtle grid background */}
+          <GlowingGrid className="opacity-20" dotCount={16} />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          <div className="relative">
+            <h2 className="text-2xl font-bold text-text-primary text-center mb-2">
+              Pay-As-You-Go <span className="gradient-text">Credit Packs</span>
+            </h2>
+            <p className="text-text-muted text-center mb-8">
+              Need more credits? Top up anytime with our credit packs.
+            </p>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {mockCreditPacks.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className="p-5 rounded-xl border border-border-default bg-surface/50 hover:border-electric-indigo/50 transition-all cursor-pointer"
+                className="p-5 rounded-xl border border-border-default bg-surface/50 hover:border-mint/50 transition-all cursor-pointer"
                 whileHover={{ y: -2 }}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -231,6 +218,7 @@ export default function PricingPage() {
                 </p>
               </motion.div>
             ))}
+            </div>
           </div>
         </motion.div>
 
@@ -290,11 +278,11 @@ export default function PricingPage() {
               Ready to <span className="gradient-text">transform</span> your content strategy?
             </h2>
             <p className="text-text-muted mb-6 max-w-xl mx-auto">
-              Join the waitlist for early access and get 50% off your first 3 months.
+              Start with 1 free video — no credit card required.
             </p>
-            <Link href="/#hero">
+            <Link href="/signup">
               <Button variant="primary" size="lg" className="animate-pulse-glow">
-                Get Early Access
+                Start Free — 1 Video, No Card
               </Button>
             </Link>
           </div>
@@ -304,7 +292,7 @@ export default function PricingPage() {
       {/* Footer */}
       <footer className="relative z-10 py-8 px-6 border-t border-border-default mt-12">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-text-muted">
-          <p>&copy; 2026 Vidnary. All rights reserved.</p>
+          <p>&copy; 2026 UGCFirst. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="#" className="hover:text-text-primary transition-colors">Privacy Policy</Link>
             <Link href="#" className="hover:text-text-primary transition-colors">Terms of Service</Link>

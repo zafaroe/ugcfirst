@@ -64,14 +64,14 @@ export function ReelIllustration({ size = 'lg', animated = true, className }: Re
         <defs>
           {/* Primary gradient */}
           <linearGradient id="reelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#6366F1" />
-            <stop offset="100%" stopColor="#D946EF" />
+            <stop offset="0%" stopColor="#10B981" />
+            <stop offset="100%" stopColor="#F43F5E" />
           </linearGradient>
 
           {/* Reversed gradient */}
           <linearGradient id="reelGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#D946EF" />
-            <stop offset="100%" stopColor="#6366F1" />
+            <stop offset="0%" stopColor="#F43F5E" />
+            <stop offset="100%" stopColor="#10B981" />
           </linearGradient>
 
           {/* Strong glow filter */}
@@ -205,7 +205,7 @@ export function ReelIllustration({ size = 'lg', animated = true, className }: Re
             width="90"
             height="65"
             rx="14"
-            fill="#1E293B"
+            fill="#FAFAF9"
             stroke="url(#reelGrad)"
             strokeWidth="2.5"
           />
