@@ -197,7 +197,7 @@ export default function StrategyPage() {
                   <h1 className="text-xl font-semibold text-text-primary">
                     Strategy Brief
                   </h1>
-                  <Badge variant="purple" size="sm">
+                  <Badge variant="gradient" size="sm">
                     <Sparkles className="w-3 h-3 mr-1" />
                     AI Generated
                   </Badge>
@@ -279,7 +279,7 @@ export default function StrategyPage() {
                   {/* Caption indicator */}
                   {canToggleCaptions && (
                     <div className="p-3 border-t border-border-default">
-                      <Badge variant={showCaptions ? 'purple' : 'default'} size="sm">
+                      <Badge variant={showCaptions ? 'mint' : 'default'} size="sm">
                         {showCaptions ? 'With Captions' : 'Without Captions'}
                       </Badge>
                     </div>
@@ -297,7 +297,7 @@ export default function StrategyPage() {
                   </h3>
                   <div className="flex items-center gap-3 mb-4">
                     <Badge
-                      variant={generation.mode === 'concierge' ? 'purple' : 'default'}
+                      variant={generation.mode === 'concierge' ? 'gradient' : 'default'}
                       size="sm"
                     >
                       {generation.mode === 'concierge' ? 'Drop & Go' : 'Studio'}

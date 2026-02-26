@@ -14,7 +14,6 @@ const demoVideos = [
     category: 'Beauty',
     videoSrc: '/videos/landing/beauty-demo.mp4',
     fallbackGradient: 'linear-gradient(135deg, #FF6B9D 0%, #C44569 100%)',
-    duration: '0:12',
     views: '3.2M',
     engagement: '+412%',
   },
@@ -24,7 +23,6 @@ const demoVideos = [
     category: 'Tech',
     videoSrc: '/videos/landing/tech-demo.mp4',
     fallbackGradient: 'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)',
-    duration: '0:12',
     views: '2.1M',
     engagement: '+287%',
   },
@@ -34,7 +32,6 @@ const demoVideos = [
     category: 'Lifestyle',
     videoSrc: '/videos/landing/lifestyle-demo.mp4',
     fallbackGradient: 'linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%)',
-    duration: '0:12',
     views: '1.8M',
     engagement: '+356%',
   },
@@ -44,7 +41,6 @@ const demoVideos = [
     category: 'Fashion',
     videoSrc: '/videos/landing/fashion-demo.mp4',
     fallbackGradient: 'linear-gradient(135deg, #F093FB 0%, #F5576C 100%)',
-    duration: '0:12',
     views: '3.1M',
     engagement: '+445%',
   },
@@ -54,7 +50,6 @@ const demoVideos = [
     category: 'Audio',
     videoSrc: '/videos/landing/audio-demo.mp4',
     fallbackGradient: 'linear-gradient(135deg, #FA709A 0%, #FEE140 100%)',
-    duration: '0:12',
     views: '1.5M',
     engagement: '+298%',
   },
@@ -269,11 +264,6 @@ function VideoCard({
               <Play className="w-7 h-7 text-white fill-white ml-1" />
             </div>
           </motion.div>
-
-          {/* Duration Badge */}
-          <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/60 backdrop-blur-sm rounded-md text-xs font-semibold text-white z-30">
-            {video.duration}
-          </div>
 
           {/* Category Badge */}
           <div className="absolute top-3 left-3 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-xs font-semibold text-white border border-white/15 z-30">

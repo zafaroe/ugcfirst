@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 export interface BadgeProps {
-  variant?: 'default' | 'success' | 'warning' | 'error' | 'mint' | 'gradient' | 'outline'
+  variant?: 'default' | 'success' | 'warning' | 'error' | 'mint' | 'gradient' | 'outline' | 'purple'
   size?: 'sm' | 'md' | 'lg'
   children: React.ReactNode
   className?: string
@@ -20,6 +20,7 @@ const variantClasses = {
   mint: 'bg-mint/15 text-mint-dark border border-mint/20',
   gradient: 'bg-gradient-to-r from-mint/20 to-mint-dark/20 text-mint-dark border border-mint/20',
   outline: 'bg-transparent text-text-primary border border-border-default hover:border-mint/50 hover:text-mint transition-colors',
+  purple: 'bg-purple-500/15 text-purple-400 border border-purple-500/20',
 }
 
 const sizeClasses = {
@@ -41,7 +42,7 @@ export function Badge({
     initial: { scale: 0.9, opacity: 0 },
     animate: { scale: 1, opacity: 1 },
     whileHover: { scale: 1.05 },
-    transition: { type: 'spring', stiffness: 400, damping: 20 },
+    transition: { type: 'spring' as const, stiffness: 400, damping: 20 },
   } : {}
 
   return (
