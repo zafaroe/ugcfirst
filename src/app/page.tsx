@@ -327,8 +327,9 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          SECTION 3: SOCIAL PROOF BAR — Dark contrast strip
+          SECTION 3: SOCIAL PROOF BAR — Hidden until launch
           ═══════════════════════════════════════════ */}
+      {/* TODO: Uncomment after launch
       <section className="relative bg-surface-dark py-14 overflow-hidden">
         <FloatingParticles />
         <div className="absolute inset-0 bg-gradient-to-r from-surface-dark via-surface-dark-raised to-surface-dark opacity-80" />
@@ -343,6 +344,7 @@ export default function LandingPage() {
           <PlatformBadges className="[&_span]:text-stone-400 [&_div]:text-stone-400 [&_div:hover]:text-white" />
         </motion.div>
       </section>
+      */}
 
       {/* ═══════════════════════════════════════════
           SECTION 4: PAIN POINTS — Before/After
