@@ -165,7 +165,7 @@ export default function NotFound() {
               <div className="space-y-1.5 text-xs font-mono border-b border-neutral-700 pb-3 mb-4">
                 <div className="flex justify-between">
                   <span className="text-neutral-500">PRODUCTION</span>
-                  <span className="text-text-primary">VIDNARY.COM</span>
+                  <span className="text-text-primary">UGCFIRST.COM</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">DIRECTOR</span>
