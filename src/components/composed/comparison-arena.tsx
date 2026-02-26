@@ -215,7 +215,7 @@ function ScoreBoard() {
       initial={{ opacity: 0, y: -20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="flex items-center justify-center gap-8 mb-12"
+      className="flex items-center justify-center gap-6 mb-12"
     >
       {/* UGCFirst score */}
       <div className="text-center">
@@ -241,7 +241,7 @@ function ScoreBoard() {
       </div>
 
       {/* VS */}
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center justify-center">
         <span className="text-2xl font-black text-stone-600">:</span>
       </div>
 
@@ -447,47 +447,86 @@ export function ComparisonArena() {
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Header with competitors */}
-            <div className="grid grid-cols-[1fr,auto,1fr] gap-4 items-center mb-8">
-              <div className="text-right">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  className="inline-flex items-center gap-3"
-                >
-                  <div>
+            {/* Combined Header + Scoreboard - vertically stacked within columns */}
+            <div className="flex items-start justify-center gap-8 mb-12">
+              {/* Left Column: UGCFirst */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="flex flex-col items-center text-center"
+              >
+                {/* Label */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-center gap-2">
                     <p className="text-xl font-bold text-mint">UGCFirst</p>
-                    <p className="text-xs text-mint/60">The Champion</p>
+                    <Crown className="w-4 h-4 text-amber" />
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center shadow-lg shadow-mint/20">
-                    <Zap className="w-6 h-6 text-white" />
-                  </div>
-                </motion.div>
-              </div>
-
-              <VSDivider />
-
-              <div className="text-left">
+                  <p className="text-xs text-mint/70 font-medium">The Champion</p>
+                </div>
+                {/* Score */}
                 <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
                   viewport={{ once: true }}
-                  className="inline-flex items-center gap-3"
+                  transition={{ delay: 0.2, type: 'spring' }}
+                  className="relative"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-stone-800 border border-stone-700 flex items-center justify-center">
-                    <span className="text-lg">🥊</span>
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center shadow-lg shadow-mint/20">
+                    <span className="text-3xl font-black text-white">{featureBattles.filter(b => b.ugcfirstWins).length}</span>
                   </div>
-                  <div>
-                    <p className="text-xl font-medium text-stone-400">MakeUGC & Creatify</p>
-                    <p className="text-xs text-stone-500">The Challengers</p>
-                  </div>
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-amber flex items-center justify-center"
+                  >
+                    <Crown className="w-3.5 h-3.5 text-white" />
+                  </motion.div>
                 </motion.div>
-              </div>
-            </div>
+              </motion.div>
 
-            {/* Score board */}
-            <ScoreBoard />
+              {/* Center Column: VS and Colon */}
+              <div className="flex flex-col items-center justify-center pt-2">
+                {/* VS Badge */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  whileInView={{ scale: 1, rotate: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-stone-700 to-stone-800 border-2 border-stone-600 flex items-center justify-center shadow-xl mb-4"
+                >
+                  <span className="text-[10px] font-black text-stone-300 tracking-widest">VS</span>
+                </motion.div>
+                {/* Colon */}
+                <div className="w-10 h-20 flex items-center justify-center">
+                  <span className="text-2xl font-black text-stone-600">:</span>
+                </div>
+              </div>
+
+              {/* Right Column: Competitors */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="flex flex-col items-center text-center"
+              >
+                {/* Label */}
+                <div className="mb-4">
+                  <p className="text-xl font-medium text-stone-300">MakeUGC & Creatify</p>
+                  <p className="text-xs text-stone-500 font-medium">The Challengers</p>
+                </div>
+                {/* Score */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3, type: 'spring' }}
+                  className="w-20 h-20 rounded-2xl bg-stone-800 border border-stone-700 flex items-center justify-center"
+                >
+                  <span className="text-3xl font-black text-stone-500">{featureBattles.length - featureBattles.filter(b => b.ugcfirstWins).length}</span>
+                </motion.div>
+              </motion.div>
+            </div>
 
             {/* Feature battles */}
             <div className="space-y-6">

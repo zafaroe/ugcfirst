@@ -10,9 +10,11 @@ export interface PricingCardProps {
   isCurrentPlan?: boolean
   onSelect?: (plan: PricingPlan) => void
   className?: string
+  disabled?: boolean
+  ctaLabel?: string
 }
 
-export function PricingCard({ plan, isCurrentPlan = false, onSelect, className }: PricingCardProps) {
+export function PricingCard({ plan, isCurrentPlan = false, onSelect, className, disabled = false, ctaLabel }: PricingCardProps) {
   return (
     <Card
       className={cn(
@@ -88,9 +90,9 @@ export function PricingCard({ plan, isCurrentPlan = false, onSelect, className }
         variant={plan.isPopular ? 'primary' : 'secondary'}
         className="w-full mt-6"
         onClick={() => onSelect?.(plan)}
-        disabled={isCurrentPlan}
+        disabled={isCurrentPlan || disabled}
       >
-        {isCurrentPlan ? 'Current Plan' : plan.price === 0 ? 'Get Started Free' : 'Subscribe Now'}
+        {ctaLabel || (isCurrentPlan ? 'Current Plan' : plan.price === 0 ? 'Get Started Free' : 'Subscribe Now')}
       </Button>
     </Card>
   )

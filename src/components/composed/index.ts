@@ -59,3 +59,6 @@ export { StudioAnimation } from './svg-illustrations/studio-animation'
 export { DropAndGoAnimation } from './svg-illustrations/drop-and-go-animation'
 export { StudioIcon } from './svg-illustrations/studio-icon'
 export { DropAndGoIcon } from './svg-illustrations/drop-and-go-icon'
+
+// Waitlist
+export { WaitlistForm, WaitlistButton } from './waitlist-form'

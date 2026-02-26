@@ -30,7 +30,7 @@ import { useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } f
 import { TestimonialCardAnimated } from '@/components/composed/testimonial-card'
 import { PricingCard } from '@/components/composed/pricing-card'
 import { ComparisonArena } from '@/components/composed/comparison-arena'
-import { StudioAnimation, DropAndGoAnimation } from '@/components/composed'
+import { StudioAnimation, DropAndGoAnimation, WaitlistForm, WaitlistButton } from '@/components/composed'
 import {
   mockTestimonials,
   mockLandingFAQ,
@@ -191,7 +191,8 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Link
+              {/* Auth buttons hidden during waitlist phase - kept for later */}
+              {/* <Link
                 href="/login"
                 className="text-stone-300 hover:text-white transition-colors text-sm font-semibold hidden sm:inline px-3 py-2"
               >
@@ -201,7 +202,8 @@ export default function LandingPage() {
                 <Button variant="primary" size="md">
                   Start Free
                 </Button>
-              </Link>
+              </Link> */}
+              <WaitlistButton />
             </div>
           </div>
         </nav>
@@ -243,24 +245,29 @@ export default function LandingPage() {
               </p>
             </StaggerItem>
 
-            <StaggerItem className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start mb-5">
-              <Link href="/signup">
-                <Button variant="primary" size="lg" className="group/btn px-8 py-4 text-base font-semibold shadow-[0_8px_30px_rgba(16,185,129,0.35)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.5)] transition-all duration-300 animate-pulse-glow">
-                  Start Free — 1 Video, No Card
-                  <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                </Button>
-              </Link>
-              <a href="#how-it-works">
-                <Button variant="ghost" size="lg" className="text-base">
-                  See How It Works
-                  <ArrowDown className="w-4 h-4 ml-2" />
-                </Button>
-              </a>
+            <StaggerItem className="w-full max-w-lg mx-auto lg:mx-0 mb-5">
+              <WaitlistForm variant="hero" />
+              {/* Original CTAs hidden during waitlist phase
+              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                <Link href="/signup">
+                  <Button variant="primary" size="lg" className="group/btn px-8 py-4 text-base font-semibold shadow-[0_8px_30px_rgba(16,185,129,0.35)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.5)] transition-all duration-300 animate-pulse-glow">
+                    Start Free — 1 Video, No Card
+                    <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                  </Button>
+                </Link>
+                <a href="#how-it-works">
+                  <Button variant="ghost" size="lg" className="text-base">
+                    See How It Works
+                    <ArrowDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </a>
+              </div>
+              */}
             </StaggerItem>
 
             <StaggerItem>
               <p className="text-sm text-text-muted mb-8">
-                Then from <span className="font-semibold text-text-primary">$1.90/video</span> <span className="text-text-disabled">· No credit card required</span>
+                <span className="font-semibold text-mint">Coming Soon</span> · Be the first to create AI-powered UGC videos
               </p>
             </StaggerItem>
 
@@ -723,7 +730,8 @@ export default function LandingPage() {
               >
                 <PricingCard
                   plan={plan}
-                  onSelect={() => window.location.href = '/signup'}
+                  disabled
+                  ctaLabel="Coming Soon"
                 />
               </motion.div>
             ))}
@@ -793,30 +801,35 @@ export default function LandingPage() {
           className="relative max-w-3xl mx-auto px-6 text-center"
         >
           <h2 className="text-display text-4xl md:text-5xl text-white mb-5 text-glow-white">
-            Ready to create your{' '}
-            <span className="gradient-text-animated">first video</span>?
+            Be the first to{' '}
+            <span className="gradient-text-animated">create viral UGC</span>
           </h2>
           <p className="text-lg text-stone-400 mb-10 max-w-xl mx-auto">
-            Join thousands of sellers using AI to create scroll-stopping UGC content.
+            Join the waitlist and get early access to AI-powered video creation.
           </p>
+          <div className="max-w-lg mx-auto">
+            <WaitlistForm variant="cta" />
+          </div>
+          {/* Original CTA hidden during waitlist phase
           <Link href="/signup">
             <Button variant="primary" size="lg" className="group/cta px-10 py-4 text-base font-semibold shadow-[0_8px_30px_rgba(16,185,129,0.4)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.55)] transition-all duration-300 animate-pulse-glow">
               Create Your First Video Free
               <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover/cta:translate-x-1" />
             </Button>
           </Link>
+          */}
           <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-stone-400">
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-mint" />
-              3 Free Videos
+              Early Access
             </span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-mint" />
-              No Credit Card
+              Exclusive Pricing
             </span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-mint" />
-              Cancel Anytime
+              Launch Updates
             </span>
           </div>
         </motion.div>
