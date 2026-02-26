@@ -152,8 +152,9 @@ export default function PricingPage() {
                     className="w-full"
                     variant={plan.isPopular ? 'primary' : 'secondary'}
                     size="md"
+                    disabled={plan.price !== 0}
                   >
-                    {plan.price === 0 ? 'Get Started Free' : 'Subscribe Now'}
+                    {plan.price === 0 ? 'Get Started Free' : 'Coming Soon'}
                   </Button>
                 </div>
               </motion.div>
