@@ -19,6 +19,7 @@
     "@fortawesome/react-fontawesome": "^3.1.1",
     "@google/generative-ai": "^0.24.1",
     "@react-email/components": "^1.0.8",
+    "@react-email/render": "^2.0.4",
     "@supabase/supabase-js": "^2.93.3",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@vercel/analytics": "^1.6.1",
