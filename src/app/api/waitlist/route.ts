@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendWaitlistConfirmation } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,6 +61,10 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Fire and forget - send confirmation email (non-blocking)
+    const normalizedEmail = email.toLowerCase().trim()
+    sendWaitlistConfirmation(normalizedEmail).catch(console.error)
 
     return NextResponse.json({
       success: true,
