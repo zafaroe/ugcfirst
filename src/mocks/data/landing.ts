@@ -147,7 +147,7 @@ export interface ComparisonRow {
 export const mockComparisonData: ComparisonRow[] = [
   {
     feature: 'Cost per video',
-    ugcfirst: '$1.67-$2.95',
+    ugcfirst: '$2.52-$2.71',
     diy: '$0 (your time)',
     freelancer: '$150-300',
     agency: '$500-2000',
