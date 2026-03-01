@@ -62,3 +62,6 @@ export { DropAndGoIcon } from './svg-illustrations/drop-and-go-icon'
 
 // Waitlist
 export { WaitlistForm, WaitlistButton } from './waitlist-form'
+
+// Connected Accounts (Social Media)
+export { ConnectedAccounts } from './connected-accounts'

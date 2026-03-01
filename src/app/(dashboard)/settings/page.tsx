@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Avatar } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { GlassCard, SPRING, EASINGS } from '@/components/ui'
+import { ConnectedAccounts } from '@/components/composed'
 import { getBrowserClient } from '@/lib/supabase'
 
 interface UserData {
@@ -155,6 +156,9 @@ export default function ProfileSettingsPage() {
           </form>
         </GlassCard>
       </motion.div>
+
+      {/* Connected Accounts */}
+      <ConnectedAccounts />
 
       {/* Password */}
       <motion.div

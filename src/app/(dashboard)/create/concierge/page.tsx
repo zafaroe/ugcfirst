@@ -22,6 +22,7 @@ import {
   InsufficientCreditsModal,
   LowCreditsBanner,
 } from '@/components/composed'
+import { ScheduleModal } from '@/components/composed/schedule-modal'
 import type { CreditBalance } from '@/types/credits'
 import { VisibilityToggle } from '@/components/composed/visibility-toggle'
 import type { ManualProductData } from '@/components/composed'
@@ -183,6 +184,7 @@ export default function ConciergePage() {
   const [visibility, setVisibility] = useState<VideoVisibility>('private')
   const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false)
   const [userPlan, setUserPlan] = useState<PlanType>('free')
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
 
   // Credit state
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
@@ -1225,8 +1227,7 @@ export default function ConciergePage() {
             }
           }}
           onSchedule={() => {
-            // Future: Bloatato integration
-            console.log('Schedule coming soon...')
+            setShowScheduleModal(true)
           }}
           onCreateAnother={handleCreateAnother}
           onRegenerateSocialCopy={async () => {
@@ -1308,6 +1309,20 @@ export default function ConciergePage() {
         mode="concierge"
         captionsEnabled={subtitlesEnabled}
       />
+
+      {/* Schedule Modal */}
+      {displayVideoUrl && (
+        <ScheduleModal
+          isOpen={showScheduleModal}
+          onClose={() => setShowScheduleModal(false)}
+          videoUrl={displayVideoUrl}
+          defaultCaption={socialCopy?.text || ''}
+          generationId={generationId || undefined}
+          onScheduled={(scheduledPostId) => {
+            console.log('Post scheduled:', scheduledPostId)
+          }}
+        />
+      )}
     </DashboardLayout>
   )
 }

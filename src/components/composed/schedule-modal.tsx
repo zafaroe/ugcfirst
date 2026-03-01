@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import {
   X,
   Calendar,
@@ -9,6 +10,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Settings,
 } from 'lucide-react';
 import {
   FaTiktok,
@@ -23,7 +25,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { getBrowserClient } from '@/lib/supabase';
 import type { LatePlatform } from '@/lib/social/late';
+import type { ConnectedAccount } from '@/types/connected-account';
 
 // ============================================
 // TYPES
@@ -70,6 +74,8 @@ export function ScheduleModal({
   generationId,
   onScheduled,
 }: ScheduleModalProps) {
+  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
   const [selectedPlatforms, setSelectedPlatforms] = useState<LatePlatform[]>([]);
   const [caption, setCaption] = useState(defaultCaption);
   const [scheduleType, setScheduleType] = useState<'now' | 'later'>('now');
@@ -78,6 +84,47 @@ export function ScheduleModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Fetch connected accounts when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchConnectedAccounts();
+    }
+  }, [isOpen]);
+
+  const fetchConnectedAccounts = async () => {
+    setIsLoadingAccounts(true);
+    try {
+      const supabase = getBrowserClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        setIsLoadingAccounts(false);
+        return;
+      }
+
+      const response = await fetch('/api/social/accounts', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setConnectedAccounts(data.accounts);
+      }
+    } catch (err) {
+      console.error('Failed to fetch connected accounts:', err);
+    } finally {
+      setIsLoadingAccounts(false);
+    }
+  };
+
+  // Get connected platform IDs
+  const connectedPlatformIds = new Set(connectedAccounts.map((a) => a.platform));
+
+  // Filter platforms to only show connected ones
+  const availablePlatforms = PLATFORMS.filter((p) => connectedPlatformIds.has(p.id));
 
   const togglePlatform = (platform: LatePlatform) => {
     setSelectedPlatforms((prev) =>
@@ -239,41 +286,69 @@ export function ScheduleModal({
                     <label className="block text-sm font-medium text-text-primary mb-3">
                       Select Platforms
                     </label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {PLATFORMS.map((platform) => {
-                        const isSelected = selectedPlatforms.includes(platform.id);
-                        const Icon = platform.icon;
-                        return (
-                          <button
-                            key={platform.id}
-                            onClick={() => togglePlatform(platform.id)}
-                            className={cn(
-                              'p-3 rounded-xl border-2 transition-all',
-                              isSelected
-                                ? 'border-mint bg-mint/10'
-                                : 'border-border-default hover:border-mint/50'
-                            )}
-                          >
-                            <div
+
+                    {isLoadingAccounts ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-mint" />
+                      </div>
+                    ) : availablePlatforms.length === 0 ? (
+                      <div className="p-6 rounded-xl border-2 border-dashed border-border-default text-center">
+                        <Settings className="w-10 h-10 text-text-muted mx-auto mb-3" />
+                        <p className="text-text-primary font-medium mb-2">
+                          No accounts connected
+                        </p>
+                        <p className="text-sm text-text-muted mb-4">
+                          Connect your social media accounts to schedule posts
+                        </p>
+                        <Link href="/settings">
+                          <Button variant="secondary" size="sm">
+                            Go to Settings
+                          </Button>
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-3">
+                        {availablePlatforms.map((platform) => {
+                          const isSelected = selectedPlatforms.includes(platform.id);
+                          const Icon = platform.icon;
+                          const account = connectedAccounts.find((a) => a.platform === platform.id);
+                          return (
+                            <button
+                              key={platform.id}
+                              onClick={() => togglePlatform(platform.id)}
                               className={cn(
-                                'w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2',
-                                platform.color
+                                'p-3 rounded-xl border-2 transition-all',
+                                isSelected
+                                  ? 'border-mint bg-mint/10'
+                                  : 'border-border-default hover:border-mint/50'
                               )}
                             >
-                              <Icon className="w-5 h-5 text-white" />
-                            </div>
-                            <p className="text-sm text-text-primary font-medium">
-                              {platform.name}
-                            </p>
-                            {isSelected && (
-                              <Badge variant="purple" size="sm" className="mt-1">
-                                Selected
-                              </Badge>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+                              <div
+                                className={cn(
+                                  'w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2',
+                                  platform.color
+                                )}
+                              >
+                                <Icon className="w-5 h-5 text-white" />
+                              </div>
+                              <p className="text-sm text-text-primary font-medium">
+                                {platform.name}
+                              </p>
+                              {account?.accountName && (
+                                <p className="text-xs text-text-muted truncate mt-0.5">
+                                  {account.accountName}
+                                </p>
+                              )}
+                              {isSelected && (
+                                <Badge variant="purple" size="sm" className="mt-1">
+                                  Selected
+                                </Badge>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Caption */}

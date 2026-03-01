@@ -182,13 +182,133 @@ function isConfigured(): boolean {
 }
 
 // ============================================
+// OAUTH / ACCOUNT CONNECTION
+// ============================================
+
+export interface LateConnectUrlRequest {
+  platform: LatePlatform;
+  redirectUrl: string;
+  userId: string; // Used to associate the connection with the user
+}
+
+export interface LateConnectUrlResponse {
+  authUrl: string;
+  state: string; // Used to verify callback
+}
+
+export interface LateOAuthCallbackData {
+  code: string;
+  state: string;
+}
+
+export interface LateConnectedAccount {
+  id: string;
+  platform: LatePlatform;
+  username?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Get OAuth URL to connect a social media account
+ */
+async function getConnectUrl(request: LateConnectUrlRequest): Promise<LateConnectUrlResponse> {
+  const response = await fetch(`${LATE_API_URL}/connect/auth-url`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      platform: request.platform,
+      redirectUrl: request.redirectUrl,
+      externalUserId: request.userId, // Late uses this to track the user
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      `Late API error: ${response.status} - ${error.message || response.statusText}`
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Complete OAuth flow and get connected account details
+ */
+async function handleOAuthCallback(data: LateOAuthCallbackData): Promise<LateConnectedAccount> {
+  const response = await fetch(`${LATE_API_URL}/connect/callback`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      code: data.code,
+      state: data.state,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      `Late API error: ${response.status} - ${error.message || response.statusText}`
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Disconnect/revoke a connected account
+ */
+async function disconnectAccount(accountId: string): Promise<void> {
+  const response = await fetch(`${LATE_API_URL}/connect/accounts/${accountId}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      `Late API error: ${response.status} - ${error.message || response.statusText}`
+    );
+  }
+}
+
+/**
+ * List all connected accounts for a user
+ */
+async function listConnectedAccounts(userId: string): Promise<LateConnectedAccount[]> {
+  const response = await fetch(`${LATE_API_URL}/connect/accounts?externalUserId=${userId}`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      `Late API error: ${response.status} - ${error.message || response.statusText}`
+    );
+  }
+
+  const data = await response.json();
+  return data.accounts || [];
+}
+
+// ============================================
 // EXPORTS
 // ============================================
 
 export const LateService = {
+  // Posting
   schedulePost,
   getPostStatus,
   cancelPost,
   listPosts,
+  // Account Connection
+  getConnectUrl,
+  handleOAuthCallback,
+  disconnectAccount,
+  listConnectedAccounts,
+  // Config
   isConfigured,
 };
