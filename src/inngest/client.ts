@@ -88,6 +88,11 @@ export type Events = {
       latePostId: string;
     };
   };
+
+  // Waitlist nurture cron
+  'waitlist/nurture-check': {
+    data: Record<string, never>;
+  };
 };
 
 // ============================================
