@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEnvelope, faLock, faEye, faEyeSlash, faUser, faGift, faCheck } from '@fortawesome/free-solid-svg-icons'
+import { faEnvelope, faLock, faEye, faEyeSlash, faUser, faGift, faCheck, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 import { AuthLayout } from '@/components/layouts/auth-layout'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { getBrowserClient } from '@/lib/supabase'
 
 // Free credits badge component with animation
 function FreeCreditsButton() {
@@ -97,16 +98,57 @@ export default function SignupPage() {
     email: '',
     password: '',
   })
+  const [error, setError] = useState('')
+
+  const handleGoogleAuth = async () => {
+    const supabase = getBrowserClient()
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    if (error) {
+      setError(error.message)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
 
-    // Simulate signup delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      const supabase = getBrowserClient()
 
-    // Navigate to onboarding
-    router.push('/onboarding')
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+          },
+        },
+      })
+
+      if (authError) {
+        // User-friendly error messages
+        if (authError.message.includes('User already registered')) {
+          setError('An account with this email already exists. Try signing in instead.')
+        } else {
+          setError(authError.message)
+        }
+        setIsLoading(false)
+        return
+      }
+
+      if (data.user) {
+        router.push('/onboarding')
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -115,6 +157,22 @@ export default function SignupPage() {
       subtitle="Start creating viral videos in minutes"
       badge={<FreeCreditsButton />}
     >
+      {/* Animated error message */}
+      <AnimatePresence mode="wait">
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            className="p-3 mb-4 text-sm text-status-error bg-status-error/10 rounded-lg border border-status-error/20 flex items-center gap-2"
+          >
+            <FontAwesomeIcon icon={faExclamationCircle} className="w-4 h-4 flex-shrink-0" />
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <form onSubmit={handleSubmit} className="space-y-5">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -241,7 +299,7 @@ export default function SignupPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <Button variant="secondary" className="w-full group">
+        <Button variant="secondary" className="w-full group" onClick={handleGoogleAuth}>
           <svg className="w-5 h-5 mr-2 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
             <path
               fill="#4285F4"

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Check, Crown, Sparkles, Zap } from 'lucide-react'
 import { Button, GradientCard, SPRING } from '@/components/ui'
 import { mockPricingPlans } from '@/mocks/data'
+import { getBrowserClient } from '@/lib/supabase'
 
 interface ChoosePlanStepProps {
   onNext: () => void
@@ -13,6 +14,27 @@ interface ChoosePlanStepProps {
 
 export function ChoosePlanStep({ onNext, onBack }: ChoosePlanStepProps) {
   const [selectedPlan, setSelectedPlan] = useState<string>('pro')
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSelectPlan = async () => {
+    setIsSaving(true)
+    try {
+      const supabase = getBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user?.id) {
+        // For now, all users stay on free tier (Stripe checkout will upgrade later)
+        await supabase
+          .from('user_credits')
+          .update({ subscription_tier: 'free' })
+          .eq('user_id', session.user.id)
+      }
+    } catch (error) {
+      console.error('Failed to save plan selection:', error)
+    } finally {
+      setIsSaving(false)
+      onNext()
+    }
+  }
 
   return (
     <div className="text-center">
@@ -138,7 +160,8 @@ export function ChoosePlanStep({ onNext, onBack }: ChoosePlanStepProps) {
       >
         <Button
           size="lg"
-          onClick={onNext}
+          onClick={handleSelectPlan}
+          isLoading={isSaving}
           className="min-w-[220px] shadow-lg shadow-mint/25"
         >
           <Sparkles className="w-4 h-4 mr-2" />

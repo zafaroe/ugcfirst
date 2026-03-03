@@ -385,14 +385,14 @@ export default function ConciergePage() {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session?.user?.id) return
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('plan')
-          .eq('id', session.user.id)
+        const { data: credits } = await supabase
+          .from('user_credits')
+          .select('subscription_tier')
+          .eq('user_id', session.user.id)
           .single()
 
-        if (profile?.plan) {
-          setUserPlan(profile.plan as PlanType)
+        if (credits?.subscription_tier) {
+          setUserPlan(credits.subscription_tier as PlanType)
         }
       } catch (error) {
         console.error('Failed to fetch user plan:', error)

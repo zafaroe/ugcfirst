@@ -18,6 +18,9 @@ export type CreditTransactionStatus = 'pending' | 'completed' | 'cancelled';
 // DATABASE TYPES
 // ============================================
 
+export type SubscriptionTier = 'free' | 'starter' | 'pro' | 'plus' | 'agency';
+export type SubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'trialing' | 'paused';
+
 export interface UserCredits {
   user_id: string;
   balance: number;
@@ -26,6 +29,13 @@ export interface UserCredits {
   lifetime_used: number;
   lifetime_refunded: number;
   updated_at: string;
+  // Subscription tracking
+  subscription_tier: SubscriptionTier;
+  subscription_status: SubscriptionStatus;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  current_period_end?: string;
+  credits_reset_date?: string;
 }
 
 export interface CreditTransaction {
