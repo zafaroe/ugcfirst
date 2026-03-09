@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <!-- Header -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0C0A09;">
+    <tr>
+      <td align="center" style="padding: 24px 20px;">
+        <span style="font-size: 28px; font-weight: 800; color: #FAFAF9; letter-spacing: -1px;">
+          ugcfirst<span style="color: #10B981;">.</span>
+        </span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Content -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px;">
+          <tr>
+            <td>
+              <h1 style="font-size: 28px; font-weight: 700; color: #111827; margin: 0 0 24px 0; text-align: center;">
+                Confirm your email
+              </h1>
+
+              <p style="font-size: 16px; line-height: 1.6; color: #374151; margin: 0 0 16px 0; text-align: center;">
+                Thanks for signing up for UGCFirst! Click the button below to confirm your email address and start creating viral UGC videos.
+              </p>
+
+              <!-- Button -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 32px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display: inline-block; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #ffffff; font-size: 16px; font-weight: 600; padding: 14px 32px; border-radius: 8px; text-decoration: none;">
+                      Confirm Email Address
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size: 14px; line-height: 1.5; color: #6B7280; margin: 24px 0 0 0; text-align: center;">
+                This link will expire in 24 hours. If you didn't create an account with UGCFirst, you can safely ignore this email.
+              </p>
+
+              <!-- Divider -->
+              <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 32px 0;">
+
+              <p style="font-size: 14px; line-height: 1.5; color: #6B7280; margin: 0; text-align: center;">
+                Button not working? Copy and paste this link into your browser:
+              </p>
+              <p style="font-size: 12px; line-height: 1.5; color: #10B981; margin: 8px 0 0 0; text-align: center; word-break: break-all;">
+                {{ .ConfirmationURL }}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Footer -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0C0A09;">
+    <tr>
+      <td align="center" style="padding: 32px 20px;">
+        <p style="font-size: 14px; color: #A1A1AA; margin: 0 0 12px 0;">
+          UGCFirst by AZ Foundry LLC
+        </p>
+        <p style="font-size: 14px; color: #A1A1AA; margin: 0 0 12px 0;">
+          <a href="https://twitter.com/AustinZBuilds" style="color: #10B981; text-decoration: none;">Twitter @AustinZBuilds</a>
+          &nbsp;|&nbsp;
+          <a href="https://ugcfirst.com" style="color: #10B981; text-decoration: none;">ugcfirst.com</a>
+        </p>
+        <p style="font-size: 12px; color: #71717A; margin: 16px 0 0 0;">
+          You received this email because you signed up for UGCFirst.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
