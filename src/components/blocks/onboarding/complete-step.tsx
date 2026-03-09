@@ -15,12 +15,24 @@ export function CompleteStep() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user?.id) return
 
-      // Update user_metadata (readable from JWT in middleware, no DB call needed)
+      // 1. Update user_metadata (readable from JWT in middleware, no DB call needed)
       await supabase.auth.updateUser({
         data: { onboarded: true }
       })
 
-      // Also update database flag
+      // 2. Update database flag via API route (uses service role, bypasses RLS)
+      try {
+        await fetch('/api/onboarding/complete', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+        })
+      } catch (err) {
+        console.error('Failed to update onboarding via API:', err)
+      }
+
+      // 3. Also try direct DB update as fallback (works if RLS policy is in place)
       await supabase
         .from('user_credits')
         .update({ onboarding_completed: true })

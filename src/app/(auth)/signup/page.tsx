@@ -140,6 +140,7 @@ function SignupContent() {
           data: {
             name: formData.name,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
@@ -166,7 +167,7 @@ function SignupContent() {
         // If session exists, user is immediately authenticated (email confirmation disabled)
         if (data.session) {
           const redirectUrl = planFromUrl ? `/onboarding?plan=${planFromUrl}` : '/onboarding'
-          router.push(redirectUrl)
+          window.location.href = redirectUrl
           return
         }
 

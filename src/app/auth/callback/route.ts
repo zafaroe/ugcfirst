@@ -58,14 +58,21 @@ export async function GET(request: Request) {
             }
           )
 
+          // Check both metadata and DB for onboarding status
+          const isOnboardedMetadata = user.user_metadata?.onboarded === true
+
+          let isOnboardedDB = false
           const { data: credits } = await adminClient
             .from('user_credits')
             .select('onboarding_completed')
             .eq('user_id', user.id)
             .single()
+          isOnboardedDB = credits?.onboarding_completed === true
 
-          // Redirect new users to onboarding
-          if (!credits?.onboarding_completed) {
+          // User is onboarded if EITHER source says so
+          const isOnboarded = isOnboardedMetadata || isOnboardedDB
+
+          if (!isOnboarded) {
             // Send welcome email to new users (fire and forget)
             sendWelcomeEmail(user.email!, user.user_metadata?.name).catch(() => {})
             redirectTo = `${origin}/onboarding`

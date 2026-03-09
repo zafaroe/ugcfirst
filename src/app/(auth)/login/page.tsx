@@ -52,17 +52,18 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        // Check if user has completed onboarding
-        const { data: credits } = await supabase
-          .from('user_credits')
-          .select('onboarding_completed')
-          .eq('user_id', data.session.user.id)
-          .single()
+        // Use router.refresh() to update the server-side session state,
+        // then full-page redirect to ensure cookies are sent properly.
+        // This is critical for production (Vercel) where soft navigation
+        // races with cookie propagation.
+        router.refresh()
 
-        if (!credits?.onboarding_completed) {
-          router.push('/onboarding')
+        // Check onboarding via user_metadata (same source as middleware)
+        const isOnboarded = data.session.user.user_metadata?.onboarded === true
+        if (!isOnboarded) {
+          window.location.href = '/onboarding'
         } else {
-          router.push('/dashboard')
+          window.location.href = '/dashboard'
         }
       }
     } catch (err) {
