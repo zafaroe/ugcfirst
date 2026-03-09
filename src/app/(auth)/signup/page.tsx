@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEnvelope, faLock, faEye, faEyeSlash, faUser, faGift, faCheck, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
+import { faEnvelope, faLock, faEye, faEyeSlash, faUser, faGift, faCheck, faExclamationCircle, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
 import { AuthLayout } from '@/components/layouts/auth-layout'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -89,8 +89,10 @@ function PasswordStrength({ password }: { password: string }) {
   )
 }
 
-export default function SignupPage() {
+function SignupContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const planFromUrl = searchParams.get('plan')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -99,6 +101,8 @@ export default function SignupPage() {
     password: '',
   })
   const [error, setError] = useState('')
+  const [signupComplete, setSignupComplete] = useState(false)
+  const [signupEmail, setSignupEmail] = useState('')
 
   const handleGoogleAuth = async () => {
     const supabase = getBrowserClient()
@@ -143,12 +147,119 @@ export default function SignupPage() {
       }
 
       if (data.user) {
-        router.push('/onboarding')
+        // Check if email confirmation is needed
+        if (data.user.identities?.length === 0) {
+          // Email already exists (duplicate signup attempt)
+          setError('An account with this email already exists. Try signing in instead.')
+          setIsLoading(false)
+          return
+        }
+
+        // If session exists, user is immediately authenticated (email confirmation disabled)
+        if (data.session) {
+          const redirectUrl = planFromUrl ? `/onboarding?plan=${planFromUrl}` : '/onboarding'
+          router.push(redirectUrl)
+          return
+        }
+
+        // No session = email confirmation required
+        setSignupEmail(formData.email)
+        setSignupComplete(true)
+        setIsLoading(false)
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
       setIsLoading(false)
     }
+  }
+
+  // Show confirmation screen after successful signup (email confirmation required)
+  if (signupComplete) {
+    return (
+      <AuthLayout
+        title="Check Your Email"
+        subtitle="We've sent you a confirmation link"
+      >
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Email icon with animation */}
+          <motion.div
+            className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center mb-6"
+            animate={{
+              boxShadow: [
+                '0 0 20px rgba(16, 185, 129, 0.3)',
+                '0 0 40px rgba(16, 185, 129, 0.5)',
+                '0 0 20px rgba(16, 185, 129, 0.3)',
+              ],
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <FontAwesomeIcon icon={faPaperPlane} className="w-8 h-8 text-white" />
+          </motion.div>
+
+          <motion.p
+            className="text-text-muted mb-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            We sent a confirmation link to
+          </motion.p>
+
+          <motion.p
+            className="text-text-primary font-semibold mb-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            {signupEmail}
+          </motion.p>
+
+          <motion.p
+            className="text-sm text-text-muted mb-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            Click the link in your email to activate your account, then sign in to get started.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <Link href="/login">
+              <Button variant="primary" className="w-full">
+                Go to Sign In
+              </Button>
+            </Link>
+          </motion.div>
+
+          <motion.p
+            className="text-center text-sm text-text-muted mt-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Didn't receive the email?{' '}
+            <button
+              onClick={() => {
+                setSignupComplete(false)
+                setError('')
+              }}
+              className="text-mint hover:text-mint-dark transition-colors font-medium"
+            >
+              Try again
+            </button>
+          </motion.p>
+        </motion.div>
+      </AuthLayout>
+    )
   }
 
   return (
@@ -337,5 +448,17 @@ export default function SignupPage() {
         </Link>
       </motion.p>
     </AuthLayout>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="animate-pulse text-text-muted">Loading...</div>
+      </div>
+    }>
+      <SignupContent />
+    </Suspense>
   )
 }
