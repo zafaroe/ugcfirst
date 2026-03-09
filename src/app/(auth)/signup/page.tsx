@@ -123,7 +123,15 @@ function SignupContent() {
     setError('')
 
     try {
-      const supabase = getBrowserClient()
+      let supabase
+      try {
+        supabase = getBrowserClient()
+      } catch (clientError) {
+        console.error('Failed to create Supabase client:', clientError)
+        setError('Service configuration error. Please contact support.')
+        setIsLoading(false)
+        return
+      }
 
       const { data, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -168,7 +176,9 @@ function SignupContent() {
         setIsLoading(false)
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.')
+      console.error('Signup error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(errorMessage.includes('Supabase') ? 'Service temporarily unavailable. Please try again.' : errorMessage)
       setIsLoading(false)
     }
   }
