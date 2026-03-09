@@ -60,8 +60,8 @@ export async function GET(request: Request) {
 
           const { data: credits } = await adminClient
             .from('user_credits')
-            .eq('user_id', user.id)
             .select('onboarding_completed')
+            .eq('user_id', user.id)
             .single()
 
           // Redirect new users to onboarding
