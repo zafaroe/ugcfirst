@@ -27,16 +27,9 @@ import {
   HeroPhoneAnimation,
 } from '@/components/ui'
 import { useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from 'framer-motion'
-import { TestimonialCardAnimated } from '@/components/composed/testimonial-card'
-import { PricingCard } from '@/components/composed/pricing-card'
 import { ComparisonArena } from '@/components/composed/comparison-arena'
-import { StudioAnimation, DropAndGoAnimation, WaitlistForm, WaitlistButton } from '@/components/composed'
-import {
-  mockTestimonials,
-  mockLandingFAQ,
-  mockPersonas,
-  mockPricingPlans,
-} from '@/mocks/data'
+import { StudioAnimation, DropAndGoAnimation } from '@/components/composed'
+import { LANDING_FAQ, USE_CASE_PERSONAS } from '@/config/landing'
 
 const personaIcons: Record<string, React.ReactNode> = {
   Package: <Package className="w-6 h-6" />,
@@ -143,6 +136,7 @@ function FloatingParticles() {
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
+  const [stats, setStats] = useState({ totalVideos: 0, weeklyVideos: 0, totalUsers: 0 })
   const heroRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const heroParallaxY = useTransform(scrollYProgress, [0, 1], [0, 150])
@@ -155,7 +149,13 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const previewPlans = mockPricingPlans.filter(p => ['free', 'starter', 'pro'].includes(p.id))
+  // Fetch live stats
+  useEffect(() => {
+    fetch('/api/public/stats')
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -191,8 +191,7 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Auth buttons hidden during waitlist phase - kept for later */}
-              {/* <Link
+              <Link
                 href="/login"
                 className="text-stone-300 hover:text-white transition-colors text-sm font-semibold hidden sm:inline px-3 py-2"
               >
@@ -202,8 +201,7 @@ export default function LandingPage() {
                 <Button variant="primary" size="md">
                   Start Free
                 </Button>
-              </Link> */}
-              <WaitlistButton />
+              </Link>
             </div>
           </div>
         </nav>
@@ -222,8 +220,8 @@ export default function LandingPage() {
           <StaggerContainer className="text-center lg:text-left lg:w-[55%]" staggerDelay={0.12} initialDelay={0.2}>
             <StaggerItem>
               <div className="inline-flex items-center gap-2 rounded-full bg-mint/10 border border-mint/20 px-4 py-1.5 mb-6">
-                <Zap className="w-3.5 h-3.5 text-mint" />
-                <span className="text-xs font-medium text-mint-dark">AI-Powered Video Creation</span>
+                <Sparkles className="w-3.5 h-3.5 text-mint" />
+                <span className="text-xs font-medium text-mint-dark">Now Live</span>
               </div>
             </StaggerItem>
 
@@ -246,8 +244,6 @@ export default function LandingPage() {
             </StaggerItem>
 
             <StaggerItem className="w-full max-w-lg mx-auto lg:mx-0 mb-5">
-              <WaitlistForm variant="hero" />
-              {/* Original CTAs hidden during waitlist phase
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <Link href="/signup">
                   <Button variant="primary" size="lg" className="group/btn px-8 py-4 text-base font-semibold shadow-[0_8px_30px_rgba(16,185,129,0.35)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.5)] transition-all duration-300 animate-pulse-glow">
@@ -262,13 +258,6 @@ export default function LandingPage() {
                   </Button>
                 </a>
               </div>
-              */}
-            </StaggerItem>
-
-            <StaggerItem>
-              <p className="text-sm text-text-muted mb-8">
-                <span className="font-semibold text-mint">Coming Soon</span> · Be the first to create AI-powered UGC videos
-              </p>
             </StaggerItem>
 
             <StaggerItem className="flex justify-center lg:justify-start">
@@ -521,7 +510,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {mockPersonas.map((persona, i) => (
+            {USE_CASE_PERSONAS.map((persona, i) => (
               <motion.div
                 key={persona.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -684,84 +673,90 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════════════════════════════════════
-          SECTION 10: TESTIMONIALS
+          SECTION 10: LIVE STATS
           ═══════════════════════════════════════════ */}
       <Section className="bg-surface-secondary/50 relative overflow-hidden">
         <FloatingStars count={10} className="opacity-60" />
-        <div className="relative max-w-6xl mx-auto px-6">
+        <div className="relative max-w-4xl mx-auto px-6">
           <div className="text-center mb-14">
-            <Badge variant="default" className="mb-4">Social Proof</Badge>
+            <Badge variant="default" className="mb-4">Live Stats</Badge>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-text-primary mb-4 tracking-tight">
-              Loved by sellers everywhere
+              Join the creators
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {mockTestimonials.map((t, i) => (
-              <TestimonialCardAnimated key={t.id} testimonial={t} delay={i * 0.12} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { value: stats.totalVideos, label: 'Videos Created', suffix: '+' },
+              { value: stats.weeklyVideos, label: 'This Week', suffix: '' },
+              { value: stats.totalUsers, label: 'Creators', suffix: '+' },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-center p-8 rounded-2xl bg-surface-raised border border-border-default"
+              >
+                <p className="text-5xl md:text-6xl font-extrabold gradient-text mb-2">
+                  <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+                </p>
+                <p className="text-text-muted font-medium">{stat.label}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </Section>
 
       {/* ═══════════════════════════════════════════
-          SECTION 11: PRICING PREVIEW
+          SECTION 11: PRICING CTA
           ═══════════════════════════════════════════ */}
       <Section id="pricing" className="bg-surface relative overflow-hidden">
         <FloatingOrbs count={2} />
-        <div className="relative max-w-5xl mx-auto px-6">
-          <div className="text-center mb-14">
+        <div className="relative max-w-3xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center p-10 md:p-14 rounded-3xl bg-gradient-to-br from-surface-raised to-surface border border-border-default shadow-elevated"
+          >
             <Badge variant="default" className="mb-4">Pricing</Badge>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-text-primary mb-4 tracking-tight">
-              Simple, transparent pricing
+              Starting at{' '}
+              <span className="gradient-text">$19/mo</span>
             </h2>
-            <p className="text-lg text-text-muted">
-              Start free. Scale when you&apos;re ready.
+            <p className="text-lg text-text-muted mb-8 max-w-lg mx-auto">
+              Get 10 videos per month. Cancel anytime. No hidden fees.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            {previewPlans.map((plan, i) => (
-              <motion.div
-                key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -4, transition: { duration: 0.25 } }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <PricingCard
-                  plan={plan}
-                  disabled
-                  ctaLabel="Coming Soon"
-                />
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-text-muted">
-            <span className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-mint" />
-              Credits roll over 12 months
-            </span>
-            <span className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-mint" />
-              Cancel anytime
-            </span>
-            <span className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-mint" />
-              No hidden fees
-            </span>
-          </div>
-
-          <div className="text-center mt-6">
-            <Link
-              href="/pricing"
-              className="text-sm text-mint hover:text-mint-dark transition-colors font-medium inline-flex items-center gap-1"
-            >
-              See all plans & credit packs <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+              <Link href="/signup">
+                <Button variant="primary" size="lg" className="group/btn px-8 py-4 text-base font-semibold shadow-[0_8px_30px_rgba(16,185,129,0.35)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.5)] transition-all duration-300">
+                  Start Free — 1 Video, No Card
+                  <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                </Button>
+              </Link>
+              <Link href="/pricing">
+                <Button variant="ghost" size="lg" className="text-base">
+                  See All Plans
+                </Button>
+              </Link>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-text-muted">
+              <span className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-mint" />
+                Credits roll over
+              </span>
+              <span className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-mint" />
+                Cancel anytime
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-mint" />
+                No hidden fees
+              </span>
+            </div>
+          </motion.div>
         </div>
       </Section>
 
@@ -785,7 +780,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Accordion items={mockLandingFAQ} />
+            <Accordion items={LANDING_FAQ} />
           </motion.div>
         </div>
       </Section>
@@ -803,35 +798,30 @@ export default function LandingPage() {
           className="relative max-w-3xl mx-auto px-6 text-center"
         >
           <h2 className="text-display text-4xl md:text-5xl text-white mb-5 text-glow-white">
-            Be the first to{' '}
-            <span className="gradient-text-animated">create viral UGC</span>
+            Ready to{' '}
+            <span className="gradient-text-animated">create viral UGC</span>?
           </h2>
           <p className="text-lg text-stone-400 mb-10 max-w-xl mx-auto">
-            Join the waitlist and get early access to AI-powered video creation.
+            Create your first AI-powered video in under 5 minutes. No credit card required.
           </p>
-          <div className="max-w-lg mx-auto">
-            <WaitlistForm variant="cta" />
-          </div>
-          {/* Original CTA hidden during waitlist phase
           <Link href="/signup">
             <Button variant="primary" size="lg" className="group/cta px-10 py-4 text-base font-semibold shadow-[0_8px_30px_rgba(16,185,129,0.4)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.55)] transition-all duration-300 animate-pulse-glow">
               Create Your First Video Free
               <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover/cta:translate-x-1" />
             </Button>
           </Link>
-          */}
           <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-stone-400">
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-mint" />
-              Early Access
+              1 Free Video
             </span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-mint" />
-              Exclusive Pricing
+              No Credit Card
             </span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-mint" />
-              Launch Updates
+              Ready in 5 Minutes
             </span>
           </div>
         </motion.div>
@@ -863,8 +853,8 @@ export default function LandingPage() {
               &copy; 2026 UGCFirst
             </p>
             <div className="flex items-center gap-6">
-              <a href="#" className="text-stone-500 hover:text-stone-300 text-sm transition-colors">Privacy Policy</a>
-              <a href="#" className="text-stone-500 hover:text-stone-300 text-sm transition-colors">Terms of Service</a>
+              <Link href="/privacy" className="text-stone-500 hover:text-stone-300 text-sm transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="text-stone-500 hover:text-stone-300 text-sm transition-colors">Terms of Service</Link>
             </div>
             <div className="flex items-center gap-4">
               <a href="#" className="text-stone-500 hover:text-mint transition-all duration-300 hover:scale-110">
