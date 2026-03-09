@@ -139,6 +139,45 @@ const APPROACH_DESCRIPTIONS: Record<ScriptApproach, string> = {
 };
 
 // ============================================
+// TEMPLATE-SPECIFIC 8-SECOND SCRIPT PROMPTS
+// ============================================
+
+const TEMPLATE_PROMPTS: Record<string, string> = {
+  'pas': `You are writing an 8-second Problem-Agitate-Solution UGC video script.
+
+This format hooks viewers by naming their pain point, then positions the product as the solution.
+
+Structure (EXACTLY 3 sections):
+1. "Hook + Problem" (0-3s, ~7 words): Open with one punchy sentence that names a specific, relatable frustration. Use "I" statements. Example energy: "I was SO tired of..."
+2. "Solution" (3-6s, ~9 words): Transition naturally to the product and ONE result. "Then I found this and..." — focus on outcome, not features.
+3. "Call to Action" (6-8s, ~4 words): Direct, short. "Link in bio, trust me" or "Comment GLOW to get it."
+
+Total: ~20 words. The script must feel like a real person venting about a problem then excitedly sharing what fixed it.`,
+
+  'unboxing': `You are writing an 8-second Unboxing & First Impressions UGC video script.
+
+This format leverages the #TikTokMadeMeBuyIt trend — pure excitement about receiving and opening a product.
+
+Structure (EXACTLY 3 sections):
+1. "Anticipation" (0-2s, ~6 words): Build excitement about what just arrived. Reference how long you waited or why you bought it. Example: "It's FINALLY here oh my god..."
+2. "Reveal + Reaction" (2-6s, ~9 words): Show the product and share instant authentic reaction. Describe what you see, feel, or notice. Be specific — mention one detail (texture, weight, smell, packaging). "The quality is insane, look at this..."
+3. "Call to Action" (6-8s, ~5 words): Direct viewers where to get it. Add urgency if genuine. "Link in bio before it sells out."
+
+Total: ~20 words. The script must feel like genuine first-time excitement — the camera is shaking because you're that hyped.`,
+
+  'testimonial': `You are writing an 8-second Testimonial & Review UGC video script.
+
+This format builds trust through the skepticism-to-satisfaction journey. "I didn't believe it" converts 4x higher than direct claims.
+
+Structure (EXACTLY 3 sections):
+1. "Skepticism Hook" (0-3s, ~7 words): Acknowledge initial doubts honestly. This relatability IS the hook. "I didn't think this would actually work..." or "I was SO skeptical about this..."
+2. "Results" (3-6s, ~9 words): Share what actually happened — be specific about the result. Mention a timeline if possible. "But after two weeks my skin is literally glowing. No filter."
+3. "Recommendation" (6-8s, ~4 words): Your verdict + CTA. Enthusiastic but genuine. "10 out of 10, link in bio."
+
+Total: ~20 words. The script must feel like an honest product review from someone who was genuinely surprised by the results.`,
+};
+
+// ============================================
 // PRODUCT ANALYSIS (GPT-4o Vision)
 // ============================================
 
@@ -167,6 +206,7 @@ function isSupportedImageFormat(imageUrl: string): boolean {
 /**
  * Validate image URL by checking content-type headers
  * Returns true if the image is valid, throws descriptive error otherwise
+ * Uses a 5-second timeout to prevent hangs on slow CDNs
  */
 async function validateImageUrl(imageUrl: string): Promise<boolean> {
   // First check if URL has a known good extension
@@ -175,13 +215,20 @@ async function validateImageUrl(imageUrl: string): Promise<boolean> {
   }
 
   // If no extension, try to fetch headers to check content-type
+  // Use a short timeout — if we can't validate quickly, let OpenAI try anyway
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
     const response = await fetch(imageUrl, {
       method: 'HEAD',
       headers: {
         'User-Agent': 'UGCFirst/1.0',
       },
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       console.warn(`Image URL returned status ${response.status}: ${imageUrl}`);
@@ -208,9 +255,13 @@ async function validateImageUrl(imageUrl: string): Promise<boolean> {
     console.warn(`Unknown content-type for image: ${contentType}, attempting anyway`);
     return true;
   } catch (error) {
-    // If fetch fails, log and let OpenAI try anyway
+    // If fetch fails or times out, log and let OpenAI try anyway
     if (error instanceof Error && error.message.includes('not supported')) {
       throw error;
+    }
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.warn(`[OpenAI] Image URL validation timed out (5s), proceeding anyway: ${imageUrl}`);
+      return true;
     }
     console.warn(`Could not validate image URL: ${error}`);
     return true;
@@ -557,16 +608,81 @@ Keywords: ${profile.keywords?.join(', ') || 'viral, trending'}
 /**
  * Generate a single viral video script using OpenAI GPT-4o
  * Fallback for when Gemini hits rate limits
+ *
+ * @param personaProfile - The persona profile to use
+ * @param productName - Name of the product
+ * @param approach - The script approach to use
+ * @param templateId - Optional template ID ('pas', 'unboxing', 'testimonial') for 8-second scripts
  */
 export async function generateScript(
   personaProfile: PersonaProfile,
   productName: string,
-  approach: ScriptApproach = 'excited_discovery'
+  approach: ScriptApproach = 'excited_discovery',
+  templateId?: string
 ): Promise<GeneratedScript> {
   const client = getClient();
   const personaDescription = buildPersonaDescription(personaProfile);
 
-  const systemPrompt = `Master Prompt: Raw 12-Second UGC Video Scripts (Enhanced Edition)
+  let systemPrompt: string;
+  let userPrompt: string;
+
+  // Check if we have a template-specific prompt (8-second template scripts)
+  if (templateId && TEMPLATE_PROMPTS[templateId]) {
+    console.log(`[OpenAI] Using template-specific 8-second prompt for: ${templateId}`);
+
+    systemPrompt = `${TEMPLATE_PROMPTS[templateId]}
+
+CRITICAL RULES:
+- Total script MUST be ~20 words (absolutely no more than 25)
+- Exactly 3 sections as specified above
+- NO text overlays - everything is spoken dialogue
+- Use the persona's communication style and demeanor
+- Sound like a real person, not a brand
+- Include natural speech patterns (filler words, pauses)
+
+You must respond with a JSON object matching this structure:
+{
+  "approach": "${approach}",
+  "approachLabel": "${APPROACH_LABELS[approach]}",
+  "energy": "Brief energy description",
+  "dialogue": [
+    { "timestamp": "0:00-0:03", "text": "Section 1 dialogue" },
+    { "timestamp": "0:03-0:06", "text": "Section 2 dialogue" },
+    { "timestamp": "0:06-0:08", "text": "Section 3 dialogue (CTA)" }
+  ],
+  "shotBreakdown": [
+    { "second": 0, "cameraPosition": "...", "cameraMovement": "...", "whatsInFrame": "...", "creatorAction": "...", "productVisibility": "...", "audioCue": "..." }
+  ],
+  "technicalDetails": {
+    "phoneOrientation": "Vertical",
+    "filmingMethod": "...",
+    "dominantHand": "...",
+    "locationSpecifics": "...",
+    "audioEnvironment": "..."
+  },
+  "fullScript": "All dialogue combined",
+  "wordCount": 20,
+  "estimatedDuration": 8
+}
+
+Include shotBreakdown entries for seconds 0-7 (8 total entries).`;
+
+    userPrompt = `Create a single 8-second UGC script for "${productName}" using the ${templateId.toUpperCase()} template structure.
+
+Creator Profile:
+${personaDescription}
+
+Product Name: ${productName}
+
+Remember:
+- This is an 8-SECOND template script (~20 words total)
+- Follow the exact 3-section structure for this template
+- NO text overlays - all dialogue must be spoken
+- Sound authentic with natural speech patterns`;
+
+  } else {
+    // Default 12-second generic prompt (existing behavior)
+    systemPrompt = `Master Prompt: Raw 12-Second UGC Video Scripts (Enhanced Edition)
 You are an expert at creating authentic UGC video scripts that look like someone just grabbed their iPhone and hit record—shaky hands, natural movement, zero production value. No text overlays. No polish. Just real.
 Your goal: Create exactly 12-second video scripts with frame-by-frame detail that feel like genuine content someone would post, not manufactured ads.
 
@@ -652,7 +768,7 @@ You must respond with a JSON object matching this exact structure:
 
 Include shotBreakdown entries for seconds 0-11 (12 total entries).`;
 
-  const userPrompt = `Create a single UGC script for "${productName}" using the "${APPROACH_LABELS[approach]}" approach.
+    userPrompt = `Create a single UGC script for "${productName}" using the "${APPROACH_LABELS[approach]}" approach.
 
 Approach Description: ${APPROACH_DESCRIPTIONS[approach]}
 
@@ -667,6 +783,7 @@ Remember:
 - Include natural filler words, pauses, and authentic speech patterns
 - The shot breakdown should show realistic handheld filming
 - Dialogue MUST complete by the 12-second mark`;
+  }
 
   const result = await withRetry(
     async () => {
@@ -724,17 +841,23 @@ Remember:
 /**
  * Generate scripts for specified approaches using OpenAI
  * Caller is responsible for approach selection (use ApproachSelector for intelligent selection)
+ *
+ * @param personaProfile - The persona profile to use
+ * @param productName - Name of the product
+ * @param approaches - Array of script approaches to generate
+ * @param templateId - Optional template ID ('pas', 'unboxing', 'testimonial') for 8-second scripts
  */
 export async function generateScripts(
   personaProfile: PersonaProfile,
   productName: string,
-  approaches: ScriptApproach[]
+  approaches: ScriptApproach[],
+  templateId?: string
 ): Promise<GeneratedScript[]> {
   const scripts: GeneratedScript[] = [];
 
   for (const approach of approaches) {
-    console.log(`OpenAI: Generating script for approach: ${approach}`);
-    const script = await generateScript(personaProfile, productName, approach);
+    console.log(`OpenAI: Generating script for approach: ${approach}${templateId ? ` (template: ${templateId})` : ''}`);
+    const script = await generateScript(personaProfile, productName, approach, templateId);
     scripts.push(script);
   }
 

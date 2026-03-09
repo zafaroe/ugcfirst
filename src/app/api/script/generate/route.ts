@@ -14,7 +14,16 @@ interface ScriptGenerateRequest {
   persona?: PersonaProfile;
   approach?: ScriptApproach; // Optional single approach
   approaches?: ScriptApproach[]; // Or multiple approaches
+  templateId?: string | null; // 'pas', 'unboxing', 'testimonial', or null
 }
+
+// Template → forced approach mapping
+// When a user selects a template, we force the matching approach
+const TEMPLATE_APPROACH_MAP: Record<string, ScriptApproach> = {
+  'pas': 'problem_agitate_solution',
+  'unboxing': 'excited_discovery',
+  'testimonial': 'skeptic_to_believer',
+};
 
 interface ScriptGenerateResponse {
   success: boolean;
@@ -67,15 +76,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<ScriptGen
     let approaches: ScriptApproach[];
     let autoSelectedApproach: ScriptApproach | undefined;
 
-    if (body.approach) {
+    if (body.templateId && TEMPLATE_APPROACH_MAP[body.templateId]) {
+      // Template selected — force the matching approach
+      const forcedApproach = TEMPLATE_APPROACH_MAP[body.templateId];
+      console.log(`[Script Generation] Template "${body.templateId}" → forced approach: ${forcedApproach}`);
+      approaches = [forcedApproach];
+    } else if (body.approach) {
       // Single approach explicitly requested
       approaches = [body.approach];
     } else if (body.approaches && body.approaches.length > 0) {
       // Multiple approaches explicitly requested
       approaches = body.approaches;
     } else {
-      // No approach specified - intelligently select the best one
-      console.log('[Script Generation] No approach specified, using intelligent selection...');
+      // No template or approach specified - intelligently select the best one
+      console.log('[Script Generation] No template or approach specified, using intelligent selection...');
       autoSelectedApproach = await ApproachSelector.selectBestApproach(persona, body.product);
       console.log(`[Script Generation] Intelligently selected: ${autoSelectedApproach}`);
       approaches = [autoSelectedApproach];
@@ -91,7 +105,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ScriptGen
       scripts = await GeminiService.generateScripts(
         persona,
         body.product.name,
-        approaches
+        approaches,
+        body.templateId || undefined
       );
       console.log('[Script Generation] Gemini succeeded!');
     } catch (geminiError) {
@@ -113,7 +128,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ScriptGen
           scripts = await OpenAIService.generateScripts(
             persona,
             body.product.name,
-            approaches
+            approaches,
+            body.templateId || undefined
           );
           console.log('[Script Generation] OpenAI fallback succeeded!');
         } catch (openaiError) {

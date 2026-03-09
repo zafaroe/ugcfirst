@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse, getAdminClient } from '@/lib/supabase';
 import { CreditService } from '@/services/credits';
 import { inngest } from '@/inngest/client';
-import { calculateCreditCost } from '@/types/credits';
+import { calculateCreditCost, calculateSpotlightCreditCost, type SpotlightDuration } from '@/types/credits';
 import { StartGenerationRequest, StartGenerationResponse } from '@/types/generation';
 
 // ============================================
@@ -27,7 +27,15 @@ export async function POST(request: NextRequest) {
       templateId,
       customScript,
       captionsEnabled,
+      endScreenEnabled = false,
+      endScreenCtaText,
+      endScreenBrandText,
       mode,
+      existingPersona, // Reuse persona from frontend (avoid double API calls)
+      // Spotlight-specific fields
+      spotlightCategoryId,
+      spotlightStyleId,
+      spotlightDuration = '5',
     } = body;
 
     // Validate required fields
@@ -38,8 +46,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate credit cost
-    const creditCost = calculateCreditCost({ mode, captionsEnabled });
+    // Spotlight-specific validation
+    if (mode === 'spotlight') {
+      if (!spotlightCategoryId || !spotlightStyleId) {
+        return NextResponse.json(
+          { error: 'Spotlight mode requires categoryId and styleId' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Calculate credit cost (different for spotlight mode)
+    const creditCost = mode === 'spotlight'
+      ? calculateSpotlightCreditCost(spotlightDuration as SpotlightDuration)
+      : calculateCreditCost({ mode, captionsEnabled, endScreenEnabled });
 
     // Check credit balance
     const creditCheck = await CreditService.checkBalance(user.id, creditCost);
@@ -58,6 +78,55 @@ export async function POST(request: NextRequest) {
 
     const adminSupabase = getAdminClient();
 
+    // ========================================
+    // Free Plan Enforcement (has_paid approach)
+    // ========================================
+    const { data: userCredits } = await adminSupabase
+      .from('user_credits')
+      .select('subscription_tier, has_paid')
+      .eq('user_id', user.id)
+      .single();
+
+    const tier = userCredits?.subscription_tier || 'free';
+    const hasPaid = userCredits?.has_paid || false;
+
+    // Determine if this is a "pure free" user (free tier + never paid)
+    const isPureFree = tier === 'free' && !hasPaid;
+
+    // Pure free users: enforce 1 video per calendar month
+    if (isPureFree) {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+      const { count: generationCount } = await adminSupabase
+        .from('generations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('created_at', monthStart)
+        .not('status', 'eq', 'failed');
+
+      if ((generationCount || 0) >= 1) {
+        return NextResponse.json(
+          {
+            error: 'Monthly video limit reached',
+            limit: 1,
+            used: generationCount,
+            tier: 'free',
+            message: 'Free plan includes 1 video per month. Purchase a credit pack or subscribe to create more.',
+          },
+          { status: 429 }
+        );
+      }
+    }
+
+    // Watermark ONLY for pure free users
+    const applyWatermark = isPureFree;
+
+    // Determine total steps based on mode
+    // Spotlight: 3 steps (analyze, frame, animate)
+    // DIY/Concierge: 9-10 steps
+    const totalSteps = mode === 'spotlight' ? 3 : 9;
+
     // Create generation record
     const { data: generation, error: createError } = await adminSupabase
       .from('generations')
@@ -68,12 +137,12 @@ export async function POST(request: NextRequest) {
         avatar_id: avatarId || null,
         template_id: templateId || null,
         custom_script: customScript || null,
-        captions_enabled: captionsEnabled,
+        captions_enabled: mode === 'spotlight' ? false : captionsEnabled, // No captions for spotlight
         mode,
         credit_cost: creditCost,
         status: 'queued',
         current_step: 0,
-        total_steps: 9,
+        total_steps: totalSteps,
       })
       .select('id')
       .single();
@@ -114,17 +183,34 @@ export async function POST(request: NextRequest) {
         avatarId,
         templateId,
         customScript,
-        captionsEnabled,
+        captionsEnabled: mode === 'spotlight' ? false : captionsEnabled,
+        endScreenEnabled,
+        endScreenCtaText,
+        endScreenBrandText,
         mode,
         creditTransactionId: holdResult.transactionId,
+        applyWatermark,
+        existingPersona: existingPersona || undefined, // Reuse persona (avoid re-analysis)
+        // Spotlight-specific fields
+        spotlightCategoryId,
+        spotlightStyleId,
+        spotlightDuration,
       },
     });
+
+    // Estimate time based on mode
+    // Spotlight: ~2 mins (1 image + 1 video)
+    // DIY/Concierge with captions: ~4.5 mins
+    // DIY/Concierge without captions: ~4 mins
+    const estimatedTime = mode === 'spotlight'
+      ? 120
+      : (captionsEnabled ? 270 : 240);
 
     const response: StartGenerationResponse = {
       generationId: generation.id,
       status: 'queued',
       creditCost,
-      estimatedTime: captionsEnabled ? 270 : 240, // ~4-4.5 minutes
+      estimatedTime,
     };
 
     return NextResponse.json({

@@ -150,7 +150,7 @@ export function ScheduleUpgradeCard({
           </Button>
 
           <p className="text-center text-xs text-text-muted mt-3">
-            Includes 200 credits + scheduling + all caption styles
+            Includes 230 credits + scheduling + 10 connected accounts
           </p>
         </div>
       </Card>

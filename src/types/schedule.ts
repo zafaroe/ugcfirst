@@ -38,6 +38,7 @@ export interface CreateScheduleRequest {
   caption: string;
   platforms: LatePlatform[];
   scheduledFor?: string; // ISO 8601, optional for immediate post
+  timezone?: string; // IANA timezone (e.g., "America/New_York")
 }
 
 export interface CreateScheduleResponse {

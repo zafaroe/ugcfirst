@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
 // ============================================
@@ -27,7 +28,7 @@ let browserSupabase: SupabaseClient | null = null
 
 /**
  * Get Supabase client for browser-side use
- * Creates a singleton instance with proper session handling
+ * Uses @supabase/ssr for proper cookie-based auth in Next.js
  */
 export function getBrowserClient(): SupabaseClient {
   if (typeof window === 'undefined') {
@@ -35,10 +36,19 @@ export function getBrowserClient(): SupabaseClient {
   }
 
   if (!browserSupabase) {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase environment variables not configured')
+    // These come from NEXT_PUBLIC_ env vars, compiled at build time
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!url || !anonKey) {
+      console.error('[Supabase] Missing env vars:', {
+        hasUrl: !!url,
+        hasAnonKey: !!anonKey,
+      })
+      throw new Error('Supabase environment variables not configured. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.')
     }
-    browserSupabase = createClient(supabaseUrl, supabaseAnonKey)
+    // Use createBrowserClient from @supabase/ssr for proper Next.js integration
+    browserSupabase = createBrowserClient(url, anonKey)
   }
 
   return browserSupabase

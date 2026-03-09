@@ -27,7 +27,8 @@ const navItems = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Projects', href: '/projects' },
   { label: 'Explore', href: '/explore' },
-  { label: 'Templates', href: '/templates' },
+  { label: 'Products', href: '/products' },
+  { label: 'Schedule', href: '/schedule' },
   { label: 'Settings', href: '/settings' },
 ]
 

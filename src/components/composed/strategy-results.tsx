@@ -41,6 +41,7 @@ export interface StrategyResultsProps {
   onSchedule?: () => void;
   onCreateAnother?: () => void;
   onRegenerateSocialCopy?: () => void;
+  isRegeneratingSocialCopy?: boolean;
   className?: string;
 }
 
@@ -55,6 +56,7 @@ export function StrategyResults({
   onSchedule,
   onCreateAnother,
   onRegenerateSocialCopy,
+  isRegeneratingSocialCopy = false,
   className,
 }: StrategyResultsProps) {
   const canSchedule = SCHEDULING_PLANS.includes(userPlan);
@@ -233,6 +235,7 @@ export function StrategyResults({
           <SocialCopyCard
             socialCopy={socialCopy}
             onRegenerate={onRegenerateSocialCopy}
+            isRegenerating={isRegeneratingSocialCopy}
           />
         </motion.div>
       )}

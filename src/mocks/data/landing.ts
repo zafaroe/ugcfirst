@@ -58,52 +58,6 @@ export const mockLandingFAQ: AccordionItem[] = [
     question: 'What if I need changes?',
     answer: 'Instant regeneration at a fraction of the cost. Change avatars, tweak scripts, or try new hooks—all without starting over. Most edits take under 2 minutes.',
   },
-  {
-    id: 'faq_6',
-    question: 'Is there a free plan?',
-    answer: 'Yes! Get 1 video completely free on signup. No credit card required. Just sign up and start creating — upgrade when you need more.',
-  },
-  {
-    id: 'faq_7',
-    question: 'What platforms do you support?',
-    answer: 'TikTok, Instagram Reels, YouTube Shorts, and Facebook. All videos are optimized for vertical 9:16 format with captions, hooks, and CTAs that drive engagement on each platform.',
-  },
-]
-
-// Use case personas for landing page
-export const mockPersonas = [
-  {
-    id: 'dropshippers',
-    title: 'Dropshippers',
-    icon: 'Package',
-    description: 'Test products faster with instant video ads. No need to wait for samples or hire creators.',
-    stat: '3.1x avg. ROAS',
-    benefits: ['Test 10 products/week', 'No product samples needed', 'TikTok Shop optimized'],
-  },
-  {
-    id: 'ecommerce',
-    title: 'E-commerce Brands',
-    icon: 'Store',
-    description: 'Scale your content library. Create 20+ unique videos per month from your existing product catalog.',
-    stat: '20+ videos/month',
-    benefits: ['Paste any product URL', 'Bulk video creation', 'A/B test creatives'],
-  },
-  {
-    id: 'agencies',
-    title: 'Agencies',
-    icon: 'Building2',
-    description: 'Deliver UGC videos to clients in hours, not weeks. Scale across multiple brands.',
-    stat: '90% cost savings',
-    benefits: ['Multi-brand support', 'Client-ready exports', 'White-label options'],
-  },
-  {
-    id: 'creators',
-    title: 'Content Creators',
-    icon: 'Camera',
-    description: 'Monetize your audience with product review videos. Auto-generated scripts from viral hooks.',
-    stat: '50x faster output',
-    benefits: ['Viral hook library', 'Multiple avatar styles', 'Cross-platform ready'],
-  },
 ]
 
 // FAQ Items for Pricing Page - Value-focused with competitor comparison
@@ -126,7 +80,7 @@ export const mockPricingFAQ: AccordionItem[] = [
   {
     id: 'pricing_faq_4',
     question: 'Is there a free trial?',
-    answer: 'Better—1 free video on signup. No credit card required. MakeUGC and Creatify both require payment upfront. We let you test first.',
+    answer: 'Better—3 free videos on signup. No credit card required. MakeUGC and Creatify both require payment upfront. We let you test first.',
   },
   {
     id: 'pricing_faq_5',
@@ -147,7 +101,7 @@ export interface ComparisonRow {
 export const mockComparisonData: ComparisonRow[] = [
   {
     feature: 'Cost per video',
-    ugcfirst: '$2.52-$2.71',
+    ugcfirst: '$1.67-$2.95',
     diy: '$0 (your time)',
     freelancer: '$150-300',
     agency: '$500-2000',
@@ -208,7 +162,7 @@ export const mockCompetitorComparison: CompetitorComparisonRow[] = [
   },
   {
     feature: 'Free Trial',
-    ugcfirst: '1 free video',
+    ugcfirst: '3 free videos',
     makeugc: 'No free trial',
     creatify: 'Watermarked only',
     ugcfirstWins: true,

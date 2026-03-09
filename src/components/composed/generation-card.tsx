@@ -224,14 +224,22 @@ export function GenerationCard({
         {/* Mode indicator */}
         <div className="mt-2">
           <span
-            className={cn(
-              'text-xs px-2 py-0.5 rounded-full',
-              generation.mode === 'concierge'
-                ? 'bg-coral/20 text-coral'
-                : 'bg-mint/20 text-mint'
-            )}
+            className="text-xs px-2 py-0.5 rounded-full font-medium"
+            style={{
+              backgroundColor: generation.mode === 'concierge'
+                ? 'rgba(244, 63, 94, 0.2)'
+                : generation.mode === 'spotlight'
+                ? 'rgba(245, 158, 11, 0.2)'
+                : 'rgba(16, 185, 129, 0.2)',
+              color: generation.mode === 'concierge'
+                ? '#F43F5E'
+                : generation.mode === 'spotlight'
+                ? '#F59E0B'
+                : '#10B981',
+            }}
           >
-            {generation.mode === 'concierge' ? 'Drop & Go' : 'Studio'}
+            {generation.mode === 'concierge' ? 'Drop & Go' :
+             generation.mode === 'spotlight' ? 'Spotlight' : 'Studio'}
           </span>
         </div>
       </div>

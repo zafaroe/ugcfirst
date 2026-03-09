@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Link2, Wand2, PenLine, Sparkles, Check, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Link2, Wand2, PenLine, Sparkles, Check, ChevronRight, ChevronLeft, Loader2, RotateCcw, Package } from 'lucide-react'
 import { getBrowserClient } from '@/lib/supabase'
 import { DashboardLayout } from '@/components/layouts/dashboard-layout'
 import { Card, CardTitle, CardDescription } from '@/components/ui/card'
@@ -21,6 +21,8 @@ import {
   ScheduleUpgradeCard,
   InsufficientCreditsModal,
   LowCreditsBanner,
+  VideoLimitModal,
+  RegenerateModal,
 } from '@/components/composed'
 import { ScheduleModal } from '@/components/composed/schedule-modal'
 import type { CreditBalance } from '@/types/credits'
@@ -37,10 +39,7 @@ import type {
   ReelItInStep,
   VideoVisibility,
 } from '@/types/generation'
-import {
-  getMockSocialCopy,
-  getMockStrategyBrief
-} from '@/mocks/data'
+import { generateSocialCopy } from '@/config/social-copy'
 import type { PersonaProfile } from '@/types/generation'
 import type { PlanType } from '@/types'
 import { cn } from '@/lib/utils'
@@ -62,7 +61,45 @@ const mapStatusToStage = (status: GenerationStatus): GenerationStage => {
   return mapping[status] || 'analyzing'
 }
 
-type InputMode = 'url' | 'manual'
+type InputMode = 'url' | 'manual' | 'saved'
+
+// Saved product from database
+interface SavedProduct {
+  id: string;
+  name: string;
+  description: string | null;
+  image_url: string;
+  images: string[];
+  price: string | null;
+  features: string[];
+  source: 'url' | 'manual';
+  source_url: string | null;
+  generation_count: number;
+  last_used_at: string | null;
+  created_at: string;
+  persona_profile: PersonaProfile | null;
+}
+
+// Helper for fetch with timeout (90s default for script generation which can be slow)
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 90000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 // Drop & Go generation stages
 const reelItInStages: GenerationStage[] = [
@@ -155,6 +192,10 @@ export default function ConciergePage() {
   const [step, setStep] = useState<ReelItInStep>(1)
   const [inputMode, setInputMode] = useState<InputMode>('url')
 
+  // Saved products state
+  const [savedProducts, setSavedProducts] = useState<SavedProduct[]>([])
+  const [isLoadingSaved, setIsLoadingSaved] = useState(false)
+
   // Step 1: Input state
   const [productUrl, setProductUrl] = useState('')
   const [manualProduct, setManualProduct] = useState<ManualProductData | null>(null)
@@ -180,15 +221,19 @@ export default function ConciergePage() {
   const [videoSubtitledUrl, setVideoSubtitledUrl] = useState<string | null>(null)
   const [showSubtitledVideo, setShowSubtitledVideo] = useState(true) // Default to showing subtitles
   const [socialCopy, setSocialCopy] = useState<SocialPostCopy | null>(null)
+  const [isRegeneratingSocialCopy, setIsRegeneratingSocialCopy] = useState(false)
   const [strategyBrief, setStrategyBrief] = useState<StrategyBrief | null>(null)
   const [visibility, setVisibility] = useState<VideoVisibility>('private')
   const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false)
   const [userPlan, setUserPlan] = useState<PlanType>('free')
   const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [showRegenerateModal, setShowRegenerateModal] = useState(false)
 
   // Credit state
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [showInsufficientCreditsModal, setShowInsufficientCreditsModal] = useState(false)
+  const [showVideoLimitModal, setShowVideoLimitModal] = useState(false)
+  const [videoLimitData, setVideoLimitData] = useState<{ limit: number; used: number } | null>(null)
   const [isCheckingCredits, setIsCheckingCredits] = useState(true)
 
   // Plans that include scheduling
@@ -230,15 +275,15 @@ export default function ConciergePage() {
         setPersonaProfile(extractData.persona)
       }
 
-      // Generate script using AI
-      const scriptResponse = await fetch('/api/script/generate', {
+      // Generate script using AI (with timeout)
+      const scriptResponse = await fetchWithTimeout('/api/script/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           product: extractData.product,
           persona: extractData.persona,
         }),
-      })
+      }, 45000)
 
       const scriptData = await scriptResponse.json()
 
@@ -278,14 +323,14 @@ export default function ConciergePage() {
   // Generate script for a product
   const generateScriptForProduct = useCallback(async (product: FetchedProduct, persona?: PersonaProfile | null) => {
     try {
-      const scriptResponse = await fetch('/api/script/generate', {
+      const scriptResponse = await fetchWithTimeout('/api/script/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           product,
           persona: persona || undefined,
         }),
-      })
+      }, 45000)
 
       const scriptData = await scriptResponse.json()
 
@@ -306,6 +351,27 @@ export default function ConciergePage() {
       const message = error instanceof Error ? error.message : 'Failed to generate script'
       setFetchError(message)
       return false
+    }
+  }, [])
+
+  // Cache persona on product for future use (fire-and-forget)
+  const cachePersonaOnProduct = useCallback(async (productId: string, persona: PersonaProfile) => {
+    try {
+      const supabase = getBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      await fetch('/api/products', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId, persona }),
+      })
+    } catch (e) {
+      console.warn('Failed to cache persona on product:', e)
+      // Non-blocking — don't affect the main flow
     }
   }, [])
 
@@ -375,6 +441,31 @@ export default function ConciergePage() {
         clearTimeout(pollingRef.current)
       }
     }
+  }, [])
+
+  // Fetch saved products on mount
+  useEffect(() => {
+    const fetchSavedProducts = async () => {
+      try {
+        setIsLoadingSaved(true)
+        const supabase = getBrowserClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.access_token) return
+
+        const response = await fetch('/api/products', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        })
+        const data = await response.json()
+        if (data.success) {
+          setSavedProducts(data.products || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch saved products:', error)
+      } finally {
+        setIsLoadingSaved(false)
+      }
+    }
+    fetchSavedProducts()
   }, [])
 
   // Fetch user plan on mount
@@ -507,6 +598,7 @@ export default function ConciergePage() {
           customScript: generatedScript?.fullScript,
           captionsEnabled: subtitlesEnabled, // API still uses captionsEnabled for backward compat
           mode: 'concierge',
+          existingPersona: personaProfile || undefined, // Reuse persona from frontend (avoid double API calls)
         }),
       })
 
@@ -522,6 +614,16 @@ export default function ConciergePage() {
           setShowInsufficientCreditsModal(true)
           setIsStartingGeneration(false)
           setStep(2) // Stay on review step
+          return
+        }
+        // Handle monthly video limit reached (429)
+        if (startResponse.status === 429) {
+          setVideoLimitData({
+            limit: startData.limit || 1,
+            used: startData.used || 1,
+          })
+          setShowVideoLimitModal(true)
+          setIsStartingGeneration(false)
           return
         }
         throw new Error(startData.error || 'Failed to start generation')
@@ -579,7 +681,7 @@ export default function ConciergePage() {
             }
             // Generate social copy from product if available
             if (fetchedProduct) {
-              setSocialCopy(getMockSocialCopy(fetchedProduct, 'tiktok'))
+              setSocialCopy(generateSocialCopy(fetchedProduct, 'tiktok'))
             }
 
             // Dispatch event to refresh credits in TopNav
@@ -680,6 +782,110 @@ export default function ConciergePage() {
     setGenerationError(null)
   }
 
+  // Handle regeneration with new generation ID
+  const handleRegenerated = async (newGenerationId: string) => {
+    // Stop any existing polling
+    if (pollingRef.current) {
+      clearTimeout(pollingRef.current)
+      pollingRef.current = null
+    }
+
+    // Reset video state but keep product/script data
+    setVideoUrl(null)
+    setVideoSubtitledUrl(null)
+    setShowSubtitledVideo(true)
+    setSocialCopy(null)
+    setStrategyBrief(null)
+    setVisibility('private')
+    setGenerationError(null)
+
+    // Set new generation ID and go to Step 3
+    setGenerationId(newGenerationId)
+    setGenerationStage('analyzing')
+    setStep(3)
+
+    // Start polling for the new generation
+    const pollStatus = async () => {
+      try {
+        const supabaseClient = getBrowserClient()
+        const { data: { session: currentSession } } = await supabaseClient.auth.getSession()
+        const currentToken = currentSession?.access_token
+
+        if (!currentToken) {
+          throw new Error('Session expired')
+        }
+
+        const statusResponse = await fetch(`/api/generate/status?id=${newGenerationId}`, {
+          headers: { 'Authorization': `Bearer ${currentToken}` },
+        })
+
+        const statusData = await statusResponse.json()
+
+        if (!statusResponse.ok || !statusData.success) {
+          throw new Error(statusData.error || 'Failed to get status')
+        }
+
+        const { data } = statusData
+
+        // Update UI stage based on backend status
+        setGenerationStage(mapStatusToStage(data.status))
+
+        // Check if complete
+        if (data.status === 'completed') {
+          if (data.videos && data.videos.length > 0) {
+            setVideoUrl(data.videos[0].videoUrl)
+            const subtitledUrl = data.videos[0].videoSubtitledUrl || data.videos[0].videoCaptionedUrl
+            setVideoSubtitledUrl(subtitledUrl || null)
+            setShowSubtitledVideo(!!subtitledUrl)
+          }
+          if (data.strategyBrief) {
+            setStrategyBrief(data.strategyBrief)
+          }
+          if (data.visibility) {
+            setVisibility(data.visibility)
+          }
+          if (fetchedProduct) {
+            setSocialCopy(generateSocialCopy(fetchedProduct, 'tiktok'))
+          }
+
+          // Dispatch event to refresh credits in TopNav
+          window.dispatchEvent(new CustomEvent('credits-updated'))
+
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          setStep(4)
+          return
+        }
+
+        // Check if failed
+        if (data.status === 'failed') {
+          let userMessage = 'Regeneration failed. Please try again.'
+          const rawError = data.errorMessage || ''
+
+          if (rawError.toLowerCase().includes('heavy load') || rawError.toLowerCase().includes('not responding')) {
+            userMessage = 'Our video service is currently experiencing high demand. Please try again in a few minutes.'
+          } else if (rawError.toLowerCase().includes('timeout')) {
+            userMessage = 'The video generation timed out. Please try again.'
+          } else if (rawError.toLowerCase().includes('rate limit')) {
+            userMessage = 'Too many requests. Please wait a moment and try again.'
+          }
+
+          throw new Error(userMessage)
+        }
+
+        // Continue polling
+        pollingRef.current = setTimeout(pollStatus, 3000)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Polling error'
+        console.error('Regeneration polling error:', error)
+        setGenerationError(message)
+        setStep(2)
+      }
+    }
+
+    // Start polling
+    pollStatus()
+  }
+
   // Handle visibility change
   const handleVisibilityChange = async (newVisibility: VideoVisibility) => {
     if (!generationId || isUpdatingVisibility) return
@@ -758,6 +964,26 @@ export default function ConciergePage() {
       <FadeIn delay={0.1}>
         <GlassCard padding="none" className="flex p-1.5 gap-1.5">
           <button
+            onClick={() => setInputMode('saved')}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-2.5 py-3.5 px-5 rounded-xl text-sm font-medium transition-all duration-300',
+              inputMode === 'saved'
+                ? 'bg-gradient-to-r from-mint to-mint-dark text-white shadow-lg shadow-mint/25'
+                : 'text-text-muted hover:text-text-primary hover:bg-surface/50'
+            )}
+          >
+            <Package className="w-4 h-4" />
+            My Products
+            {savedProducts.length > 0 && (
+              <span className={cn(
+                'text-xs px-1.5 py-0.5 rounded-full',
+                inputMode === 'saved' ? 'bg-white/20' : 'bg-mint/20 text-mint'
+              )}>
+                {savedProducts.length}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setInputMode('url')}
             className={cn(
               'flex-1 flex items-center justify-center gap-2.5 py-3.5 px-5 rounded-xl text-sm font-medium transition-all duration-300',
@@ -792,7 +1018,210 @@ export default function ConciergePage() {
         transition={{ duration: 0.3, ease: EASINGS.easeOut }}
       >
         <GradientCard padding="lg" className="space-y-6">
-          {inputMode === 'url' ? (
+          {inputMode === 'saved' ? (
+            <>
+              <div className="text-center">
+                <motion.div
+                  className="relative w-18 h-18 mx-auto mb-5"
+                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <motion.div
+                    className="absolute inset-0 rounded-2xl bg-mint/30 blur-xl"
+                    animate={{ opacity: [0.4, 0.6, 0.4] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                  <motion.div
+                    className="relative w-full h-full rounded-2xl bg-gradient-to-br from-mint to-emerald-500 flex items-center justify-center shadow-lg shadow-mint/25"
+                    whileHover={{ scale: 1.08, rotate: 3 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                  >
+                    <Package className="w-9 h-9 text-white" strokeWidth={1.5} />
+                  </motion.div>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.15 }}
+                >
+                  <CardTitle className="text-xl mb-2">My Products</CardTitle>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.25 }}
+                >
+                  <CardDescription className="max-w-md mx-auto">
+                    Select a product from your library to create a new video.
+                    Products are saved automatically when imported.
+                  </CardDescription>
+                </motion.div>
+              </div>
+
+              <div className="space-y-4">
+                {isLoadingSaved ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="aspect-square skeleton rounded-lg" />
+                    ))}
+                  </div>
+                ) : savedProducts.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Package className="w-8 h-8 text-text-muted mx-auto mb-2" />
+                    <p className="text-sm text-text-muted">No saved products yet</p>
+                    <p className="text-xs text-text-muted mt-1">
+                      Products are saved automatically when you import them via URL
+                    </p>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => setInputMode('url')}
+                    >
+                      <Link2 className="w-4 h-4 mr-2" />
+                      Import from URL
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {savedProducts.map((product) => (
+                      <motion.button
+                        key={product.id}
+                        onClick={async () => {
+                          // Check credits first
+                          if (hasInsufficientCredits) {
+                            setShowInsufficientCreditsModal(true)
+                            return
+                          }
+
+                          // Clear previous state (BUG 5 fix)
+                          setFetchError(null)
+                          setGeneratedScript(null)
+
+                          // Set fetched product from saved product
+                          const fetchedProd = {
+                            name: product.name,
+                            image: product.image_url,
+                            images: product.images,
+                            price: product.price || undefined,
+                            description: product.description || undefined,
+                            features: product.features,
+                            source: product.source,
+                            url: product.source_url || undefined,
+                          }
+                          setFetchedProduct(fetchedProd)
+
+                          // Move to Step 2 immediately - script generates in background
+                          setStep(2)
+
+                          // Generate script in background while on Step 2 (with timeout + persona caching)
+                          setIsFetchingProduct(true)
+                          try {
+                            const scriptResponse = await fetchWithTimeout('/api/script/generate', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                product: {
+                                  name: product.name,
+                                  image: product.image_url,
+                                  price: product.price,
+                                  description: product.description,
+                                  features: product.features,
+                                  source: product.source,
+                                },
+                                persona: product.persona_profile || undefined, // Send cached persona if available
+                              }),
+                            }, 45000)
+                            const scriptData = await scriptResponse.json()
+                            if (scriptData.success && scriptData.scripts?.length > 0) {
+                              setGeneratedScript(scriptData.scripts[0])
+                            }
+                            if (scriptData.persona) {
+                              setPersonaProfile(scriptData.persona)
+                              // Cache persona on product for future use (if not already cached)
+                              if (!product.persona_profile && product.id) {
+                                cachePersonaOnProduct(product.id, scriptData.persona)
+                                // Also update local state so next click doesn't re-analyze
+                                setSavedProducts(prev => prev.map(p =>
+                                  p.id === product.id ? { ...p, persona_profile: scriptData.persona } : p
+                                ))
+                              }
+                            }
+                          } catch (error) {
+                            const message = error instanceof Error ? error.message : 'Failed to generate script'
+                            console.error('Script generation error:', error)
+                            setFetchError(message)
+                          } finally {
+                            setIsFetchingProduct(false)
+                          }
+                        }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="text-left rounded-xl border border-border-default bg-surface overflow-hidden hover:border-mint/50 transition-colors"
+                      >
+                        <div className="aspect-square bg-cream overflow-hidden">
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-3">
+                          <h4 className="text-sm font-medium text-text-primary truncate">
+                            {product.name}
+                          </h4>
+                          <p className="text-xs text-text-muted mt-1">
+                            {product.generation_count > 0
+                              ? `${product.generation_count} video${product.generation_count > 1 ? 's' : ''} created`
+                              : 'Never used'}
+                          </p>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Show insufficient credits warning */}
+              {hasInsufficientCredits && !isCheckingCredits && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-lg bg-status-warning/10 border border-status-warning/20 text-sm"
+                >
+                  <p className="text-status-warning font-medium mb-1">Insufficient Credits</p>
+                  <p className="text-text-muted">
+                    You need at least {creditCost} credits to create a video.{' '}
+                    <button
+                      onClick={() => setShowInsufficientCreditsModal(true)}
+                      className="text-mint hover:underline"
+                    >
+                      Buy credits or upgrade your plan
+                    </button>
+                  </p>
+                </motion.div>
+              )}
+
+              {fetchError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-lg bg-status-error/10 border border-status-error/20 text-status-error text-sm"
+                >
+                  {fetchError}
+                </motion.div>
+              )}
+
+              {isFetchingProduct && (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-6 h-6 animate-spin text-mint mr-2" />
+                  <span className="text-text-muted">Generating script...</span>
+                </div>
+              )}
+            </>
+          ) : inputMode === 'url' ? (
             <>
               <div className="text-center">
                 <motion.div
@@ -1059,15 +1488,70 @@ export default function ConciergePage() {
         />
       )}
 
-      {/* Script Preview */}
-      {generatedScript && (
+      {/* Script Preview or Loading State */}
+      {generatedScript ? (
         <ScriptPreview
           script={generatedScript}
           onRegenerate={handleRegenerateScript}
           onScriptChange={handleScriptChange}
           isRegenerating={isRegeneratingScript}
         />
-      )}
+      ) : isFetchingProduct ? (
+        <Card className="p-5 bg-surface border border-border-default">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-mint to-mint-dark flex items-center justify-center">
+              <Wand2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-text-primary">AI Script</h3>
+              <p className="text-sm text-text-muted">Generating your script...</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="h-4 bg-surface-raised rounded animate-pulse w-full" />
+            <div className="h-4 bg-surface-raised rounded animate-pulse w-5/6" />
+            <div className="h-4 bg-surface-raised rounded animate-pulse w-4/5" />
+            <div className="h-4 bg-surface-raised rounded animate-pulse w-full" />
+            <div className="h-4 bg-surface-raised rounded animate-pulse w-3/4" />
+          </div>
+          <div className="flex items-center justify-center mt-4 pt-4 border-t border-border-default">
+            <Loader2 className="w-5 h-5 animate-spin text-mint mr-2" />
+            <span className="text-sm text-text-muted">Crafting your perfect script...</span>
+          </div>
+        </Card>
+      ) : fetchError ? (
+        <Card className="p-5 bg-surface border border-status-error/30">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-status-error/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-status-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-status-error font-medium mb-1">Script Generation Failed</p>
+              <p className="text-text-muted text-sm mb-3">{fetchError}</p>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={async () => {
+                  setFetchError(null)
+                  if (fetchedProduct) {
+                    setIsFetchingProduct(true)
+                    try {
+                      await generateScriptForProduct(fetchedProduct, personaProfile)
+                    } finally {
+                      setIsFetchingProduct(false)
+                    }
+                  }
+                }}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ) : null}
 
       {/* Subtitle Toggle */}
       <CaptionToggle
@@ -1128,10 +1612,19 @@ export default function ConciergePage() {
             size="lg"
             onClick={handleStartGeneration}
             isLoading={isStartingGeneration}
-            disabled={isStartingGeneration}
+            disabled={isStartingGeneration || isFetchingProduct || !generatedScript}
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Generate Video ({creditCost} Credits)
+            {isFetchingProduct ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Preparing Script...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate Video ({creditCost} Credits)
+              </>
+            )}
           </Button>
         </div>
       </Card>
@@ -1232,9 +1725,15 @@ export default function ConciergePage() {
           onCreateAnother={handleCreateAnother}
           onRegenerateSocialCopy={async () => {
             if (!fetchedProduct) return
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            setSocialCopy(getMockSocialCopy(fetchedProduct, 'tiktok'))
+            setIsRegeneratingSocialCopy(true)
+            try {
+              await new Promise(resolve => setTimeout(resolve, 1000))
+              setSocialCopy(generateSocialCopy(fetchedProduct, 'tiktok'))
+            } finally {
+              setIsRegeneratingSocialCopy(false)
+            }
           }}
+          isRegeneratingSocialCopy={isRegeneratingSocialCopy}
         />
       )}
 
@@ -1262,6 +1761,26 @@ export default function ConciergePage() {
       {/* Scheduling Teaser for non-Pro users - only needs videoUrl */}
       {!canSchedule && videoUrl && (
         <ScheduleUpgradeCard variant="full" />
+      )}
+
+      {/* Regenerate with Feedback */}
+      {videoUrl && generationId && (
+        <Card className="p-5 bg-surface border border-border-default">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-semibold text-text-primary">Not quite right?</h4>
+              <p className="text-xs text-text-muted">Regenerate with feedback at half the cost</p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowRegenerateModal(true)}
+              leftIcon={<RotateCcw className="w-4 h-4" />}
+            >
+              Regenerate (5 Credits)
+            </Button>
+          </div>
+        </Card>
       )}
     </motion.div>
   )
@@ -1310,6 +1829,14 @@ export default function ConciergePage() {
         captionsEnabled={subtitlesEnabled}
       />
 
+      {/* Video Limit Modal */}
+      <VideoLimitModal
+        isOpen={showVideoLimitModal}
+        onClose={() => setShowVideoLimitModal(false)}
+        limit={videoLimitData?.limit ?? 1}
+        used={videoLimitData?.used ?? 1}
+      />
+
       {/* Schedule Modal */}
       {displayVideoUrl && (
         <ScheduleModal
@@ -1321,6 +1848,17 @@ export default function ConciergePage() {
           onScheduled={(scheduledPostId) => {
             console.log('Post scheduled:', scheduledPostId)
           }}
+        />
+      )}
+
+      {/* Regenerate Modal */}
+      {generationId && (
+        <RegenerateModal
+          isOpen={showRegenerateModal}
+          onClose={() => setShowRegenerateModal(false)}
+          generationId={generationId}
+          captionsEnabled={subtitlesEnabled}
+          onRegenerated={handleRegenerated}
         />
       )}
     </DashboardLayout>

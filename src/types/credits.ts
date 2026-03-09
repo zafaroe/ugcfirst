@@ -36,6 +36,8 @@ export interface UserCredits {
   stripe_subscription_id?: string;
   current_period_end?: string;
   credits_reset_date?: string;
+  // Payment tracking (permanent flag - true once user has ever paid)
+  has_paid: boolean;
 }
 
 export interface CreditTransaction {
@@ -100,6 +102,7 @@ export interface TransactionHistoryItem {
 // ============================================
 
 export const CREDIT_COSTS = {
+  // Legacy costs (keeping for backwards compatibility)
   DIY_BASE: 10,
   DIY_WITH_CAPTIONS: 11,
   CONCIERGE_BASE: 15,
@@ -107,7 +110,65 @@ export const CREDIT_COSTS = {
   EDIT_FIX: 5,
   SINGLE_SCRIPT: 4,
   CAPTION_ADDON: 1,
+  END_SCREEN_ADDON: 2,
+  SCHEDULE_POST: 2,
+
+  // UGC Video Generation by Duration
+  // Pricing targets ~55-60% gross margin
+  // Pipeline: Nano Banana (images) + Veo 3.1 (person animation) + Kling 2.6 (product reveal)
+  UGC_8S: 20,    // Quick (8s) - FB Feed, hooks, teasers
+  UGC_15S: 25,   // Short (15s) - TikTok/Reels quick ads
+  UGC_22S: 30,   // Standard (22s) - TikTok/Reels optimal
+  UGC_30S: 40,   // Full (30s) - Complete UGC story
+
+  // Spotlight Product Animation (Nano Banana + Kling 2.6)
+  // Flat 10 credits regardless of duration — Kling 2.6 costs ~110 Kie credits ($0.55)
+  SPOTLIGHT_5S: 10,   // 5-second cinematic product animation
+  SPOTLIGHT_10S: 10,  // 10-second cinematic product animation
 } as const;
+
+// UGC Video Duration Configuration
+export type UGCDuration = '8s' | '15s' | '22s' | '30s';
+
+// Spotlight Animation Duration
+export type SpotlightDuration = '5' | '10';
+
+export const UGC_DURATION_CONFIG: Record<UGCDuration, {
+  label: string;
+  seconds: number;
+  credits: number;
+  description: string;
+  bestFor: string[];
+}> = {
+  '8s': {
+    label: 'Quick',
+    seconds: 8,
+    credits: CREDIT_COSTS.UGC_8S,
+    description: 'Perfect for hooks and teasers',
+    bestFor: ['Facebook Feed', 'Story Ads', 'Hook Testing'],
+  },
+  '15s': {
+    label: 'Short',
+    seconds: 15,
+    credits: CREDIT_COSTS.UGC_15S,
+    description: 'Ideal for quick social ads',
+    bestFor: ['TikTok Ads', 'Instagram Reels', 'Quick Demos'],
+  },
+  '22s': {
+    label: 'Standard',
+    seconds: 22,
+    credits: CREDIT_COSTS.UGC_22S,
+    description: 'Optimal engagement length',
+    bestFor: ['TikTok', 'Instagram Reels', 'YouTube Shorts'],
+  },
+  '30s': {
+    label: 'Full',
+    seconds: 30,
+    credits: CREDIT_COSTS.UGC_30S,
+    description: 'Complete story with CTA',
+    bestFor: ['Full UGC Story', 'Product Reviews', 'Testimonials'],
+  },
+};
 
 export type CreditCostType = keyof typeof CREDIT_COSTS;
 
@@ -118,18 +179,85 @@ export type CreditCostType = keyof typeof CREDIT_COSTS;
 export function calculateCreditCost(options: {
   mode: 'diy' | 'concierge';
   captionsEnabled: boolean;
+  endScreenEnabled?: boolean;
 }): number {
-  const { mode, captionsEnabled } = options;
+  const { mode, captionsEnabled, endScreenEnabled = false } = options;
+
+  let baseCost: number;
 
   if (mode === 'concierge') {
-    return captionsEnabled
-      ? CREDIT_COSTS.CONCIERGE_WITH_CAPTIONS
-      : CREDIT_COSTS.CONCIERGE_BASE;
+    baseCost = CREDIT_COSTS.CONCIERGE_BASE;
+  } else {
+    baseCost = CREDIT_COSTS.DIY_BASE;
   }
 
-  return captionsEnabled
-    ? CREDIT_COSTS.DIY_WITH_CAPTIONS
-    : CREDIT_COSTS.DIY_BASE;
+  // Add caption addon (+1 credit)
+  if (captionsEnabled) {
+    baseCost += CREDIT_COSTS.CAPTION_ADDON;
+  }
+
+  // Add end screen addon (+2 credits)
+  if (endScreenEnabled) {
+    baseCost += CREDIT_COSTS.END_SCREEN_ADDON;
+  }
+
+  return baseCost;
+}
+
+/**
+ * Calculate credit cost for UGC video generation
+ */
+export function calculateUGCCreditCost(options: {
+  duration: UGCDuration;
+  captionsEnabled?: boolean;
+}): number {
+  const { duration, captionsEnabled = false } = options;
+  const config = UGC_DURATION_CONFIG[duration];
+
+  // Base cost for duration + optional caption add-on
+  return config.credits + (captionsEnabled ? CREDIT_COSTS.CAPTION_ADDON : 0);
+}
+
+/**
+ * Calculate credit cost for Spotlight product animation
+ */
+export function calculateSpotlightCreditCost(duration: SpotlightDuration): number {
+  // Flat 10 credits regardless of duration — Kling 2.6 animation cost is the same
+  return CREDIT_COSTS.SPOTLIGHT_5S; // Both 5s and 10s are 10 credits
+}
+
+/**
+ * Get estimated cost breakdown for display
+ */
+export function getUGCCostBreakdown(duration: UGCDuration): {
+  apiCost: number;       // Actual Kie.ai cost in USD
+  credits: number;       // UGCFirst credits charged
+  margin: number;        // Gross margin percentage
+} {
+  const config = UGC_DURATION_CONFIG[duration];
+
+  // Kie.ai costs (approximate)
+  const imageCost = 0.18;  // 5x Nano Banana
+  const klingCost = 0.28;  // 1x Kling 2.6
+  const veoBaseCost = 0.30;
+  const extensionCost = 0.30;
+
+  const extensions = {
+    '8s': 0,
+    '15s': 1,
+    '22s': 2,
+    '30s': 3,
+  }[duration];
+
+  const apiCost = imageCost + klingCost + veoBaseCost + (extensions * extensionCost);
+  const revenue = config.credits * 0.10;  // Assuming $0.10 per credit
+  const margin = ((revenue - apiCost) / revenue) * 100;
+
+  return {
+    apiCost: Math.round(apiCost * 100) / 100,
+    credits: config.credits,
+    margin: Math.round(margin),
+  };
 }
 
 export function formatCreditAmount(amount: number): string {

@@ -6,9 +6,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
 
-  // Turbopack config (Next.js 16 default)
-  turbopack: {},
-
   // SEO headers for protected routes
   async headers() {
     return [

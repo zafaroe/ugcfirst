@@ -1,23 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Logo, GradientOrb, FloatingStars, EASINGS } from '@/components/ui'
 import { Confetti } from '@/components/ui/confetti'
 import {
   WelcomeStep,
-  ConnectStoreStep,
+  AddProductStep,
   ChoosePlanStep,
   CompleteStep,
 } from '@/components/blocks/onboarding'
 
-type OnboardingStep = 'welcome' | 'connect-store' | 'choose-plan' | 'complete'
+type OnboardingStep = 'welcome' | 'add-product' | 'choose-plan' | 'complete'
 
-const steps: OnboardingStep[] = ['welcome', 'connect-store', 'choose-plan', 'complete']
+const steps: OnboardingStep[] = ['welcome', 'add-product', 'choose-plan', 'complete']
 
-export default function OnboardingPage() {
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome')
+function OnboardingContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const planFromUrl = searchParams.get('plan')
+  const checkoutSuccess = searchParams.get('checkout') === 'success'
+
+  // If returning from successful checkout, start at complete step
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(
+    checkoutSuccess ? 'complete' : 'welcome'
+  )
   const [showConfetti, setShowConfetti] = useState(false)
+
+  // Handle checkout success - trigger confetti and clean up URL
+  useEffect(() => {
+    if (checkoutSuccess) {
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 4000)
+      // Clean up the URL without triggering navigation
+      router.replace('/onboarding', { scroll: false })
+    }
+  }, [checkoutSuccess, router])
 
   const currentStepIndex = steps.indexOf(currentStep)
 
@@ -106,8 +125,8 @@ export default function OnboardingPage() {
             {currentStep === 'welcome' && (
               <WelcomeStep onNext={goToNextStep} />
             )}
-            {currentStep === 'connect-store' && (
-              <ConnectStoreStep
+            {currentStep === 'add-product' && (
+              <AddProductStep
                 onNext={goToNextStep}
                 onBack={goToPreviousStep}
               />
@@ -116,6 +135,7 @@ export default function OnboardingPage() {
               <ChoosePlanStep
                 onNext={goToNextStep}
                 onBack={goToPreviousStep}
+                preselectedPlan={planFromUrl}
               />
             )}
             {currentStep === 'complete' && (
@@ -144,5 +164,17 @@ export default function OnboardingPage() {
         </motion.footer>
       )}
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="animate-pulse text-text-muted">Loading...</div>
+      </div>
+    }>
+      <OnboardingContent />
+    </Suspense>
   )
 }

@@ -19,6 +19,18 @@ import {
   WaitlistLaunchDayEmail,
   subject as launchSubject,
 } from './templates/waitlist-launch-day'
+import {
+  SubscriptionConfirmedEmail,
+} from './templates/subscription-confirmed'
+import {
+  CreditPackPurchasedEmail,
+} from './templates/credit-pack-purchased'
+import {
+  SubscriptionCanceledEmail,
+} from './templates/subscription-canceled'
+import {
+  PaymentFailedEmail,
+} from './templates/payment-failed'
 
 /**
  * Send waitlist confirmation email.
@@ -170,5 +182,153 @@ export async function sendWaitlistLaunchDay(email: string): Promise<void> {
     console.log('[Email] Launch Day email sent:', data?.id)
   } catch (err) {
     console.error('[Email] Error sending Launch Day email:', err)
+  }
+}
+
+/**
+ * Send subscription confirmed email.
+ * Fire-and-forget: logs errors but never throws.
+ */
+export async function sendSubscriptionConfirmed(
+  email: string,
+  params: {
+    name?: string
+    planName: string
+    credits: number
+    videoCount: number
+  }
+): Promise<void> {
+  if (!isConfigured() || !resend) {
+    console.log('[Email] Resend not configured, skipping subscription confirmed email')
+    return
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: EMAIL_CONFIG.from,
+      replyTo: EMAIL_CONFIG.replyTo,
+      to: email,
+      subject: `Welcome to UGCFirst ${params.planName}!`,
+      react: SubscriptionConfirmedEmail(params),
+    })
+
+    if (error) {
+      console.error('[Email] Failed to send subscription confirmed email:', error)
+      return
+    }
+
+    console.log('[Email] Subscription confirmed email sent:', data?.id)
+  } catch (err) {
+    console.error('[Email] Error sending subscription confirmed email:', err)
+  }
+}
+
+/**
+ * Send credit pack purchased email.
+ * Fire-and-forget: logs errors but never throws.
+ */
+export async function sendCreditPackPurchased(
+  email: string,
+  params: {
+    name?: string
+    packName: string
+    credits: number
+    price: number
+    newBalance: number
+  }
+): Promise<void> {
+  if (!isConfigured() || !resend) {
+    console.log('[Email] Resend not configured, skipping credit pack email')
+    return
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: EMAIL_CONFIG.from,
+      replyTo: EMAIL_CONFIG.replyTo,
+      to: email,
+      subject: `Credits Added — ${params.credits} credits ready to use`,
+      react: CreditPackPurchasedEmail(params),
+    })
+
+    if (error) {
+      console.error('[Email] Failed to send credit pack email:', error)
+      return
+    }
+
+    console.log('[Email] Credit pack email sent:', data?.id)
+  } catch (err) {
+    console.error('[Email] Error sending credit pack email:', err)
+  }
+}
+
+/**
+ * Send subscription canceled email.
+ * Fire-and-forget: logs errors but never throws.
+ */
+export async function sendSubscriptionCanceled(
+  email: string,
+  params: {
+    name?: string
+    remainingCredits?: number
+  }
+): Promise<void> {
+  if (!isConfigured() || !resend) {
+    console.log('[Email] Resend not configured, skipping subscription canceled email')
+    return
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: EMAIL_CONFIG.from,
+      replyTo: EMAIL_CONFIG.replyTo,
+      to: email,
+      subject: 'Your UGCFirst subscription has been canceled',
+      react: SubscriptionCanceledEmail(params),
+    })
+
+    if (error) {
+      console.error('[Email] Failed to send subscription canceled email:', error)
+      return
+    }
+
+    console.log('[Email] Subscription canceled email sent:', data?.id)
+  } catch (err) {
+    console.error('[Email] Error sending subscription canceled email:', err)
+  }
+}
+
+/**
+ * Send payment failed email.
+ * Fire-and-forget: logs errors but never throws.
+ */
+export async function sendPaymentFailed(
+  email: string,
+  params: {
+    name?: string
+  }
+): Promise<void> {
+  if (!isConfigured() || !resend) {
+    console.log('[Email] Resend not configured, skipping payment failed email')
+    return
+  }
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: EMAIL_CONFIG.from,
+      replyTo: EMAIL_CONFIG.replyTo,
+      to: email,
+      subject: 'Action needed: Payment failed for your UGCFirst subscription',
+      react: PaymentFailedEmail(params),
+    })
+
+    if (error) {
+      console.error('[Email] Failed to send payment failed email:', error)
+      return
+    }
+
+    console.log('[Email] Payment failed email sent:', data?.id)
+  } catch (err) {
+    console.error('[Email] Error sending payment failed email:', err)
   }
 }

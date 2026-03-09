@@ -53,6 +53,16 @@ export const generateVideo = inngest.createFunction(
       mode,
       creditTransactionId,
       voiceId,
+      applyWatermark,
+      existingPersona, // Optional - for regeneration, skip analysis and reuse persona
+      customScript,
+      endScreenEnabled,
+      endScreenCtaText,
+      endScreenBrandText,
+      // Spotlight-specific fields
+      spotlightCategoryId,
+      spotlightStyleId,
+      spotlightDuration,
     } = event.data;
 
     try {
@@ -66,12 +76,22 @@ export const generateVideo = inngest.createFunction(
           mode,
           voiceId,
           captionsEnabled: captionsEnabled ?? false,
+          applyWatermark: applyWatermark ?? false,
+          existingPersona, // Skip analysis if provided (regeneration)
+          customScript,
+          endScreenEnabled,
+          endScreenCtaText,
+          endScreenBrandText,
+          // Spotlight-specific fields
+          spotlightCategoryId,
+          spotlightStyleId,
+          spotlightDuration,
         });
       });
 
-      // Step 2: Process videos with subtitles if enabled
+      // Step 2: Store subtitle words in DB (separate step = checkpoint after pipeline)
       if (captionsEnabled && result.videos.length > 0 && result.subtitles) {
-        await step.run('process-all-videos', async () => {
+        await step.run('store-subtitle-data', async () => {
           const supabase = getAdminClient();
 
           for (let i = 0; i < result.videos.length; i++) {

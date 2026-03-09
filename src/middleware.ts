@@ -2,10 +2,10 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Public routes - no auth required
-const PUBLIC_ROUTES = ['/', '/login', '/signup', '/forgot-password', '/pricing', '/auth/callback']
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/forgot-password', '/pricing', '/auth/callback', '/v', '/terms', '/privacy']
 
 // Protected routes - require auth
-const PROTECTED_ROUTES = ['/dashboard', '/create', '/projects', '/settings', '/explore', '/templates', '/onboarding']
+const PROTECTED_ROUTES = ['/dashboard', '/create', '/projects', '/products', '/schedule', '/settings', '/explore', '/onboarding', '/reset-password']
 
 // Auth routes - redirect to dashboard if already logged in
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password']
@@ -23,16 +23,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check WIP flag first (secondary protection layer)
-  const isWipEnabled = process.env.NEXT_PUBLIC_ENABLE_WIP_ROUTES === 'true'
+  // Check if this is a protected route
   const isProtectedRoute = PROTECTED_ROUTES.some(route =>
     pathname === route || pathname.startsWith(`${route}/`)
   )
-
-  // If WIP disabled and protected route, redirect to home (regardless of auth)
-  if (!isWipEnabled && isProtectedRoute) {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
 
   // Skip auth check if Supabase env vars are missing
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -69,6 +63,11 @@ export async function middleware(request: NextRequest) {
     // Check if on auth route while authenticated -> redirect to dashboard
     const isAuthRoute = AUTH_ROUTES.some(route => pathname === route)
     if (isAuthRoute && user) {
+      // Check if user has completed onboarding (from user_metadata to avoid DB call)
+      const isOnboarded = user.user_metadata?.onboarded === true
+      if (!isOnboarded) {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
@@ -77,6 +76,15 @@ export async function middleware(request: NextRequest) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
+    }
+
+    // If user exists but hasn't completed onboarding, redirect to onboarding
+    // (Skip this check if already on /onboarding or /reset-password to avoid infinite redirect)
+    if (user && isProtectedRoute && !pathname.startsWith('/onboarding') && !pathname.startsWith('/reset-password')) {
+      const isOnboarded = user.user_metadata?.onboarded === true
+      if (!isOnboarded) {
+        return NextResponse.redirect(new URL('/onboarding', request.url))
+      }
     }
 
     return supabaseResponse

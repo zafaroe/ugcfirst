@@ -100,11 +100,13 @@ export function Modal({
           />
 
           {/* Modal */}
-          <div className="fixed inset-0 flex items-center justify-center p-4">
+          <div className="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
             <motion.div
               className={cn(
-                'bg-surface rounded-2xl w-full p-6 relative overflow-hidden',
+                'bg-surface rounded-2xl w-full p-6 relative',
                 'shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(16,185,129,0.1)]',
+                'max-h-[calc(100vh-2rem)] overflow-y-auto',
+                'my-auto',
                 sizeClasses[size],
                 className
               )}

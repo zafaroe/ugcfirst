@@ -8,9 +8,10 @@ import { faArrowRight, faBolt } from '@fortawesome/free-solid-svg-icons'
 import { cn } from '@/lib/utils'
 import { DropAndGoIcon } from './svg-illustrations/drop-and-go-icon'
 import { StudioIcon } from './svg-illustrations/studio-icon'
+import { SpotlightIcon } from './svg-illustrations/spotlight-icon'
 
 export interface ModeSelectionCardProps {
-  mode: 'diy' | 'concierge'
+  mode: 'diy' | 'concierge' | 'spotlight'
   className?: string
 }
 
@@ -40,6 +41,19 @@ const modeConfig = {
     accentBg: 'bg-coral/10',
     glowColor: 'rgba(244, 63, 94, 0.2)',
     borderHover: '#F43F5E40',
+  },
+  spotlight: {
+    title: 'Spotlight',
+    description: 'Cinematic product animations.',
+    tagText: 'No avatar',
+    credits: 10,
+    buttonText: 'Create Animation',
+    href: '/create/spotlight',
+    accentColor: '#F59E0B', // amber
+    accentColorLight: '#FBBF24',
+    accentBg: 'bg-amber-400/10',
+    glowColor: 'rgba(251, 191, 36, 0.2)',
+    borderHover: '#F59E0B40',
   },
 }
 
@@ -104,11 +118,9 @@ export function ModeSelectionCard({ mode, className }: ModeSelectionCardProps) {
 
           {/* Icon */}
           <div className="py-2">
-            {mode === 'diy' ? (
-              <StudioIcon size="lg" hovered={isHovered} />
-            ) : (
-              <DropAndGoIcon size="lg" hovered={isHovered} />
-            )}
+            {mode === 'diy' && <StudioIcon size="lg" hovered={isHovered} />}
+            {mode === 'concierge' && <DropAndGoIcon size="lg" hovered={isHovered} />}
+            {mode === 'spotlight' && <SpotlightIcon size="lg" hovered={isHovered} />}
           </div>
 
           {/* Text */}
@@ -170,11 +182,9 @@ export function ModeSelectionCardCompact({ mode, className }: ModeSelectionCardP
               config.accentBg
             )}
           >
-            {mode === 'diy' ? (
-              <StudioIcon size="sm" hovered={isHovered} />
-            ) : (
-              <DropAndGoIcon size="sm" hovered={isHovered} />
-            )}
+            {mode === 'diy' && <StudioIcon size="sm" hovered={isHovered} />}
+            {mode === 'concierge' && <DropAndGoIcon size="sm" hovered={isHovered} />}
+            {mode === 'spotlight' && <SpotlightIcon size="sm" hovered={isHovered} />}
           </div>
           <div className="flex-1">
             <h4 className="font-semibold text-text-primary">{config.title}</h4>

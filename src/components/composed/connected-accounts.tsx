@@ -24,9 +24,12 @@ import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { GlassCard, EASINGS } from '@/components/ui';
 import { getBrowserClient } from '@/lib/supabase';
+import { hasSchedulingAccess } from '@/config/pricing';
+import { ScheduleUpgradeCard } from './schedule-upgrade-card';
 import type { LatePlatform } from '@/lib/social/late';
 import type { ConnectedAccount } from '@/types/connected-account';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 // ============================================
 // PLATFORM CONFIG
@@ -64,10 +67,12 @@ export function ConnectedAccounts() {
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [requiresUpgrade, setRequiresUpgrade] = useState(false);
+  const [userTier, setUserTier] = useState<string>('free');
 
-  // Fetch connected accounts on mount
+  // Fetch connected accounts and user tier on mount
   useEffect(() => {
-    fetchAccounts();
+    fetchAccountsAndTier();
 
     // Check for success/error from OAuth redirect
     const params = new URLSearchParams(window.location.search);
@@ -87,22 +92,31 @@ export function ConnectedAccounts() {
     }
   }, []);
 
-  const fetchAccounts = async () => {
+  const fetchAccountsAndTier = async () => {
     try {
       const supabase = getBrowserClient();
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.access_token) return;
 
-      const response = await fetch('/api/social/accounts', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      // Fetch accounts and credits (for tier) in parallel
+      const [accountsRes, creditsRes] = await Promise.all([
+        fetch('/api/social/accounts', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }),
+        fetch('/api/credits/balance', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }),
+      ]);
 
-      const data = await response.json();
-      if (data.success) {
-        setAccounts(data.accounts);
+      const accountsData = await accountsRes.json();
+      if (accountsData.success) {
+        setAccounts(accountsData.accounts);
+      }
+
+      const creditsData = await creditsRes.json();
+      if (creditsData.success) {
+        setUserTier(creditsData.data?.tier || 'free');
       }
     } catch (err) {
       console.error('Failed to fetch accounts:', err);
@@ -114,6 +128,7 @@ export function ConnectedAccounts() {
   const handleConnect = async (platform: LatePlatform) => {
     setConnectingPlatform(platform);
     setError(null);
+    setRequiresUpgrade(false);
 
     try {
       const supabase = getBrowserClient();
@@ -133,6 +148,9 @@ export function ConnectedAccounts() {
       const data = await response.json();
 
       if (!data.success) {
+        if (data.requiresUpgrade) {
+          setRequiresUpgrade(true);
+        }
         setError(data.error || 'Failed to start connection');
         return;
       }
@@ -184,6 +202,22 @@ export function ConnectedAccounts() {
   // Get connected platforms
   const connectedPlatforms = new Set(accounts.map((a) => a.platform));
 
+  // Check if user has scheduling access
+  const hasAccess = hasSchedulingAccess(userTier);
+
+  // Show upgrade card for non-Pro users (after loading)
+  if (!isLoading && !hasAccess) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4, ease: EASINGS.easeOut }}
+      >
+        <ScheduleUpgradeCard variant="full" />
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -218,10 +252,30 @@ export function ConnectedAccounts() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-3 rounded-lg bg-status-error/10 border border-status-error/20 flex items-center gap-2"
+              className={cn(
+                "mb-4 p-3 rounded-lg flex items-start gap-3",
+                requiresUpgrade
+                  ? "bg-amber-500/10 border border-amber-500/20"
+                  : "bg-status-error/10 border border-status-error/20"
+              )}
             >
-              <AlertCircle className="w-5 h-5 text-status-error flex-shrink-0" />
-              <p className="text-sm text-status-error">{error}</p>
+              <AlertCircle className={cn(
+                "w-5 h-5 flex-shrink-0 mt-0.5",
+                requiresUpgrade ? "text-amber-500" : "text-status-error"
+              )} />
+              <div className="flex-1">
+                <p className={cn(
+                  "text-sm",
+                  requiresUpgrade ? "text-amber-600" : "text-status-error"
+                )}>{error}</p>
+                {requiresUpgrade && (
+                  <Link href="/settings/billing" className="inline-block mt-2">
+                    <Button variant="secondary" size="sm">
+                      Upgrade to Pro
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

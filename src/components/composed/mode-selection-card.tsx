@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button'
 import { SPRING } from '@/components/ui/motion'
 import { DIYIllustration } from './svg-illustrations/diy-illustration'
 import { ReelIllustration } from './svg-illustrations/reel-illustration'
+import { SpotlightIllustration } from './svg-illustrations/spotlight-illustration'
 
 export interface ModeSelectionCardProps {
-  mode: 'diy' | 'concierge'
+  mode: 'diy' | 'concierge' | 'spotlight'
   className?: string
 }
 
@@ -25,6 +26,8 @@ const modeConfig = {
     gradient: 'from-mint to-indigo-400',
     glowColor: 'rgba(16, 185, 129, 0.3)',
     borderGradient: 'linear-gradient(135deg, #10B981, #34D399, #10B981)',
+    accentColor: 'text-mint',
+    buttonClass: 'bg-mint hover:bg-mint-dark',
   },
   concierge: {
     title: 'Auto Pilot',
@@ -35,6 +38,20 @@ const modeConfig = {
     gradient: 'from-coral to-pink-400',
     glowColor: 'rgba(244, 63, 94, 0.3)',
     borderGradient: 'linear-gradient(135deg, #F43F5E, #FB7185, #F43F5E)',
+    accentColor: 'text-coral',
+    buttonClass: 'bg-coral hover:bg-coral-light',
+  },
+  spotlight: {
+    title: 'Spotlight',
+    description: 'Cinematic product animations. No avatar, no script - pure visual showcase.',
+    credits: 10,
+    buttonText: 'Create Animation',
+    href: '/create/spotlight',
+    gradient: 'from-amber-400 to-orange-500',
+    glowColor: 'rgba(251, 191, 36, 0.3)',
+    borderGradient: 'linear-gradient(135deg, #F59E0B, #FBBF24, #F59E0B)',
+    accentColor: 'text-amber-400',
+    buttonClass: 'bg-amber-500 hover:bg-amber-600',
   },
 }
 
@@ -73,10 +90,7 @@ export function ModeSelectionCard({ mode, className }: ModeSelectionCardProps) {
           <div className="flex items-center gap-1.5 mb-4">
             <FontAwesomeIcon
               icon={faBolt}
-              className={cn(
-                'w-3.5 h-3.5',
-                mode === 'diy' ? 'text-mint' : 'text-coral'
-              )}
+              className={cn('w-3.5 h-3.5', config.accentColor)}
             />
             <span className="text-sm font-medium text-text-muted">
               {config.credits} Credits
@@ -91,11 +105,9 @@ export function ModeSelectionCard({ mode, className }: ModeSelectionCardProps) {
               transition={{ delay: 0.1, duration: 0.4 }}
               className="group-hover:scale-105 transition-transform duration-300"
             >
-              {mode === 'diy' ? (
-                <DIYIllustration size="lg" animated={false} />
-              ) : (
-                <ReelIllustration size="lg" animated={false} />
-              )}
+              {mode === 'diy' && <DIYIllustration size="lg" animated={false} />}
+              {mode === 'concierge' && <ReelIllustration size="lg" animated={false} />}
+              {mode === 'spotlight' && <SpotlightIllustration size="lg" animated={false} />}
             </motion.div>
           </div>
 
@@ -111,14 +123,7 @@ export function ModeSelectionCard({ mode, className }: ModeSelectionCardProps) {
             </div>
 
             {/* Action button */}
-            <Button
-              className={cn(
-                'w-full',
-                mode === 'diy'
-                  ? 'bg-mint hover:bg-mint-dark'
-                  : 'bg-coral hover:bg-coral-light'
-              )}
-            >
+            <Button className={cn('w-full', config.buttonClass)}>
               {config.buttonText}
               <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
@@ -133,6 +138,12 @@ export function ModeSelectionCard({ mode, className }: ModeSelectionCardProps) {
 export function ModeSelectionCardCompact({ mode, className }: ModeSelectionCardProps) {
   const config = modeConfig[mode]
 
+  const bgColorClass = {
+    diy: 'bg-mint/20',
+    concierge: 'bg-coral/20',
+    spotlight: 'bg-amber-400/20',
+  }[mode]
+
   return (
     <Link href={config.href}>
       <motion.div
@@ -145,26 +156,15 @@ export function ModeSelectionCardCompact({ mode, className }: ModeSelectionCardP
         transition={SPRING.bouncy}
       >
         <div className="flex items-center gap-4">
-          <div className={cn(
-            'w-12 h-12 rounded-lg flex items-center justify-center',
-            mode === 'diy' ? 'bg-mint/20' : 'bg-coral/20'
-          )}>
-            {mode === 'diy' ? (
-              <DIYIllustration size="sm" animated={false} />
-            ) : (
-              <ReelIllustration size="sm" animated={false} />
-            )}
+          <div className={cn('w-12 h-12 rounded-lg flex items-center justify-center', bgColorClass)}>
+            {mode === 'diy' && <DIYIllustration size="sm" animated={false} />}
+            {mode === 'concierge' && <ReelIllustration size="sm" animated={false} />}
+            {mode === 'spotlight' && <SpotlightIllustration size="sm" animated={false} />}
           </div>
           <div className="flex-1">
             <h4 className="font-semibold text-text-primary">{config.title}</h4>
             <div className="flex items-center gap-1 text-sm text-text-muted">
-              <FontAwesomeIcon
-                icon={faBolt}
-                className={cn(
-                  'w-3 h-3',
-                  mode === 'diy' ? 'text-mint' : 'text-coral'
-                )}
-              />
+              <FontAwesomeIcon icon={faBolt} className={cn('w-3 h-3', config.accentColor)} />
               <span>{config.credits} Credits</span>
             </div>
           </div>

@@ -135,7 +135,7 @@ export async function DELETE(
     // If we have a Late post ID, cancel in Late API
     if (scheduledPost.latePostId && LateService.isConfigured()) {
       try {
-        await LateService.cancelPost(scheduledPost.latePostId);
+        await LateService.deletePost(scheduledPost.latePostId);
       } catch (error) {
         console.warn('Failed to cancel in Late:', error);
         // Continue with local cancellation

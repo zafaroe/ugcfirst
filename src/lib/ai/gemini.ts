@@ -143,6 +143,45 @@ const APPROACH_DESCRIPTIONS: Record<ScriptApproach, string> = {
 };
 
 // ============================================
+// TEMPLATE-SPECIFIC 8-SECOND SCRIPT PROMPTS
+// ============================================
+
+const TEMPLATE_PROMPTS: Record<string, string> = {
+  'pas': `You are writing an 8-second Problem-Agitate-Solution UGC video script.
+
+This format hooks viewers by naming their pain point, then positions the product as the solution.
+
+Structure (EXACTLY 3 sections):
+1. "Hook + Problem" (0-3s, ~7 words): Open with one punchy sentence that names a specific, relatable frustration. Use "I" statements. Example energy: "I was SO tired of..."
+2. "Solution" (3-6s, ~9 words): Transition naturally to the product and ONE result. "Then I found this and..." — focus on outcome, not features.
+3. "Call to Action" (6-8s, ~4 words): Direct, short. "Link in bio, trust me" or "Comment GLOW to get it."
+
+Total: ~20 words. The script must feel like a real person venting about a problem then excitedly sharing what fixed it.`,
+
+  'unboxing': `You are writing an 8-second Unboxing & First Impressions UGC video script.
+
+This format leverages the #TikTokMadeMeBuyIt trend — pure excitement about receiving and opening a product.
+
+Structure (EXACTLY 3 sections):
+1. "Anticipation" (0-2s, ~6 words): Build excitement about what just arrived. Reference how long you waited or why you bought it. Example: "It's FINALLY here oh my god..."
+2. "Reveal + Reaction" (2-6s, ~9 words): Show the product and share instant authentic reaction. Describe what you see, feel, or notice. Be specific — mention one detail (texture, weight, smell, packaging). "The quality is insane, look at this..."
+3. "Call to Action" (6-8s, ~5 words): Direct viewers where to get it. Add urgency if genuine. "Link in bio before it sells out."
+
+Total: ~20 words. The script must feel like genuine first-time excitement — the camera is shaking because you're that hyped.`,
+
+  'testimonial': `You are writing an 8-second Testimonial & Review UGC video script.
+
+This format builds trust through the skepticism-to-satisfaction journey. "I didn't believe it" converts 4x higher than direct claims.
+
+Structure (EXACTLY 3 sections):
+1. "Skepticism Hook" (0-3s, ~7 words): Acknowledge initial doubts honestly. This relatability IS the hook. "I didn't think this would actually work..." or "I was SO skeptical about this..."
+2. "Results" (3-6s, ~9 words): Share what actually happened — be specific about the result. Mention a timeline if possible. "But after two weeks my skin is literally glowing. No filter."
+3. "Recommendation" (6-8s, ~4 words): Your verdict + CTA. Enthusiastic but genuine. "10 out of 10, link in bio."
+
+Total: ~20 words. The script must feel like an honest product review from someone who was genuinely surprised by the results.`,
+};
+
+// ============================================
 // SCRIPT GENERATION (n8n Raw 12-Second UGC)
 // ============================================
 
@@ -158,14 +197,72 @@ const APPROACH_DESCRIPTIONS: Record<ScriptApproach, string> = {
 export async function generateScript(
   personaProfile: PersonaProfile,
   productName: string,
-  approach: ScriptApproach = 'excited_discovery'
+  approach: ScriptApproach = 'excited_discovery',
+  templateId?: string
 ): Promise<GeneratedScript> {
   const model = getModel('gemini-2.0-flash');
 
   // Build the persona description from the detailed profile
   const personaDescription = buildPersonaDescription(personaProfile);
 
-  const systemPrompt = `Master Prompt: Raw 12-Second UGC Video Scripts (Enhanced Edition)
+  let systemPrompt: string;
+  let prompt: string;
+
+  if (templateId && TEMPLATE_PROMPTS[templateId]) {
+    // ========================================
+    // TEMPLATE-AWARE 8-SECOND SCRIPT (DIY)
+    // ========================================
+    systemPrompt = `${TEMPLATE_PROMPTS[templateId]}
+
+Verbal Authenticity Rules:
+- Use filler words naturally: "like," "literally," "so," "honestly"
+- Include natural speech patterns: self-corrections, fragments, trailing off
+- This should sound like a real person talking to their phone, not a scripted ad
+
+You must respond with a JSON object matching this exact structure:
+{
+  "approach": "${approach}",
+  "approachLabel": "${APPROACH_LABELS[approach]}",
+  "energy": "One line describing the energy and vibe",
+  "dialogue": [
+    { "timestamp": "0:00-0:03", "text": "Section 1 dialogue" },
+    { "timestamp": "0:03-0:06", "text": "Section 2 dialogue" },
+    { "timestamp": "0:06-0:08", "text": "Section 3 dialogue" }
+  ],
+  "shotBreakdown": [],
+  "technicalDetails": {
+    "phoneOrientation": "Vertical",
+    "filmingMethod": "Selfie mode",
+    "dominantHand": "Right hand holds phone",
+    "locationSpecifics": "Casual indoor setting",
+    "audioEnvironment": "Quiet room"
+  },
+  "fullScript": "All dialogue concatenated",
+  "wordCount": 20,
+  "estimatedDuration": 8
+}`;
+
+    prompt = `Create a single 8-second UGC script for "${productName}" following the template structure above.
+
+Creator Profile:
+${personaDescription}
+
+Product Name: ${productName}
+
+CRITICAL RULES:
+- EXACTLY 3 dialogue entries matching the template sections
+- Total ~20 words (no more than 25)
+- 8 seconds total, NOT 12
+- No text overlays — all dialogue is spoken
+- The script must clearly follow the ${APPROACH_LABELS[approach]} structure
+- Each section must serve its specific purpose (don't blend them)
+- Use natural, authentic speech patterns`;
+
+  } else {
+    // ========================================
+    // GENERIC 12-SECOND SCRIPT (Concierge / freeform)
+    // ========================================
+    systemPrompt = `Master Prompt: Raw 12-Second UGC Video Scripts (Enhanced Edition)
 You are an expert at creating authentic UGC video scripts that look like someone just grabbed their iPhone and hit record—shaky hands, natural movement, zero production value. No text overlays. No polish. Just real.
 Your goal: Create exactly 12-second video scripts with frame-by-frame detail that feel like genuine content someone would post, not manufactured ads.
 
@@ -251,7 +348,7 @@ You must respond with a JSON object matching this exact structure:
 
 Include shotBreakdown entries for seconds 0-11 (12 total entries).`;
 
-  const prompt = `Create a single UGC script for "${productName}" using the "${APPROACH_LABELS[approach]}" approach.
+    prompt = `Create a single UGC script for "${productName}" using the "${APPROACH_LABELS[approach]}" approach.
 
 Approach Description: ${APPROACH_DESCRIPTIONS[approach]}
 
@@ -266,8 +363,10 @@ Remember:
 - Include natural filler words, pauses, and authentic speech patterns
 - The shot breakdown should show realistic handheld filming
 - Dialogue MUST complete by the 12-second mark`;
+  }
 
   // Wrap API call with retry logic for rate limiting
+  // Use fast retries (1 retry, 2s delay) to fail fast and fallback to OpenAI
   const result = await withRetry(
     async () => {
       return await model.generateContent({
@@ -281,7 +380,7 @@ Remember:
         },
       });
     },
-    { maxRetries: 4, initialDelayMs: 15000, maxDelayMs: 60000 }
+    { maxRetries: 1, initialDelayMs: 2000, maxDelayMs: 5000 }
   );
 
   const responseText = result.response.text();
@@ -380,12 +479,13 @@ Keywords: ${profile.keywords?.join(', ') || 'viral, trending'}
 export async function generateScripts(
   personaProfile: PersonaProfile,
   productName: string,
-  approaches: ScriptApproach[]
+  approaches: ScriptApproach[],
+  templateId?: string
 ): Promise<GeneratedScript[]> {
   const scripts: GeneratedScript[] = [];
 
   for (const approach of approaches) {
-    const script = await generateScript(personaProfile, productName, approach);
+    const script = await generateScript(personaProfile, productName, approach, templateId);
     scripts.push(script);
   }
 
@@ -441,22 +541,56 @@ Respond with JSON:
   "mood": "e.g., excited, curious, frustrated, etc."
 }`;
 
-  // Wrap API call with retry logic for rate limiting
-  const result = await withRetry(
-    async () => {
-      return await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 500,
-          responseMimeType: 'application/json',
-        },
-      });
-    },
-    { maxRetries: 4, initialDelayMs: 15000, maxDelayMs: 60000 }
-  );
+  let responseText: string;
 
-  const responseText = result.response.text();
+  try {
+    // Wrap API call with retry logic for rate limiting
+    // Use fast retries to fail fast and let caller handle fallback
+    const result = await withRetry(
+      async () => {
+        return await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 500,
+            responseMimeType: 'application/json',
+          },
+        });
+      },
+      { maxRetries: 1, initialDelayMs: 2000, maxDelayMs: 5000 }
+    );
+
+    responseText = result.response.text();
+  } catch (geminiError) {
+    // Fallback: Generate rule-based frame prompt when Gemini fails (quota/rate limit)
+    console.warn('[Gemini] generateFramePrompt failed, using rule-based fallback:', geminiError instanceof Error ? geminiError.message : 'Unknown error');
+
+    // Analyze script to determine mood
+    const scriptLower = script.toLowerCase();
+    let mood = 'engaging';
+    let cameraAngle = 'medium shot';
+    let lighting = 'natural daylight';
+
+    if (scriptLower.includes('excited') || scriptLower.includes('amazing') || scriptLower.includes('love')) {
+      mood = 'excited';
+    } else if (scriptLower.includes('problem') || scriptLower.includes('struggling') || scriptLower.includes('frustrated')) {
+      mood = 'frustrated';
+    } else if (scriptLower.includes('discover') || scriptLower.includes('found') || scriptLower.includes('secret')) {
+      mood = 'curious';
+    }
+
+    // Hook-style openings often use close-ups
+    if (scriptLower.startsWith('okay') || scriptLower.startsWith('wait') || scriptLower.startsWith('stop')) {
+      cameraAngle = 'close-up';
+    }
+
+    return {
+      description: `A 25-35 year old person in a casual home setting, looking directly at the camera with a ${mood} expression, about to share their experience with the product. Natural UGC style, authentic and relatable.`,
+      cameraAngle,
+      lighting,
+      mood,
+    };
+  }
 
   // Strip markdown code blocks if present
   let cleanedResponse = responseText.trim();
@@ -561,6 +695,7 @@ Maintain the conversational, authentic UGC tone.
 Return only the refined script text, nothing else.`;
 
   // Wrap API call with retry logic for rate limiting
+  // Use fast retries to fail fast and let caller handle fallback
   const result = await withRetry(
     async () => {
       return await model.generateContent({
@@ -571,7 +706,7 @@ Return only the refined script text, nothing else.`;
         },
       });
     },
-    { maxRetries: 4, initialDelayMs: 15000, maxDelayMs: 60000 }
+    { maxRetries: 1, initialDelayMs: 2000, maxDelayMs: 5000 }
   );
 
   return result.response.text().trim();

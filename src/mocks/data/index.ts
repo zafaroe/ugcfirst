@@ -51,7 +51,6 @@ export {
   mockPricingFAQ,
   mockComparisonData,
   mockCompetitorComparison,
-  mockPersonas,
   type ComparisonRow,
   type CompetitorComparisonRow,
 } from './landing'

@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { getBrowserClient } from '@/lib/supabase';
 import type { LatePlatform } from '@/lib/social/late';
 import type { ConnectedAccount } from '@/types/connected-account';
+import { CREDIT_COSTS } from '@/types/credits';
 
 // ============================================
 // TYPES
@@ -84,6 +85,8 @@ export function ScheduleModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [requiresUpgrade, setRequiresUpgrade] = useState(false);
+  const [insufficientCredits, setInsufficientCredits] = useState<{ required: number; available: number } | null>(null);
 
   // Fetch connected accounts when modal opens
   useEffect(() => {
@@ -136,6 +139,8 @@ export function ScheduleModal({
 
   const handleSubmit = async () => {
     setError(null);
+    setRequiresUpgrade(false);
+    setInsufficientCredits(null);
 
     if (selectedPlatforms.length === 0) {
       setError('Please select at least one platform');
@@ -150,12 +155,8 @@ export function ScheduleModal({
     setIsSubmitting(true);
 
     try {
-      // Get auth token
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      // Get auth token using singleton client
+      const supabase = getBrowserClient();
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
@@ -168,6 +169,9 @@ export function ScheduleModal({
       if (scheduleType === 'later') {
         scheduledFor = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
       }
+
+      // Get user's timezone for accurate scheduling
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       // Call schedule API
       const response = await fetch('/api/schedule', {
@@ -182,12 +186,21 @@ export function ScheduleModal({
           caption,
           platforms: selectedPlatforms,
           scheduledFor,
+          timezone,
         }),
       });
 
       const data = await response.json();
 
       if (!data.success) {
+        if (data.requiresUpgrade) {
+          setRequiresUpgrade(true);
+        } else if (data.insufficientCredits) {
+          setInsufficientCredits({
+            required: data.required,
+            available: data.available,
+          });
+        }
         setError(data.error || 'Failed to schedule post');
         return;
       }
@@ -452,11 +465,57 @@ export function ScheduleModal({
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mb-6 p-3 rounded-lg bg-status-error/10 border border-status-error/20 flex items-center gap-2"
+                      className="mb-6"
                     >
-                      <AlertCircle className="w-5 h-5 text-status-error flex-shrink-0" />
-                      <p className="text-sm text-status-error">{error}</p>
+                      {requiresUpgrade ? (
+                        <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm text-amber-600 font-medium mb-2">
+                                {error}
+                              </p>
+                              <Link href="/settings/billing">
+                                <Button variant="secondary" size="sm">
+                                  Upgrade Plan
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      ) : insufficientCredits ? (
+                        <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm text-amber-600 font-medium mb-2">
+                                {error}
+                              </p>
+                              <Link href="/settings/billing#credit-packs">
+                                <Button variant="secondary" size="sm">
+                                  Buy Credits
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-3 rounded-lg bg-status-error/10 border border-status-error/20 flex items-center gap-2">
+                          <AlertCircle className="w-5 h-5 text-status-error flex-shrink-0" />
+                          <p className="text-sm text-status-error">{error}</p>
+                        </div>
+                      )}
                     </motion.div>
+                  )}
+
+                  {/* Credit Cost Info */}
+                  {selectedPlatforms.length > 0 && (
+                    <div className="mb-4 p-3 rounded-lg bg-mint/10 border border-mint/20">
+                      <p className="text-sm text-text-primary">
+                        <span className="font-medium">{CREDIT_COSTS.SCHEDULE_POST} credits</span>
+                        {' '}will be deducted for this scheduled post
+                      </p>
+                    </div>
                   )}
 
                   {/* Submit Button */}

@@ -12,6 +12,7 @@ export interface VisibilityToggleProps {
   disabled?: boolean;
   className?: string;
   showUnlisted?: boolean; // Whether to show unlisted option
+  shareToken?: string | null; // Show copy link when unlisted
 }
 
 const visibilityOptions: Array<{
@@ -46,10 +47,18 @@ export function VisibilityToggle({
   disabled = false,
   className,
   showUnlisted = false,
+  shareToken,
 }: VisibilityToggleProps) {
   const options = showUnlisted
     ? visibilityOptions
     : visibilityOptions.filter((o) => o.value !== 'unlisted');
+
+  const handleCopyLink = () => {
+    if (shareToken && typeof window !== 'undefined') {
+      const url = `${window.location.origin}/v/${shareToken}`;
+      navigator.clipboard.writeText(url);
+    }
+  };
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
@@ -94,6 +103,24 @@ export function VisibilityToggle({
       <p className="text-sm text-text-muted">
         {options.find((o) => o.value === visibility)?.description}
       </p>
+
+      {/* Share link for unlisted videos */}
+      {visibility === 'unlisted' && shareToken && (
+        <div className="flex items-center gap-2 mt-2 p-2 bg-surface-raised rounded-lg">
+          <input
+            type="text"
+            readOnly
+            value={typeof window !== 'undefined' ? `${window.location.origin}/v/${shareToken}` : `/v/${shareToken}`}
+            className="flex-1 text-xs bg-transparent text-text-muted truncate outline-none"
+          />
+          <button
+            onClick={handleCopyLink}
+            className="text-xs px-2 py-1 rounded bg-surface border border-border-default text-mint hover:bg-mint/10 transition-colors shrink-0"
+          >
+            Copy Link
+          </button>
+        </div>
+      )}
     </div>
   );
 }

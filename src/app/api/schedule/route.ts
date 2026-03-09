@@ -8,6 +8,9 @@ import {
   type ListSchedulesResponse,
   type ScheduledPostRow,
 } from '@/types/schedule';
+import { hasSchedulingAccess } from '@/config/pricing';
+import { CREDIT_COSTS } from '@/types/credits';
+import { CreditService } from '@/services/credits';
 
 // ============================================
 // POST /api/schedule
@@ -45,6 +48,57 @@ export async function POST(
       );
     }
 
+    // Get user's subscription tier
+    const { data: userCredits, error: creditsError } = await adminSupabase
+      .from('user_credits')
+      .select('subscription_tier, balance, held')
+      .eq('user_id', user.id)
+      .single();
+
+    if (creditsError || !userCredits) {
+      return NextResponse.json(
+        { success: false, error: 'Could not fetch user subscription' },
+        { status: 500 }
+      );
+    }
+
+    // Check tier - only Pro, Plus, Agency can schedule
+    if (!hasSchedulingAccess(userCredits.subscription_tier)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Social scheduling is available on Pro and above. Upgrade to unlock.',
+          requiresUpgrade: true,
+        },
+        { status: 403 }
+      );
+    }
+
+    // Calculate credit cost (2 credits per scheduled post)
+    const creditCost = CREDIT_COSTS.SCHEDULE_POST;
+    const availableCredits = userCredits.balance - (userCredits.held || 0);
+
+    if (availableCredits < creditCost) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Insufficient credits. You need ${creditCost} credits to schedule a post, but you only have ${availableCredits} available.`,
+          insufficientCredits: true,
+          required: creditCost,
+          available: availableCredits,
+        },
+        { status: 402 }
+      );
+    }
+
+    // Deduct credits
+    await CreditService.deductCredits(
+      user.id,
+      creditCost,
+      `Scheduled post to ${body.platforms.join(', ')}`,
+      { platforms: body.platforms, videoUrl: body.videoUrl }
+    );
+
     // Insert scheduled post into database
     const { data: row, error: insertError } = await adminSupabase
       .from('scheduled_posts')
@@ -80,6 +134,7 @@ export async function POST(
         caption: scheduledPost.caption,
         platforms: scheduledPost.platforms,
         scheduledFor: scheduledPost.scheduledFor,
+        timezone: body.timezone || 'UTC', // Pass timezone for accurate scheduling
       },
     });
 

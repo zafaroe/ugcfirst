@@ -52,8 +52,18 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        // Navigate to dashboard after successful login
-        router.push('/dashboard')
+        // Check if user has completed onboarding
+        const { data: credits } = await supabase
+          .from('user_credits')
+          .select('onboarding_completed')
+          .eq('user_id', data.session.user.id)
+          .single()
+
+        if (!credits?.onboarding_completed) {
+          router.push('/onboarding')
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')

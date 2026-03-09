@@ -23,7 +23,7 @@ export type GenerationStatus =
   | 'completed'
   | 'failed';
 
-export type GenerationMode = 'diy' | 'concierge';
+export type GenerationMode = 'diy' | 'concierge' | 'spotlight';
 
 export type VideoJobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -235,7 +235,15 @@ export interface StartGenerationRequest {
   templateId?: string;
   customScript?: string;
   captionsEnabled: boolean;
+  endScreenEnabled?: boolean;
+  endScreenCtaText?: string;
+  endScreenBrandText?: string;
   mode: GenerationMode;
+  existingPersona?: PersonaProfile; // Reuse persona from frontend (avoid double API calls)
+  // Spotlight-specific fields
+  spotlightCategoryId?: string;
+  spotlightStyleId?: string;
+  spotlightDuration?: '5' | '10';
 }
 
 export interface StartGenerationResponse {

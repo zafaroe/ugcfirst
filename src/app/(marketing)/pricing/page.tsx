@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -18,9 +19,85 @@ import {
   Accordion,
 } from '@/components/ui'
 import { ComparisonArena } from '@/components/composed'
-import { mockPricingPlans, mockCreditPacks, mockPricingFAQ } from '@/mocks/data'
+import { SUBSCRIPTION_PLANS, CREDIT_PACKS, PRICING_FAQ } from '@/config/pricing'
+import { redirectToCheckout, fetchPriceIds } from '@/lib/stripe-client'
+import { getBrowserClient } from '@/lib/supabase'
 
 export default function PricingPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [stripePrices, setStripePrices] = useState<{
+    subscriptions: Record<string, { monthly: string; annual: string }>
+    credit_packs: Record<string, { price: string; credits: number }>
+  } | null>(null)
+
+  // Check auth status and fetch Stripe prices on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = getBrowserClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      setIsLoggedIn(!!user)
+      setAuthChecked(true)
+    }
+
+    const loadPrices = async () => {
+      try {
+        const prices = await fetchPriceIds()
+        setStripePrices(prices)
+      } catch (error) {
+        console.error('Failed to load Stripe prices:', error)
+      }
+    }
+
+    checkAuth()
+    loadPrices()
+  }, [])
+
+  const handleSubscribe = async (planId: string) => {
+    // Always redirect to signup if not logged in (double-check)
+    if (!authChecked || !isLoggedIn) {
+      window.location.href = `/signup?plan=${planId}`
+      return
+    }
+
+    if (!stripePrices?.subscriptions[planId]) {
+      console.error('Price not found for plan:', planId)
+      return
+    }
+
+    setLoadingPlan(planId)
+    try {
+      // Pass planId for fallback redirect if session expired
+      await redirectToCheckout(stripePrices.subscriptions[planId].monthly, planId)
+    } catch (error) {
+      console.error('Checkout error:', error)
+      setLoadingPlan(null)
+    }
+  }
+
+  const handleBuyCreditPack = async (packId: string) => {
+    // Always redirect to signup if not logged in (double-check)
+    if (!authChecked || !isLoggedIn) {
+      window.location.href = `/signup?pack=${packId}`
+      return
+    }
+
+    if (!stripePrices?.credit_packs[packId]) {
+      console.error('Price not found for pack:', packId)
+      return
+    }
+
+    setLoadingPlan(packId)
+    try {
+      // Pass packId for fallback redirect if session expired
+      await redirectToCheckout(stripePrices.credit_packs[packId].price, packId)
+    } catch (error) {
+      console.error('Checkout error:', error)
+      setLoadingPlan(null)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-cream bg-grid bg-grid-animated relative overflow-hidden">
       {/* Background decorations */}
@@ -45,17 +122,43 @@ export default function PricingPage() {
             <Logo variant="colored" size="sm" />
           </Link>
           <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-stone-300 hover:text-white text-sm font-semibold transition-colors"
-            >
-              Back to Home
-            </Link>
-            <Link href="/login">
-              <Button variant="secondary" size="sm" className="border-stone-600 text-stone-200 hover:bg-stone-800">
-                Sign In
-              </Button>
-            </Link>
+            {authChecked ? (
+              isLoggedIn ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="text-stone-300 hover:text-white text-sm font-semibold transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link href="/settings/billing">
+                    <Button variant="secondary" size="sm" className="border-stone-600 text-stone-200 hover:bg-stone-800">
+                      Billing
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/"
+                    className="text-stone-300 hover:text-white text-sm font-semibold transition-colors"
+                  >
+                    Back to Home
+                  </Link>
+                  <Link href="/login">
+                    <Button variant="secondary" size="sm" className="border-stone-600 text-stone-200 hover:bg-stone-800">
+                      Sign In
+                    </Button>
+                  </Link>
+                </>
+              )
+            ) : (
+              // Show skeleton while checking auth to prevent flash
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-4 bg-stone-700 rounded animate-pulse" />
+                <div className="w-16 h-8 bg-stone-700 rounded animate-pulse" />
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -79,7 +182,7 @@ export default function PricingPage() {
 
         {/* Pricing cards */}
         <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-16 items-stretch" staggerDelay={0.1}>
-          {mockPricingPlans.map((plan) => (
+          {SUBSCRIPTION_PLANS.map((plan) => (
             <StaggerItem key={plan.id} className="flex">
               <motion.div
                 className={`relative w-full rounded-2xl transition-all flex flex-col ${
@@ -152,9 +255,17 @@ export default function PricingPage() {
                     className="w-full"
                     variant={plan.isPopular ? 'primary' : 'secondary'}
                     size="md"
-                    disabled={plan.price !== 0}
+                    isLoading={loadingPlan === plan.id}
+                    disabled={loadingPlan !== null && loadingPlan !== plan.id}
+                    onClick={() => {
+                      if (plan.price === 0) {
+                        window.location.href = '/signup'
+                      } else {
+                        handleSubscribe(plan.id)
+                      }
+                    }}
                   >
-                    {plan.price === 0 ? 'Get Started Free' : 'Coming Soon'}
+                    {plan.price === 0 ? 'Get Started Free' : isLoggedIn ? 'Subscribe' : 'Get Started'}
                   </Button>
                 </div>
               </motion.div>
@@ -196,15 +307,18 @@ export default function PricingPage() {
             </p>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {mockCreditPacks.map((pack, index) => (
+            {CREDIT_PACKS.map((pack, index) => (
               <motion.div
                 key={pack.id}
-                className="p-5 rounded-xl border border-border-default bg-surface/50 hover:border-mint/50 transition-all cursor-pointer"
+                className={`p-5 rounded-xl border border-border-default bg-surface/50 hover:border-mint/50 transition-all cursor-pointer ${
+                  loadingPlan === pack.id ? 'opacity-70' : ''
+                }`}
                 whileHover={{ y: -2 }}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
+                onClick={() => handleBuyCreditPack(pack.id)}
               >
                 <h3 className="font-semibold text-text-primary mb-1">{pack.name}</h3>
                 <div className="flex items-baseline gap-2 mb-1">
@@ -217,6 +331,9 @@ export default function PricingPage() {
                 <p className="text-xs text-status-success font-medium">
                   ${pack.costPerVideo.toFixed(2)}/video
                 </p>
+                {loadingPlan === pack.id && (
+                  <p className="text-xs text-mint mt-2">Loading checkout...</p>
+                )}
               </motion.div>
             ))}
             </div>
@@ -237,7 +354,7 @@ export default function PricingPage() {
             Common questions about our pricing and credits
           </p>
           <div className="max-w-3xl mx-auto">
-            <Accordion items={mockPricingFAQ} />
+            <Accordion items={PRICING_FAQ} />
           </div>
         </motion.div>
 
@@ -295,8 +412,8 @@ export default function PricingPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-text-muted">
           <p>&copy; 2026 UGCFirst. All rights reserved.</p>
           <div className="flex gap-6">
-            <Link href="#" className="hover:text-text-primary transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-text-primary transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-text-primary transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-text-primary transition-colors">Terms of Service</Link>
           </div>
         </div>
       </footer>

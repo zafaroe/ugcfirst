@@ -1,11 +1,35 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Zap, ArrowRight, Sparkles, Wand2, Sliders, PartyPopper } from 'lucide-react'
 import { Button, GradientCard, SPRING } from '@/components/ui'
+import { getBrowserClient } from '@/lib/supabase'
 
 export function CompleteStep() {
+  // Mark onboarding as complete when this step renders
+  useEffect(() => {
+    const markOnboarded = async () => {
+      const supabase = getBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user?.id) return
+
+      // Update user_metadata (readable from JWT in middleware, no DB call needed)
+      await supabase.auth.updateUser({
+        data: { onboarded: true }
+      })
+
+      // Also update database flag
+      await supabase
+        .from('user_credits')
+        .update({ onboarding_completed: true })
+        .eq('user_id', session.user.id)
+    }
+
+    markOnboarded()
+  }, [])
+
   return (
     <div className="text-center">
       {/* Animated celebration icon */}

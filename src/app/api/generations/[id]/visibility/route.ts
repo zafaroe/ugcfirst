@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { verifyAuth, unauthorizedResponse, getAdminClient } from '@/lib/supabase';
 import { VideoVisibility } from '@/types/generation';
 
@@ -40,7 +41,7 @@ export async function PATCH(
     const adminSupabase = getAdminClient();
     const { data: generation, error: fetchError } = await adminSupabase
       .from('generations')
-      .select('id, user_id, status, visibility')
+      .select('id, user_id, status, visibility, share_token')
       .eq('id', generationId)
       .single();
 
@@ -67,10 +68,19 @@ export async function PATCH(
       );
     }
 
-    // Update visibility
+    // Generate share_token for unlisted visibility if one doesn't exist
+    let shareToken = generation.share_token;
+    if (visibility === 'unlisted' && !shareToken) {
+      shareToken = randomUUID();
+    }
+
+    // Update visibility (and share_token if needed)
     const { data: updated, error: updateError } = await adminSupabase
       .from('generations')
-      .update({ visibility })
+      .update({
+        visibility,
+        ...(visibility === 'unlisted' && shareToken ? { share_token: shareToken } : {}),
+      })
       .eq('id', generationId)
       .select()
       .single();

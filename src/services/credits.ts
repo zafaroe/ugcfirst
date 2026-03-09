@@ -330,6 +330,68 @@ export async function refundCredits(
 }
 
 // ============================================
+// DIRECT CREDIT DEDUCTION (for instant operations)
+// ============================================
+
+/**
+ * Directly deduct credits for instant operations (no hold/confirm pattern)
+ * Use this for operations that are completed immediately, like scheduling posts
+ * @param userId - User ID
+ * @param amount - Amount to deduct
+ * @param description - Description for the transaction
+ * @param metadata - Additional metadata
+ * @returns Result with new balance
+ */
+export async function deductCredits(
+  userId: string,
+  amount: number,
+  description: string,
+  metadata?: Record<string, unknown>
+): Promise<{ success: boolean; newBalance: number }> {
+  const supabase = getAdminClient();
+
+  // Get current balance
+  const balance = await getBalance(userId);
+
+  if (balance.available < amount) {
+    throw new Error(
+      `Insufficient credits. Available: ${balance.available}, Required: ${amount}`
+    );
+  }
+
+  const newBalance = balance.balance - amount;
+
+  // Update user credits
+  const { error: updateError } = await supabase
+    .from('user_credits')
+    .update({
+      balance: newBalance,
+      lifetime_used: (balance.lifetime.used || 0) + amount,
+    })
+    .eq('user_id', userId);
+
+  if (updateError) {
+    throw new Error(`Failed to deduct credits: ${updateError.message}`);
+  }
+
+  // Create usage transaction
+  await supabase.from('credit_transactions').insert({
+    user_id: userId,
+    type: 'usage' as CreditTransactionType,
+    amount: -amount,
+    balance_before: balance.balance,
+    balance_after: newBalance,
+    held_before: balance.held,
+    held_after: balance.held,
+    description,
+    status: 'completed',
+    metadata,
+  });
+
+  return { success: true, newBalance };
+}
+
+// ============================================
 // ADD CREDITS (Purchase/Subscription/Bonus)
 // ============================================
 
@@ -514,6 +576,7 @@ export const CreditService = {
   holdCredits,
   confirmCredits,
   refundCredits,
+  deductCredits,
   addCredits,
   getTransactionHistory,
   adminAdjustCredits,

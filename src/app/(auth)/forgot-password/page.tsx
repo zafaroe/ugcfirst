@@ -2,27 +2,45 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEnvelope, faArrowLeft, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { faEnvelope, faArrowLeft, faCircleCheck, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 import { AuthLayout } from '@/components/layouts/auth-layout'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { getBrowserClient } from '@/lib/supabase'
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      const supabase = getBrowserClient()
 
-    setIsSubmitted(true)
-    setIsLoading(false)
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      })
+
+      if (error) {
+        setError(error.message)
+        setIsLoading(false)
+        return
+      }
+
+      setIsSubmitted(true)
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (isSubmitted) {
@@ -68,6 +86,17 @@ export default function ForgotPasswordPage() {
       subtitle="Enter your email and we'll send you reset instructions"
     >
       <Card padding="lg">
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 mb-4 text-sm text-status-error bg-status-error/10 rounded-lg border border-status-error/20 flex items-center gap-2"
+          >
+            <FontAwesomeIcon icon={faExclamationCircle} className="w-4 h-4 flex-shrink-0" />
+            {error}
+          </motion.div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-5">
           <Input
             label="Email"

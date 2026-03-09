@@ -14,12 +14,35 @@ import * as os from 'os';
 // CONFIGURATION
 // ============================================
 
-// Path to FFmpeg binary (defaults to system PATH)
-const FFMPEG_PATH = process.env.FFMPEG_PATH || 'ffmpeg';
-const FFPROBE_PATH = process.env.FFPROBE_PATH || 'ffprobe';
+// Path to FFmpeg binary
+// 1. Use env var if set (local development with custom install)
+// 2. Use ffmpeg-static package (Vercel / production)
+// 3. Fall back to system PATH
+let ffmpegPath = process.env.FFMPEG_PATH || '';
+let ffprobePath = process.env.FFPROBE_PATH || '';
 
-ffmpeg.setFfmpegPath(FFMPEG_PATH);
-ffmpeg.setFfprobePath(FFPROBE_PATH);
+if (!ffmpegPath) {
+  try {
+    // ffmpeg-static provides a bundled binary that works on Vercel
+    const ffmpegStatic = require('ffmpeg-static');
+    if (ffmpegStatic) {
+      ffmpegPath = ffmpegStatic;
+      console.log(`[FFmpeg] Using ffmpeg-static binary: ${ffmpegPath}`);
+    }
+  } catch {
+    console.log('[FFmpeg] ffmpeg-static not available, using system PATH');
+  }
+}
+
+if (!ffmpegPath) {
+  ffmpegPath = 'ffmpeg';
+}
+if (!ffprobePath) {
+  ffprobePath = 'ffprobe';
+}
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 
 // ============================================
 // TYPES
@@ -235,6 +258,68 @@ export function burnSubtitles(
 }
 
 // ============================================
+// WATERMARK
+// ============================================
+
+export interface WatermarkOptions {
+  text?: string;
+  fontSize?: number;
+  fontColor?: string;
+  opacity?: number;
+  paddingBottom?: number;
+  outputPath?: string;
+}
+
+/**
+ * Add a text watermark to video
+ * Used for free tier videos to display "Made with ugcfirst.com"
+ *
+ * @param inputPath - Path to video file
+ * @param options - Watermark options
+ * @returns Path to watermarked video
+ */
+export function addWatermark(
+  inputPath: string,
+  options: WatermarkOptions = {}
+): Promise<string> {
+  const {
+    text = 'Made with ugcfirst.com',
+    fontSize = 24,
+    fontColor = 'white',
+    opacity = 0.6,
+    paddingBottom = 40,
+    outputPath,
+  } = options;
+
+  const output = outputPath || generateTempPath('watermarked', '.mp4');
+
+  // Convert opacity to hex (0.6 = 99 in hex for ~60%)
+  const opacityHex = Math.round(opacity * 255).toString(16).padStart(2, '0');
+
+  // FFmpeg drawtext filter for bottom-center watermark with drop shadow
+  // First draw shadow (offset by 2px), then draw main text
+  const shadowFilter = `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=black@0.5:x=(w-text_w)/2:y=h-${paddingBottom + 2}-text_h:shadowx=2:shadowy=2`;
+  const textFilter = `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=${fontColor}@${opacity}:x=(w-text_w)/2:y=h-${paddingBottom}-text_h`;
+
+  console.log(`[FFmpeg] Adding watermark: "${text}"`);
+
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .videoFilters([shadowFilter, textFilter])
+      .outputOptions([
+        '-c:v', 'libx264',
+        '-preset', 'fast',
+        '-crf', '23',
+        '-c:a', 'copy',
+      ])
+      .output(output)
+      .on('end', () => resolve(output))
+      .on('error', reject)
+      .run();
+  });
+}
+
+// ============================================
 // VIDEO CONCATENATION
 // ============================================
 
@@ -428,6 +513,7 @@ export const FFmpegService = {
   extractAudio,
   burnSubtitles,
   burnCaptions: burnSubtitles, // backward compat
+  addWatermark,
   concatenateVideos,
   convertToWebMp4,
   createThumbnail,

@@ -6,16 +6,16 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faMagnifyingGlass, faTableCells, faList } from '@fortawesome/free-solid-svg-icons'
-import { createClient } from '@supabase/supabase-js'
+import { getBrowserClient } from '@/lib/supabase'
 import { DashboardLayout } from '@/components/layouts/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { ConfirmModal } from '@/components/ui/modal'
+import { Modal, ConfirmModal } from '@/components/ui/modal'
 import { useToast } from '@/components/ui/toast'
 import { StaggerContainer, StaggerItem, EASINGS, GlassCard } from '@/components/ui'
-import { GenerationCard, GenerationCardSkeleton, EmptyState, emptyStatePresets } from '@/components/composed'
-import type { Generation, GenerationVideoWithUrls } from '@/types/generation'
+import { GenerationCard, GenerationCardSkeleton, EmptyState, emptyStatePresets, VideoPreviewModal, VisibilityToggle, ScheduleModal } from '@/components/composed'
+import type { Generation, GenerationVideoWithUrls, VideoVisibility } from '@/types/generation'
 
 type GenerationWithVideos = Generation & { videos?: GenerationVideoWithUrls[] | null }
 
@@ -55,6 +55,10 @@ export default function ProjectsPage() {
   const [error, setError] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Generation | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [visibilityTarget, setVisibilityTarget] = useState<GenerationWithVideos | null>(null)
+  const [previewGeneration, setPreviewGeneration] = useState<GenerationWithVideos | null>(null)
+  const [scheduleGeneration, setScheduleGeneration] = useState<GenerationWithVideos | null>(null)
+  const [userPlan, setUserPlan] = useState<string>('free')
 
   useEffect(() => {
     async function fetchGenerations() {
@@ -62,10 +66,7 @@ export default function ProjectsPage() {
         setIsLoading(true)
         setError(null)
 
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
+        const supabase = getBrowserClient()
         const { data: { session } } = await supabase.auth.getSession()
 
         if (!session?.access_token) {
@@ -73,12 +74,19 @@ export default function ProjectsPage() {
           return
         }
 
-        const response = await fetch('/api/generations', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          cache: 'no-store', // Ensure fresh data on every request
-        })
+        const [response, creditsRes] = await Promise.all([
+          fetch('/api/generations', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            cache: 'no-store', // Ensure fresh data on every request
+          }),
+          fetch('/api/credits/balance', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+          }),
+        ])
 
         if (!response.ok) {
           if (response.status === 401) {
@@ -90,6 +98,14 @@ export default function ProjectsPage() {
 
         const data = await response.json()
         setGenerations(data.generations || [])
+
+        // Get user plan from credits
+        if (creditsRes.ok) {
+          const creditsData = await creditsRes.json()
+          if (creditsData.success) {
+            setUserPlan(creditsData.data?.tier || 'free')
+          }
+        }
       } catch (err) {
         console.error('Error fetching generations:', err)
         setError(err instanceof Error ? err.message : 'Failed to load videos')
@@ -102,12 +118,12 @@ export default function ProjectsPage() {
   }, [router])
 
   const handleView = (generation: Generation) => {
-    router.push(`/projects/${generation.id}/strategy`)
+    setPreviewGeneration(generation as GenerationWithVideos)
   }
 
   const handleDownload = (generation: Generation) => {
     const gen = generation as GenerationWithVideos
-    const videoUrl = gen.videos?.[0]?.videoCaptionedUrl || gen.videos?.[0]?.videoUrl
+    const videoUrl = gen.videos?.[0]?.videoSubtitledUrl || gen.videos?.[0]?.videoUrl
     if (videoUrl) {
       window.open(videoUrl, '_blank')
     }
@@ -117,15 +133,93 @@ export default function ProjectsPage() {
     setDeleteTarget(generation)
   }
 
+  const handleVisibilityChange = (generation: Generation) => {
+    setVisibilityTarget(generation as GenerationWithVideos)
+  }
+
+  const updateVisibility = async (newVisibility: VideoVisibility) => {
+    if (!visibilityTarget) return
+
+    try {
+      const supabase = getBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      const response = await fetch(`/api/generations/${visibilityTarget.id}/visibility`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ visibility: newVisibility }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Update local state with new visibility and share_token
+        setGenerations(prev =>
+          prev.map(g => g.id === visibilityTarget.id
+            ? { ...g, visibility: newVisibility, share_token: data.data?.share_token || g.share_token }
+            : g
+          )
+        )
+        addToast({ variant: 'success', title: `Video set to ${newVisibility}` })
+      } else {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to update visibility')
+      }
+    } catch (err) {
+      addToast({
+        variant: 'error',
+        title: err instanceof Error ? err.message : 'Failed to update visibility',
+      })
+    } finally {
+      setVisibilityTarget(null)
+    }
+  }
+
+  const updateVisibilityFromModal = async (generationId: string, newVisibility: VideoVisibility) => {
+    try {
+      const supabase = getBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      const response = await fetch(`/api/generations/${generationId}/visibility`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ visibility: newVisibility }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setGenerations(prev =>
+          prev.map(g => g.id === generationId
+            ? { ...g, visibility: newVisibility, share_token: data.data?.share_token || g.share_token }
+            : g
+          )
+        )
+        // Also update the preview generation if it's the same one
+        setPreviewGeneration(prev =>
+          prev && prev.id === generationId
+            ? { ...prev, visibility: newVisibility, share_token: data.data?.share_token || prev.share_token }
+            : prev
+        )
+        addToast({ variant: 'success', title: `Video set to ${newVisibility}` })
+      }
+    } catch (err) {
+      addToast({ variant: 'error', title: 'Failed to update visibility' })
+    }
+  }
+
   const confirmDelete = async () => {
     if (!deleteTarget) return
 
     setIsDeleting(true)
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
+      const supabase = getBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
 
       if (!session?.access_token) {
@@ -266,6 +360,7 @@ export default function ProjectsPage() {
                   onView={handleView}
                   onDownload={handleDownload}
                   onDelete={handleDelete}
+                  onVisibilityChange={handleVisibilityChange}
                 />
               </motion.div>
             </StaggerItem>
@@ -387,6 +482,54 @@ export default function ProjectsPage() {
         variant="destructive"
         isLoading={isDeleting}
       />
+
+      {/* Visibility Change Modal */}
+      <Modal
+        isOpen={!!visibilityTarget}
+        onClose={() => setVisibilityTarget(null)}
+        title="Video Visibility"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-muted">
+            Choose who can see &ldquo;{visibilityTarget?.product_name}&rdquo;
+          </p>
+          <VisibilityToggle
+            visibility={visibilityTarget?.visibility || 'private'}
+            onChange={updateVisibility}
+            showUnlisted
+            shareToken={visibilityTarget?.share_token}
+          />
+        </div>
+      </Modal>
+
+      {/* Video Preview Modal */}
+      <VideoPreviewModal
+        generation={previewGeneration}
+        isOpen={!!previewGeneration}
+        onClose={() => setPreviewGeneration(null)}
+        onVisibilityChange={updateVisibilityFromModal}
+        onDownload={handleDownload}
+        onSchedule={(gen) => {
+          setPreviewGeneration(null) // Close preview
+          setScheduleGeneration(gen as GenerationWithVideos) // Open schedule
+        }}
+        userPlan={userPlan}
+      />
+
+      {/* Schedule Modal */}
+      {scheduleGeneration && (
+        <ScheduleModal
+          isOpen={!!scheduleGeneration}
+          onClose={() => setScheduleGeneration(null)}
+          videoUrl={scheduleGeneration.videos?.[0]?.videoSubtitledUrl || scheduleGeneration.videos?.[0]?.videoUrl || ''}
+          generationId={scheduleGeneration.id}
+          onScheduled={() => {
+            setScheduleGeneration(null)
+            addToast({ variant: 'success', title: 'Post scheduled!' })
+          }}
+        />
+      )}
     </DashboardLayout>
   )
 }

@@ -25,9 +25,11 @@ import {
   STTResult,
   ImageResult,
   KieTask,
+  Veo3Result,
+  Kling26Result,
 } from '@/lib/ai/kie';
-import { uploadFrame, uploadVideo, uploadSubtitledVideo, R2Paths, getSignedDownloadUrl, getPublicUrl, uploadToR2, downloadVideo } from '@/lib/r2';
-import { burnSubtitles, cleanupTempFile, extractAudio } from '@/lib/ffmpeg';
+import { uploadFrame, uploadVideo, uploadSubtitledVideo, R2Paths, getSignedDownloadUrl, getPublicUrl, uploadToR2, downloadVideo, downloadFromR2 } from '@/lib/r2';
+import { burnSubtitles, cleanupTempFile, extractAudio, addWatermark, concatenateVideos } from '@/lib/ffmpeg';
 import { generateASSFile } from '@/lib/subtitles/ass-generator';
 import { WordTimestamp } from '@/lib/subtitles/stt';
 import { confirmCredits, refundCredits } from '@/services/credits';
@@ -44,6 +46,10 @@ import {
   ScriptApproach,
   StrategyBrief,
 } from '@/types/generation';
+import {
+  getSpotlightStyle,
+  type SpotlightCategory,
+} from '@/data/spotlight-styles';
 
 // ============================================
 // STATUS UPDATE HELPER
@@ -599,6 +605,220 @@ export async function stepPollVideoCompletion(
 }
 
 // ============================================
+// CONCIERGE VIDEO GENERATION WITH FALLBACK
+// ============================================
+
+/**
+ * Generate video using Sora 2, with automatic Veo 3.1 fallback
+ * Handles the full flow: create task → poll → download → upload to R2
+ *
+ * If Sora 2 fails at any point (creation, polling, download),
+ * automatically retries with Veo 3.1 Fast.
+ *
+ * @returns CompletedVideo array (same format regardless of which model was used)
+ */
+export async function stepGenerateVideoWithFallback(
+  generationId: string,
+  scripts: GeneratedScript[],
+  frames: GeneratedFrame[],
+  frameUrls: string[],
+): Promise<CompletedVideo[]> {
+  await updateGenerationStatus(generationId, 'generating', 6);
+
+  if (!KieService.isConfigured()) {
+    throw new Error('KIE_AI_API_KEY not configured');
+  }
+
+  const supabase = getAdminClient();
+  const completedVideos: CompletedVideo[] = [];
+
+  for (let i = 0; i < scripts.length; i++) {
+    const script = scripts[i];
+    const frame = frames[i];
+    const frameUrl = frameUrls[i];
+
+    const videoPrompt = buildVideoPrompt(
+      script.fullScript,
+      frame.prompt.description
+    );
+
+    // Insert video_job record (will be updated on completion)
+    await supabase.from('video_jobs').insert({
+      generation_id: generationId,
+      script_index: i,
+      status: 'pending',
+      frame_url: frameUrl,
+    });
+
+    let videoBuffer: Buffer;
+    let videoDuration: number;
+    let modelUsed: string = 'sora-2';
+
+    // ============================================
+    // TRY SORA 2 FIRST
+    // ============================================
+    try {
+      console.log(`[Pipeline:Concierge] Attempting Sora 2 for video ${i}...`);
+
+      const actualDuration = calculateVideoDuration(script);
+      const kieAiDuration = getKieAiDurationCode(actualDuration);
+
+      const taskId = await KieService.generateVideo({
+        model: 'sora-2',
+        prompt: videoPrompt,
+        imageUrl: frameUrl,
+        duration: kieAiDuration,
+        aspectRatio: '9:16',
+      });
+
+      console.log(`[Pipeline:Concierge] Sora 2 task created: ${taskId}`);
+
+      // Update video_job with task ID
+      await supabase
+        .from('video_jobs')
+        .update({ kie_job_id: taskId })
+        .eq('generation_id', generationId)
+        .eq('script_index', i);
+
+      // Poll for completion (5 min timeout - reduced from 10 to fail faster for fallback)
+      const result = await KieService.pollForCompletion<VideoResult>(
+        taskId,
+        {
+          interval: 5000,
+          timeout: 300000,
+          onProgress: (task) => {
+            console.log(`[Pipeline:Concierge] Sora 2 video ${i}: ${task.status} (${task.progress || 0}%)`);
+          },
+        }
+      );
+
+      console.log(`[Pipeline:Concierge] Sora 2 video ${i} complete, downloading...`);
+      videoBuffer = await KieService.downloadFile(result.url);
+      videoDuration = result.duration || actualDuration;
+      modelUsed = 'sora-2';
+
+    } catch (sora2Error) {
+      // ============================================
+      // TIER 2: FALLBACK TO SORA 2 PRO
+      // ============================================
+      console.warn(`[Pipeline:Concierge] Sora 2 Standard failed for video ${i}:`, sora2Error instanceof Error ? sora2Error.message : String(sora2Error));
+      console.log(`[Pipeline:Concierge] Trying Sora 2 Pro for video ${i}...`);
+
+      try {
+        const actualDuration = calculateVideoDuration(script);
+        const kieAiDuration = getKieAiDurationCode(actualDuration);
+
+        const proTaskId = await KieService.generateVideo({
+          model: 'sora-2-pro',
+          prompt: videoPrompt,
+          imageUrl: frameUrl,
+          duration: kieAiDuration,
+          aspectRatio: '9:16',
+        });
+
+        console.log(`[Pipeline:Concierge] Sora 2 Pro task created: ${proTaskId}`);
+
+        // Update video_job with task ID
+        await supabase
+          .from('video_jobs')
+          .update({ kie_job_id: proTaskId })
+          .eq('generation_id', generationId)
+          .eq('script_index', i);
+
+        // Poll for completion (5 min timeout)
+        const proResult = await KieService.pollForCompletion<VideoResult>(
+          proTaskId,
+          {
+            interval: 5000,
+            timeout: 300000,
+            onProgress: (task) => {
+              console.log(`[Pipeline:Concierge] Sora 2 Pro video ${i}: ${task.status} (${task.progress || 0}%)`);
+            },
+          }
+        );
+
+        console.log(`[Pipeline:Concierge] Sora 2 Pro video ${i} complete, downloading...`);
+        videoBuffer = await KieService.downloadFile(proResult.url);
+        videoDuration = proResult.duration || actualDuration;
+        modelUsed = 'sora-2-pro';
+
+      } catch (sora2ProError) {
+        // ============================================
+        // TIER 3: FALLBACK TO VEO 3.1 FAST
+        // ============================================
+        console.warn(`[Pipeline:Concierge] Sora 2 Pro also failed for video ${i}:`, sora2ProError instanceof Error ? sora2ProError.message : String(sora2ProError));
+        console.log(`[Pipeline:Concierge] Final fallback to Veo 3.1 Fast for video ${i}...`);
+
+        try {
+          // Build a Veo-appropriate prompt (include script text for native speech)
+          const veoPrompt = `UGC style selfie video of a person talking directly to camera, showing a product. The person speaks naturally with authentic energy. They say: "${script.fullScript}" Natural hand gestures, genuine facial expressions, casual indoor setting. 9:16 vertical TikTok format, warm natural lighting.`;
+
+          const veoResult = await KieService.generateVeo3VideoSync(
+            {
+              model: 'veo3_fast',
+              prompt: veoPrompt,
+              imageUrls: [frameUrl],
+              aspectRatio: '9:16',
+              sound: true,
+              duration: '8',
+            },
+            (task) => console.log(`[Pipeline:Concierge] Veo 3.1 video ${i}: ${task.status} (${task.progress || 0}%)`)
+          );
+
+          console.log(`[Pipeline:Concierge] Veo 3.1 video ${i} complete, downloading...`);
+          videoBuffer = await KieService.downloadFile(veoResult.url);
+          videoDuration = veoResult.duration || 8;
+          modelUsed = 'veo3_fast';
+
+        } catch (veo3Error) {
+          // All 3 tiers failed — this video is a total loss
+          console.error(`[Pipeline:Concierge] All 3 tiers (Sora 2, Sora 2 Pro, Veo 3.1) failed for video ${i}:`, veo3Error instanceof Error ? veo3Error.message : String(veo3Error));
+
+          // Update video_job as failed
+          await supabase
+            .from('video_jobs')
+            .update({
+              status: 'failed',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('generation_id', generationId)
+            .eq('script_index', i);
+
+          throw new Error(`Video generation failed for video ${i}. All video models (Sora 2, Sora 2 Pro, Veo 3.1) are unavailable. Please try again later.`);
+        }
+      }
+    }
+
+    // ============================================
+    // UPLOAD TO R2 (same for both models)
+    // ============================================
+    const uploadResult = await uploadVideo(generationId, i, videoBuffer);
+    console.log(`[Pipeline:Concierge] Video ${i} uploaded to R2: ${uploadResult.key} (model: ${modelUsed})`);
+
+    // Update video_job with completion info
+    await supabase
+      .from('video_jobs')
+      .update({
+        status: 'completed',
+        video_r2_key: uploadResult.key,
+        duration_seconds: videoDuration,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('generation_id', generationId)
+      .eq('script_index', i);
+
+    completedVideos.push({
+      scriptIndex: i,
+      videoR2Key: uploadResult.key,
+      videoSignedUrl: uploadResult.signedUrl,
+      duration: videoDuration,
+    });
+  }
+
+  return completedVideos;
+}
+
+// ============================================
 // PIPELINE STEP 8: GENERATE CAPTIONS
 // ============================================
 
@@ -686,10 +906,12 @@ export async function stepGenerateSubtitles(
       );
 
       // Filter to only actual words (not spacing)
+      // IMPORTANT: Kie.ai/ElevenLabs returns timestamps in SECONDS
+      // but our subtitle system (WordTimestamp, ASS generator) expects MILLISECONDS
       const words = KieService.filterWordTimestamps(sttResult).map((w) => ({
         text: w.text,
-        start: w.start,
-        end: w.end,
+        start: w.start * 1000,  // seconds → milliseconds
+        end: w.end * 1000,      // seconds → milliseconds
       }));
 
       console.log(`[Pipeline] Subtitle ${video.scriptIndex}: STT complete, ${words.length} words extracted`);
@@ -829,6 +1051,538 @@ export async function stepBurnSubtitles(
 }
 
 // ============================================
+// PIPELINE STEP 9.5: ADD WATERMARK (FREE TIER)
+// ============================================
+
+export interface WatermarkedVideo {
+  scriptIndex: number;
+  videoR2Key: string;
+  videoSignedUrl: string;
+}
+
+/**
+ * Add watermark to videos for free tier users
+ * Downloads video from R2, applies watermark, overwrites R2 key
+ *
+ * @param generationId - Generation ID
+ * @param videos - Videos to watermark (either burned subtitle videos or raw videos)
+ * @param burnedSubtitles - Burned subtitle videos (prefer these over raw)
+ * @returns Array of watermarked video info
+ */
+export async function stepAddWatermark(
+  generationId: string,
+  videos: CompletedVideo[],
+  burnedSubtitles: BurnedSubtitleVideo[]
+): Promise<WatermarkedVideo[]> {
+  console.log('[Pipeline] Adding watermark for free tier user...');
+
+  const results: WatermarkedVideo[] = [];
+
+  for (const video of videos) {
+    const tempFiles: string[] = [];
+
+    try {
+      // Determine which video to watermark (prefer subtitled version)
+      const subtitled = burnedSubtitles.find((bs) => bs.scriptIndex === video.scriptIndex);
+      const sourceR2Key = subtitled?.videoSubtitledR2Key || video.videoR2Key;
+
+      if (!sourceR2Key) {
+        console.log(`[Pipeline] No video found for index ${video.scriptIndex}, skipping watermark`);
+        continue;
+      }
+
+      console.log(`[Pipeline] Watermarking video ${video.scriptIndex} from R2 key: ${sourceR2Key}`);
+
+      // 1. Download video from R2 using the key directly
+      const videoBuffer = await downloadFromR2(sourceR2Key);
+
+      // 2. Write to temp for FFmpeg processing
+      const tempVideoPath = path.join(os.tmpdir(), `ugcfirst_watermark_input_${generationId}_${video.scriptIndex}_${Date.now()}.mp4`);
+      fs.writeFileSync(tempVideoPath, videoBuffer);
+      tempFiles.push(tempVideoPath);
+
+      // 3. Apply watermark using FFmpeg
+      const watermarkedPath = await addWatermark(tempVideoPath, {
+        text: 'Made with ugcfirst.com',
+        fontSize: 24,
+        fontColor: 'white',
+        opacity: 0.6,
+        paddingBottom: 40,
+      });
+      tempFiles.push(watermarkedPath);
+
+      // 4. Upload watermarked video back to R2 (overwrite same key)
+      const watermarkedBuffer = fs.readFileSync(watermarkedPath);
+      await uploadToR2(sourceR2Key, watermarkedBuffer, { contentType: 'video/mp4' });
+
+      // Get fresh signed URL
+      const signedUrl = await getSignedDownloadUrl(sourceR2Key);
+
+      console.log(`[Pipeline] Watermark applied to video ${video.scriptIndex}`);
+
+      results.push({
+        scriptIndex: video.scriptIndex,
+        videoR2Key: sourceR2Key,
+        videoSignedUrl: signedUrl,
+      });
+    } catch (error) {
+      console.error(`[Pipeline] Failed to watermark video ${video.scriptIndex}:`, error);
+      // Don't fail the entire pipeline - deliver unwatermarked video instead
+    } finally {
+      // Clean up temp files
+      for (const tempFile of tempFiles) {
+        try {
+          if (fs.existsSync(tempFile)) {
+            fs.unlinkSync(tempFile);
+          }
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+    }
+  }
+
+  return results;
+}
+
+// ============================================
+// DIY PIPELINE STEP 2: USE CUSTOM SCRIPT
+// ============================================
+
+/**
+ * Use user's custom script directly (DIY mode)
+ * Falls back to AI generation if no custom script provided
+ */
+export async function stepUseCustomScript(
+  generationId: string,
+  customScript: string | undefined,
+  persona: PersonaProfile,
+  productName: string,
+): Promise<GeneratedScript[]> {
+  await updateGenerationStatus(generationId, 'scripting', 2);
+
+  if (customScript && customScript.trim().length > 0) {
+    console.log('[Pipeline:DIY] Using user custom script');
+    const wordCount = customScript.trim().split(/\s+/).filter(w => w.length > 0).length;
+
+    const script: GeneratedScript = {
+      approach: 'casual_recommendation',
+      approachLabel: 'Custom Script',
+      energy: 'User-directed',
+      dialogue: [{ timestamp: '0:00-0:08', text: customScript.trim() }],
+      shotBreakdown: [],
+      technicalDetails: {
+        phoneOrientation: 'vertical',
+        filmingMethod: 'selfie',
+        dominantHand: 'right',
+        locationSpecifics: 'neutral background',
+        audioEnvironment: 'quiet indoor',
+      },
+      fullScript: customScript.trim(),
+      wordCount,
+      estimatedDuration: 8,
+    };
+
+    const supabase = getAdminClient();
+    await supabase
+      .from('generations')
+      .update({ scripts: [script.fullScript] })
+      .eq('id', generationId);
+
+    return [script];
+  }
+
+  console.log('[Pipeline:DIY] No custom script, falling back to AI generation');
+  return stepGenerateScripts(generationId, persona, productName);
+}
+
+// ============================================
+// TEMPLATE-SPECIFIC VISUAL PROMPTS
+// ============================================
+
+const TEMPLATE_VISUAL_CONFIG: Record<string, {
+  actorPromptOverride?: string;       // How the actor should look/pose
+  compositePrompt: string;            // How to composite actor + product
+  veoPrompt: (productName: string, script: string) => string;  // Veo 3.1 animation prompt
+}> = {
+  'pas': {
+    compositePrompt: `Photo-realistic UGC selfie image of the person from the first reference image looking directly at camera with a relatable, slightly frustrated expression — like they're about to vent to a friend. They are holding or gesturing toward the product from the second reference image. The product should be visible but not the main focus yet — the person's expression is the hook. Casual indoor setting, warm natural lighting, vertical 9:16 format. IMPORTANT: NO text, NO watermarks, NO overlays.`,
+    veoPrompt: (productName, script) => `UGC selfie video of a person talking to camera about a problem they had, then getting excited as they show ${productName} as the solution. The person starts with a relatable, slightly frustrated energy then transitions to genuine enthusiasm when presenting the product. They speak: "${script}" Natural hand gestures, authentic facial expressions matching the emotional arc from frustration to excitement. Product becomes more prominent as the person gets excited. 9:16 vertical, TikTok style, warm lighting.`,
+  },
+  'unboxing': {
+    actorPromptOverride: `looking down at something in their hands with excited anticipation, like they're about to open a package`,
+    compositePrompt: `Photo-realistic UGC image of the person from the first reference image excitedly holding a package or box containing the product from the second reference image. The person looks thrilled and is about to open or has just opened the package. Their expression shows genuine anticipation and excitement. The product packaging should be visible. Casual indoor setting (kitchen counter, bed, desk), warm natural lighting, vertical 9:16 format. IMPORTANT: NO text, NO watermarks, NO overlays.`,
+    veoPrompt: (productName, script) => `UGC selfie video of a person doing an authentic unboxing of ${productName}. They start by showing the package excitedly, then open/reveal the product with genuine surprise and delight. Their hands are active — touching, holding up, examining the product. High energy throughout. They speak: "${script}" The camera is slightly shaky from excitement. Close-ups of the product as they react to quality and details. 9:16 vertical, TikTok #unboxing style, natural indoor lighting.`,
+  },
+  'testimonial': {
+    compositePrompt: `Photo-realistic UGC selfie image of the person from the first reference image holding the product from the second reference image with a thoughtful, slightly skeptical but curious expression — like they're about to give an honest review. Product is visible in their hand. The vibe is "real talk" — not overly polished. Casual setting, natural lighting, vertical 9:16 format. IMPORTANT: NO text, NO watermarks, NO overlays.`,
+    veoPrompt: (productName, script) => `UGC selfie video of a person giving an honest testimonial about ${productName}. They start with a skeptical, uncertain energy — like they genuinely didn't expect it to work. Then their expression and tone shifts to surprised satisfaction as they share results. The emotional arc goes from doubt to genuine recommendation. They speak: "${script}" Natural, conversational delivery. Holding the product up at the end. 9:16 vertical, TikTok review style, warm indoor lighting.`,
+  },
+};
+
+// Default visual config (when no template or unknown template)
+const DEFAULT_VISUAL_CONFIG = {
+  compositePrompt: `Photo-realistic image of the person from the first reference image naturally holding the product from the second reference image. The person is showing the product to camera in a casual, authentic UGC selfie style. Natural hand positioning, product clearly visible, warm lighting matching both references. Vertical 9:16 format, TikTok/Instagram Reels style. IMPORTANT: NO text, NO watermarks, NO logos, NO overlays in the image.`,
+  veoPrompt: (productName: string, script: string) => `UGC style selfie video of a person showing ${productName} to camera while speaking naturally. The person looks directly at camera and speaks: "${script}" Natural hand gestures, authentic expressions, casual vibe. The person is holding the product visible in frame throughout. 9:16 vertical format, TikTok style, warm natural lighting.`,
+};
+
+// ============================================
+// DIY PIPELINE STEP 3: GENERATE COMPOSITE IMAGE
+// ============================================
+
+export interface DIYCompositeResult {
+  actorImageUrl: string;
+  productGridUrl: string;
+  compositeImageUrl: string;
+}
+
+/**
+ * Generate composite image using Nano Banana
+ * 1. Generate actor photo from persona
+ * 2. Generate product angle grid
+ * 3. Composite actor holding product
+ */
+export async function stepGenerateComposite(
+  generationId: string,
+  productImageUrl: string,
+  productName: string,
+  persona: PersonaProfile,
+  templateId?: string,
+): Promise<DIYCompositeResult> {
+  await updateGenerationStatus(generationId, 'framing', 3);
+
+  if (!KieService.isConfigured()) {
+    throw new Error('KIE_AI_API_KEY not configured — required for DIY pipeline');
+  }
+
+  // Get template-specific visual config
+  const visualConfig = templateId ? TEMPLATE_VISUAL_CONFIG[templateId] : undefined;
+
+  // 3a: Generate actor photo
+  console.log('[Pipeline:DIY] Step 3a: Generating actor photo...');
+  const actorExpression = visualConfig?.actorPromptOverride || 'looking directly at camera with a warm, natural expression';
+  const actorPrompt = `Photo-realistic selfie portrait of a ${persona.age || 'young'} year old ${persona.gender || 'person'}. ${persona.appearance?.generalAppearance || 'Natural, approachable look'}. ${persona.appearance?.clothingAesthetic || 'Casual everyday clothing'}. ${actorExpression}. Warm natural lighting, neutral background. Vertical 9:16 format, TikTok/UGC style. IMPORTANT: NO text, NO watermarks, NO logos, NO overlays in the image.`;
+
+  const actorResult = await KieService.generateImageSync(
+    { prompt: actorPrompt, aspectRatio: '9:16' },
+    (task) => console.log(`[Pipeline:DIY] Actor photo: ${task.status} (${task.progress || 0}%)`)
+  );
+
+  const actorBuffer = await KieService.downloadFile(actorResult.url);
+  const actorR2Url = await uploadFrame(generationId, 0, actorBuffer);
+  console.log(`[Pipeline:DIY] Actor photo uploaded: ${actorR2Url}`);
+
+  // 3b: Generate product angle grid
+  console.log('[Pipeline:DIY] Step 3b: Generating product angle grid...');
+  const gridPrompt = `3x3 grid showing ${productName} from 9 different angles on white background. Product photography style, clean studio lighting, consistent scale. Angles: front, back, left, right, top, 3/4 left, 3/4 right, close-up detail, in-use shot. Landscape 16:9 format. IMPORTANT: NO text, NO labels, NO watermarks, NO logos anywhere in the image.`;
+
+  const gridResult = await KieService.generateImageSync(
+    { prompt: gridPrompt, aspectRatio: '16:9', referenceImageUrls: [productImageUrl] },
+    (task) => console.log(`[Pipeline:DIY] Product grid: ${task.status} (${task.progress || 0}%)`)
+  );
+
+  const gridBuffer = await KieService.downloadFile(gridResult.url);
+  const gridKey = `frames/${generationId}/product-grid.png`;
+  await uploadToR2(gridKey, gridBuffer, { contentType: 'image/png' });
+  const gridR2Url = getPublicUrl(gridKey);
+  console.log(`[Pipeline:DIY] Product grid uploaded: ${gridR2Url}`);
+
+  // 3c: Composite actor + product
+  console.log('[Pipeline:DIY] Step 3c: Compositing actor + product...');
+  const compositePrompt = visualConfig?.compositePrompt || DEFAULT_VISUAL_CONFIG.compositePrompt;
+
+  const compositeResult = await KieService.generateImageSync(
+    { prompt: compositePrompt, aspectRatio: '9:16', referenceImageUrls: [actorR2Url, gridR2Url] },
+    (task) => console.log(`[Pipeline:DIY] Composite: ${task.status} (${task.progress || 0}%)`)
+  );
+
+  const compositeBuffer = await KieService.downloadFile(compositeResult.url);
+  const compositeR2Url = await uploadFrame(generationId, 1, compositeBuffer);
+  console.log(`[Pipeline:DIY] Composite uploaded: ${compositeR2Url}`);
+
+  return { actorImageUrl: actorR2Url, productGridUrl: gridR2Url, compositeImageUrl: compositeR2Url };
+}
+
+// ============================================
+// DIY PIPELINE STEP 6: ANIMATE WITH VEO 3.1
+// ============================================
+
+export interface DIYVideoResult {
+  scriptIndex: number;
+  videoR2Key: string;
+  videoSignedUrl: string;
+  duration: number;
+}
+
+/**
+ * Animate composite image with Veo 3.1 Fast
+ * Uses prompt with script text for native audio generation
+ */
+export async function stepAnimateWithVeo31(
+  generationId: string,
+  compositeImageUrl: string,
+  script: GeneratedScript,
+  productName: string,
+  templateId?: string,
+): Promise<DIYVideoResult> {
+  await updateGenerationStatus(generationId, 'generating', 6);
+
+  if (!KieService.isConfigured()) {
+    throw new Error('KIE_AI_API_KEY not configured');
+  }
+
+  const supabase = getAdminClient();
+
+  // Get template-specific visual config for Veo prompt
+  const visualConfig = templateId ? TEMPLATE_VISUAL_CONFIG[templateId] : undefined;
+  const veoPromptBuilder = visualConfig?.veoPrompt || DEFAULT_VISUAL_CONFIG.veoPrompt;
+  const veoPrompt = veoPromptBuilder(productName, script.fullScript);
+
+  console.log(`[Pipeline:DIY] Veo 3.1 prompt (${script.wordCount} words)`);
+
+  await supabase.from('video_jobs').insert({
+    generation_id: generationId,
+    script_index: 0,
+    status: 'pending',
+    frame_url: compositeImageUrl,
+  });
+
+  const veoResult = await KieService.generateVeo3VideoSync(
+    {
+      model: 'veo3_fast',
+      prompt: veoPrompt,
+      imageUrls: [compositeImageUrl],
+      aspectRatio: '9:16',
+      sound: true,
+      duration: '8',
+    },
+    (task) => console.log(`[Pipeline:DIY] Veo 3.1: ${task.status} (${task.progress || 0}%)`)
+  );
+
+  console.log(`[Pipeline:DIY] Veo 3.1 complete, downloading...`);
+  const videoBuffer = await KieService.downloadFile(veoResult.url);
+  const uploadResult = await uploadVideo(generationId, 0, videoBuffer);
+
+  await supabase
+    .from('video_jobs')
+    .update({
+      status: 'completed',
+      video_r2_key: uploadResult.key,
+      duration_seconds: veoResult.duration || 8,
+      completed_at: new Date().toISOString(),
+    })
+    .eq('generation_id', generationId)
+    .eq('script_index', 0);
+
+  return {
+    scriptIndex: 0,
+    videoR2Key: uploadResult.key,
+    videoSignedUrl: uploadResult.signedUrl,
+    duration: veoResult.duration || 8,
+  };
+}
+
+// ============================================
+// DIY PIPELINE STEP 9.6: GENERATE END SCREEN
+// ============================================
+
+export interface EndScreenResult {
+  videoR2Key: string;
+  videoSignedUrl: string;
+  duration: number;
+}
+
+/**
+ * Generate end screen with CTA using Nano Banana + Kling 2.6
+ * 1. Generate end frame image with CTA text
+ * 2. Animate with Kling 2.6 for premium product reveal effect
+ */
+export async function stepGenerateEndScreen(
+  generationId: string,
+  productImageUrl: string,
+  productName: string,
+  ctaText: string,
+  brandText?: string,
+): Promise<EndScreenResult> {
+  console.log('[Pipeline:DIY] Step 9.6: Generating end screen...');
+
+  if (!KieService.isConfigured()) {
+    throw new Error('KIE_AI_API_KEY not configured');
+  }
+
+  const brandLine = brandText ? `\nBrand text visible: "${brandText}"` : '';
+  const endFramePrompt = `Sleek product reveal frame for a video end card. Product: ${productName} centered, dramatic studio lighting, subtle glow effect. Dark premium background with soft gradient. Call-to-action text area at bottom: "${ctaText}"${brandLine} Cinematic product photography style, 9:16 vertical. IMPORTANT: Only include the CTA text specified, no other text.`;
+
+  const frameResult = await KieService.generateImageSync(
+    { prompt: endFramePrompt, aspectRatio: '9:16', referenceImageUrls: [productImageUrl] },
+    (task) => console.log(`[Pipeline:DIY] End frame: ${task.status}`)
+  );
+
+  const frameBuffer = await KieService.downloadFile(frameResult.url);
+  const frameKey = `frames/${generationId}/end-screen-frame.png`;
+  await uploadToR2(frameKey, frameBuffer, { contentType: 'image/png' });
+  const frameUrl = getPublicUrl(frameKey);
+
+  console.log('[Pipeline:DIY] Animating end screen with Kling 2.6...');
+  const kling26Result = await KieService.generateKling26VideoSync(
+    {
+      prompt: 'Slow cinematic product reveal with subtle glow and shimmer effect. Camera slowly pushes in. Premium product showcase motion design. Elegant and minimal.',
+      imageUrls: [frameUrl],
+      duration: '5',
+      sound: false,
+    },
+    (task) => console.log(`[Pipeline:DIY] Kling 2.6: ${task.status}`)
+  );
+
+  const endVideoBuffer = await KieService.downloadFile(kling26Result.url);
+  const endVideoKey = `videos/${generationId}/end-screen.mp4`;
+  await uploadToR2(endVideoKey, endVideoBuffer, { contentType: 'video/mp4' });
+  const endVideoSignedUrl = await getSignedDownloadUrl(endVideoKey);
+
+  return { videoR2Key: endVideoKey, videoSignedUrl: endVideoSignedUrl, duration: kling26Result.duration || 5 };
+}
+
+// ============================================
+// DIY PIPELINE STEP 9.7: CONCATENATE MAIN + END SCREEN
+// ============================================
+
+/**
+ * Concatenate main video with end screen video
+ * Uses FFmpeg concat filter for seamless joining
+ */
+export async function stepConcatenateWithEndScreen(
+  generationId: string,
+  mainVideoR2Key: string,
+  endScreenR2Key: string,
+): Promise<{ videoR2Key: string; videoSignedUrl: string; duration: number }> {
+  console.log('[Pipeline:DIY] Step 9.7: Concatenating main + end screen...');
+
+  const tempFiles: string[] = [];
+
+  try {
+    const mainBuffer = await downloadFromR2(mainVideoR2Key);
+    const mainPath = path.join(os.tmpdir(), `ugcfirst_main_${generationId}_${Date.now()}.mp4`);
+    fs.writeFileSync(mainPath, mainBuffer);
+    tempFiles.push(mainPath);
+
+    const endBuffer = await downloadFromR2(endScreenR2Key);
+    const endPath = path.join(os.tmpdir(), `ugcfirst_end_${generationId}_${Date.now()}.mp4`);
+    fs.writeFileSync(endPath, endBuffer);
+    tempFiles.push(endPath);
+
+    const concatPath = await concatenateVideos([mainPath, endPath]);
+    tempFiles.push(concatPath);
+
+    const concatBuffer = fs.readFileSync(concatPath);
+    await uploadToR2(mainVideoR2Key, concatBuffer, { contentType: 'video/mp4' });
+    const signedUrl = await getSignedDownloadUrl(mainVideoR2Key);
+
+    return { videoR2Key: mainVideoR2Key, videoSignedUrl: signedUrl, duration: 13 };
+  } finally {
+    for (const f of tempFiles) {
+      try { if (fs.existsSync(f)) fs.unlinkSync(f); } catch { /* ignore */ }
+    }
+  }
+}
+
+// ============================================
+// SPOTLIGHT PIPELINE STEP 1: ENHANCE PRODUCT FRAME
+// ============================================
+
+/**
+ * Generate enhanced product frame using Nano Banana with style-specific prompt
+ */
+export async function stepSpotlightEnhanceFrame(
+  generationId: string,
+  productImageUrl: string,
+  framePrompt: string,
+): Promise<{ frameUrl: string }> {
+  await updateGenerationStatus(generationId, 'framing', 1);
+
+  if (!KieService.isConfigured()) {
+    throw new Error('KIE_AI_API_KEY not configured');
+  }
+
+  console.log('[Pipeline:Spotlight] Generating enhanced product frame...');
+  const result = await KieService.generateImageSync(
+    {
+      prompt: framePrompt,
+      aspectRatio: '9:16',
+      referenceImageUrls: [productImageUrl],
+    },
+    (task) => console.log(`[Pipeline:Spotlight] Frame: ${task.status} (${task.progress || 0}%)`)
+  );
+
+  const buffer = await KieService.downloadFile(result.url);
+  const frameUrl = await uploadFrame(generationId, 0, buffer);
+  console.log(`[Pipeline:Spotlight] Frame uploaded: ${frameUrl}`);
+
+  return { frameUrl };
+}
+
+// ============================================
+// SPOTLIGHT PIPELINE STEP 2: ANIMATE WITH KLING 2.6
+// ============================================
+
+/**
+ * Animate the enhanced product frame with Kling 2.6
+ */
+export async function stepSpotlightAnimate(
+  generationId: string,
+  frameUrl: string,
+  animationPrompt: string,
+  duration: '5' | '10',
+): Promise<{ videoR2Key: string; videoSignedUrl: string; duration: number }> {
+  await updateGenerationStatus(generationId, 'generating', 2);
+
+  if (!KieService.isConfigured()) {
+    throw new Error('KIE_AI_API_KEY not configured');
+  }
+
+  const supabase = getAdminClient();
+
+  await supabase.from('video_jobs').insert({
+    generation_id: generationId,
+    script_index: 0,
+    status: 'pending',
+    frame_url: frameUrl,
+  });
+
+  console.log(`[Pipeline:Spotlight] Animating with Kling 2.6 (${duration}s)...`);
+  const result = await KieService.generateKling26VideoSync(
+    {
+      prompt: animationPrompt,
+      imageUrls: [frameUrl],
+      duration,
+      sound: false,
+    },
+    (task) => console.log(`[Pipeline:Spotlight] Kling 2.6: ${task.status} (${task.progress || 0}%)`)
+  );
+
+  const videoBuffer = await KieService.downloadFile(result.url);
+  const uploadResult = await uploadVideo(generationId, 0, videoBuffer);
+
+  await supabase
+    .from('video_jobs')
+    .update({
+      status: 'completed',
+      video_r2_key: uploadResult.key,
+      duration_seconds: result.duration || parseInt(duration),
+      completed_at: new Date().toISOString(),
+    })
+    .eq('generation_id', generationId)
+    .eq('script_index', 0);
+
+  console.log(`[Pipeline:Spotlight] Video uploaded: ${uploadResult.key}`);
+
+  return {
+    videoR2Key: uploadResult.key,
+    videoSignedUrl: uploadResult.signedUrl,
+    duration: result.duration || parseInt(duration),
+  };
+}
+
+// ============================================
 // FULL PIPELINE ORCHESTRATION
 // ============================================
 
@@ -844,6 +1598,16 @@ export interface PipelineInput {
   subtitlesEnabled?: boolean; // Whether to burn subtitles into video
   captionsEnabled?: boolean;  // DEPRECATED: backward compat, use subtitlesEnabled
   webhookBaseUrl?: string; // Optional - only needed for webhook-based flow
+  applyWatermark?: boolean; // Whether to add watermark (true for pure free users only)
+  existingPersona?: PersonaProfile; // Optional - skip analysis and reuse persona (for regeneration)
+  customScript?: string; // User-provided script for DIY mode
+  endScreenEnabled?: boolean; // Whether to generate end screen
+  endScreenCtaText?: string; // CTA text for end screen
+  endScreenBrandText?: string; // Brand/URL text for end screen
+  // Spotlight-specific fields
+  spotlightCategoryId?: string; // Category ID (e.g., 'beauty', 'tech')
+  spotlightStyleId?: string;    // Style ID (e.g., 'glass-glow', 'orbit')
+  spotlightDuration?: '5' | '10'; // Animation duration in seconds
 }
 
 export interface PipelineOutput {
@@ -872,6 +1636,8 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutput>
     mode,
     voiceId,
     subtitlesEnabled = input.captionsEnabled ?? false, // Support both new and legacy param
+    applyWatermark = false, // Only true for pure free users (free tier + never paid)
+    existingPersona, // Optional - skip analysis if provided (for regeneration)
   } = input;
 
   try {
@@ -882,102 +1648,335 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutput>
       .update({ started_at: new Date().toISOString() })
       .eq('id', generationId);
 
-    // Step 1: Analyze product
-    const persona = await stepAnalyzeProduct(
-      generationId,
-      productImageUrl,
-      productName
-    );
-
-    // Step 2: Generate scripts (uses intelligent approach selection)
-    const scripts = await stepGenerateScripts(
-      generationId,
-      persona,
-      productName,
-      input.productDescription,
-      input.productFeatures
-    );
-
-    // Step 3: Generate frames
-    const frames = await stepGenerateFrames(
-      generationId,
-      productImageUrl,
-      productName,
-      scripts,
-      persona
-    );
-
-    // Step 4: Upload frames to R2 (public URLs for Kie.ai access)
-    const frameUrls = await stepUploadFrames(generationId, frames);
-
-    // Clear image buffers after upload to prevent Inngest serialization issues
-    // The buffers are no longer needed - images are now stored in R2
-    for (let i = 0; i < frames.length; i++) {
-      if (frames[i].imageBuffer) {
-        delete frames[i].imageBuffer;
-      }
-      // Add the R2 URL to the frame for reference
-      frames[i].imageUrl = frameUrls[i];
-    }
-    console.log(`[Pipeline] Cleared ${frames.length} image buffers after R2 upload`);
-
-    // Step 5: SKIPPED - Video models (Sora 2) generate audio natively
-    // No need for separate TTS voiceover generation
-
-    // Step 6: Create video jobs (no voiceovers - video model handles audio)
-    const videoJobs = await stepCreateVideoJobs(
-      generationId,
-      scripts,
-      frames,
-      frameUrls
-      // voiceovers parameter omitted - video model generates audio
-    );
-
-    // Step 7: Poll for video completion and upload to R2
-    const videos = await stepPollVideoCompletion(
-      generationId,
-      videoJobs,
-      (scriptIndex, progress) => {
-        console.log(`Video ${scriptIndex}: ${progress}% complete`);
-      }
-    );
-
-    // Step 8: Generate subtitles from video audio
-    console.log(`[Pipeline] Generating subtitles for ${videos.length} videos, subtitlesEnabled=${subtitlesEnabled}`);
-    const subtitles = await stepGenerateSubtitles(generationId, videos);
-    console.log(`[Pipeline] Generated ${subtitles.length} subtitle sets:`, subtitles.map(s => ({ scriptIndex: s.scriptIndex, wordCount: s.words?.length || 0 })));
-
-    // Step 9: Burn subtitles into videos (if enabled)
-    let burnedSubtitles: BurnedSubtitleVideo[] = [];
-    if (subtitlesEnabled && subtitles.length > 0) {
-      console.log('[Pipeline] Burning subtitles into videos...');
-      burnedSubtitles = await stepBurnSubtitles(generationId, videos, subtitles);
-      console.log(`[Pipeline] Burned subtitles for ${burnedSubtitles.length} videos:`, burnedSubtitles.map(bs => ({ scriptIndex: bs.scriptIndex, key: bs.videoSubtitledR2Key })));
+    // Step 1: Analyze product (or reuse existing persona for regeneration)
+    let persona: PersonaProfile;
+    if (existingPersona) {
+      console.log('[Pipeline] Reusing existing persona (regeneration)');
+      persona = existingPersona;
+      // Still update status for progress tracking
+      await updateGenerationStatus(generationId, 'analyzing', 1, {
+        persona_profile: persona,
+      } as Partial<Generation>);
     } else {
-      console.log(`[Pipeline] Skipping subtitle burning: subtitlesEnabled=${subtitlesEnabled}, subtitles.length=${subtitles.length}`);
+      persona = await stepAnalyzeProduct(
+        generationId,
+        productImageUrl,
+        productName
+      );
     }
 
-    // Create lookup map for subtitled video keys
-    const subtitledKeyMap = new Map(
-      burnedSubtitles.map((bs) => [bs.scriptIndex, bs.videoSubtitledR2Key])
-    );
-    console.log('[Pipeline] Subtitled key map:', Object.fromEntries(subtitledKeyMap));
+    if (mode === 'spotlight') {
+      // ========================================
+      // SPOTLIGHT PIPELINE (Nano Banana + Kling 2.6)
+      // ========================================
 
-    // Mark as completed - store frame URL (public), video R2 key, and subtitled video R2 key
-    const generationVideos: GenerationVideo[] = videos.map((v, i) => ({
-      scriptIndex: v.scriptIndex,
-      frameUrl: frameUrls[i],
-      videoR2Key: v.videoR2Key,
-      videoSubtitledR2Key: subtitledKeyMap.get(v.scriptIndex),
-      duration: v.duration,
-      subtitleWords: subtitles[i]?.words,
-    }));
-    console.log('[Pipeline] Final generation videos:', generationVideos.map(gv => ({ scriptIndex: gv.scriptIndex, hasRawKey: !!gv.videoR2Key, hasSubtitledKey: !!gv.videoSubtitledR2Key })));
+      const { spotlightCategoryId, spotlightStyleId, spotlightDuration = '5' } = input;
 
-    // Step 10: Generate strategy (Concierge only) - MUST run BEFORE marking completed
-    // so the frontend receives strategyBrief on the same poll that shows 'completed'
-    let strategyBrief = null;
-    if (mode === 'concierge') {
+      // Validate spotlight inputs
+      if (!spotlightCategoryId || !spotlightStyleId) {
+        throw new Error('Spotlight mode requires categoryId and styleId');
+      }
+
+      // Get style config
+      const style = getSpotlightStyle(spotlightCategoryId as SpotlightCategory, spotlightStyleId);
+      if (!style) {
+        throw new Error(`Invalid spotlight style: ${spotlightCategoryId}/${spotlightStyleId}`);
+      }
+
+      console.log(`[Pipeline:Spotlight] Starting with style: ${style.name} (${spotlightDuration}s)`);
+
+      // Step 1: Generate enhanced product frame
+      const { frameUrl } = await stepSpotlightEnhanceFrame(
+        generationId,
+        productImageUrl,
+        style.framePrompt,
+      );
+
+      // Step 2: Animate with Kling 2.6
+      const videoResult = await stepSpotlightAnimate(
+        generationId,
+        frameUrl,
+        style.animationPrompt,
+        spotlightDuration,
+      );
+
+      // Build final generation video (no subtitles for spotlight - it's a product animation)
+      const generationVideos: GenerationVideo[] = [{
+        scriptIndex: 0,
+        frameUrl,
+        videoR2Key: videoResult.videoR2Key,
+        duration: videoResult.duration,
+      }];
+
+      // Step 3: Complete (no strategy, no subtitles for spotlight)
+      await updateGenerationStatus(generationId, 'completed', 3, {
+        videos: generationVideos,
+        total_steps: 3,
+      } as Partial<Generation>);
+
+      // Confirm credits
+      const { data: completedGen } = await supabase
+        .from('generations')
+        .select('credit_transaction_id')
+        .eq('id', generationId)
+        .single();
+
+      if (completedGen?.credit_transaction_id) {
+        try {
+          await confirmCredits(completedGen.credit_transaction_id);
+        } catch (creditError) {
+          console.error('[Pipeline:Spotlight] Credit confirm failed:', creditError);
+        }
+      }
+
+      console.log(`[Pipeline:Spotlight] Completed successfully`);
+
+      // Return minimal output (spotlight doesn't generate scripts/personas meaningfully)
+      return {
+        persona: persona, // Keep for consistency but not really used
+        scripts: [],
+        frames: [{ scriptIndex: 0, prompt: { description: style.name, cameraAngle: '', lighting: '', mood: '' }, imageUrl: frameUrl }],
+        videos: [{ scriptIndex: 0, videoR2Key: videoResult.videoR2Key, videoSignedUrl: videoResult.videoSignedUrl, duration: videoResult.duration }],
+        subtitles: [],
+        burnedSubtitles: [],
+        captions: [],
+        burnedCaptions: [],
+      };
+    }
+
+    if (mode === 'diy') {
+      // ========================================
+      // DIY PIPELINE (Veo 3.1 + Compositing)
+      // ========================================
+
+      // Step 2: Use custom script directly
+      const scripts = await stepUseCustomScript(
+        generationId, input.customScript, persona, productName,
+      );
+
+      // Step 3: Generate composite image (template-aware)
+      const composite = await stepGenerateComposite(
+        generationId, productImageUrl, productName, persona,
+        templateId,
+      );
+
+      // Step 6: Animate with Veo 3.1 Fast (template-aware)
+      const diyVideo = await stepAnimateWithVeo31(
+        generationId, composite.compositeImageUrl, scripts[0], productName,
+        templateId,
+      );
+
+      // Build CompletedVideo for subtitle/watermark steps
+      const videos: CompletedVideo[] = [{
+        scriptIndex: 0,
+        videoR2Key: diyVideo.videoR2Key,
+        videoSignedUrl: diyVideo.videoSignedUrl,
+        duration: diyVideo.duration,
+      }];
+
+      // Step 8 + 9: Generate and burn subtitles (only if enabled)
+      let subtitles: GeneratedSubtitle[] = [];
+      let burnedSubtitles: BurnedSubtitleVideo[] = [];
+
+      if (subtitlesEnabled) {
+        subtitles = await stepGenerateSubtitles(generationId, videos);
+        if (subtitles.length > 0 && subtitles[0].words.length > 0) {
+          burnedSubtitles = await stepBurnSubtitles(generationId, videos, subtitles);
+        }
+      } else {
+        console.log('[Pipeline:DIY] Captions disabled, skipping STT + subtitle burn');
+      }
+
+      // Step 9.5: Watermark (if pure free user)
+      if (applyWatermark) {
+        try {
+          await stepAddWatermark(generationId, videos, burnedSubtitles);
+        } catch (watermarkError) {
+          console.error('[Pipeline:DIY] Watermark failed:', watermarkError);
+        }
+      }
+
+      // Step 9.6 + 9.7: End screen (if enabled)
+      if (input.endScreenEnabled && input.endScreenCtaText) {
+        try {
+          const endScreen = await stepGenerateEndScreen(
+            generationId, productImageUrl, productName,
+            input.endScreenCtaText, input.endScreenBrandText,
+          );
+
+          const videoToConcat = burnedSubtitles[0]?.videoSubtitledR2Key || diyVideo.videoR2Key;
+          const concatResult = await stepConcatenateWithEndScreen(
+            generationId, videoToConcat, endScreen.videoR2Key,
+          );
+
+          videos[0].duration = concatResult.duration;
+          if (burnedSubtitles.length > 0) {
+            burnedSubtitles[0].videoSubtitledR2Key = concatResult.videoR2Key;
+          } else {
+            videos[0].videoR2Key = concatResult.videoR2Key;
+          }
+        } catch (endScreenError) {
+          console.error('[Pipeline:DIY] End screen failed:', endScreenError);
+        }
+      }
+
+      // Build final generation videos
+      const subtitledKeyMap = new Map(
+        burnedSubtitles.map((bs) => [bs.scriptIndex, bs.videoSubtitledR2Key])
+      );
+
+      const generationVideos: GenerationVideo[] = videos.map((v) => ({
+        scriptIndex: v.scriptIndex,
+        frameUrl: composite.compositeImageUrl,
+        videoR2Key: v.videoR2Key,
+        videoSubtitledR2Key: subtitledKeyMap.get(v.scriptIndex),
+        duration: v.duration,
+        subtitleWords: subtitles[0]?.words,
+      }));
+
+      // Step 10: Complete (no strategy for DIY)
+      await updateGenerationStatus(generationId, 'completed', 10, {
+        videos: generationVideos,
+        strategy_brief: null,
+      } as Partial<Generation>);
+
+      // Confirm credits
+      const { data: completedGen } = await supabase
+        .from('generations')
+        .select('credit_transaction_id')
+        .eq('id', generationId)
+        .single();
+
+      if (completedGen?.credit_transaction_id) {
+        try {
+          await confirmCredits(completedGen.credit_transaction_id);
+        } catch (creditError) {
+          console.error('[Pipeline:DIY] Credit confirm failed:', creditError);
+        }
+      }
+
+      const frames: GeneratedFrame[] = [{
+        scriptIndex: 0,
+        prompt: { description: 'Veo 3.1 composite', cameraAngle: 'selfie', lighting: 'natural', mood: 'casual' },
+        imageUrl: composite.compositeImageUrl,
+      }];
+
+      return {
+        persona, scripts, frames, videos, subtitles, burnedSubtitles,
+        captions: subtitles, burnedCaptions: burnedSubtitles,
+      };
+
+    } else {
+      // ========================================
+      // CONCIERGE PIPELINE (Sora 2)
+      // ========================================
+
+      // Step 2: Use custom script if provided (from frontend review), otherwise generate
+      let scripts: GeneratedScript[];
+      if (input.customScript && input.customScript.trim().length > 0) {
+        console.log('[Pipeline:Concierge] Using pre-approved custom script (skipping regeneration)');
+        // Use the script the user already reviewed and approved on the frontend
+        scripts = await stepUseCustomScript(
+          generationId, input.customScript, persona, productName,
+        );
+      } else {
+        console.log('[Pipeline:Concierge] No custom script provided, generating from scratch');
+        scripts = await stepGenerateScripts(
+          generationId,
+          persona,
+          productName,
+          input.productDescription,
+          input.productFeatures
+        );
+      }
+
+      // Step 3: Generate frames
+      const frames = await stepGenerateFrames(
+        generationId,
+        productImageUrl,
+        productName,
+        scripts,
+        persona
+      );
+
+      // Step 4: Upload frames to R2 (public URLs for Kie.ai access)
+      const frameUrls = await stepUploadFrames(generationId, frames);
+
+      // Clear image buffers after upload to prevent Inngest serialization issues
+      // The buffers are no longer needed - images are now stored in R2
+      for (let i = 0; i < frames.length; i++) {
+        if (frames[i].imageBuffer) {
+          delete frames[i].imageBuffer;
+        }
+        // Add the R2 URL to the frame for reference
+        frames[i].imageUrl = frameUrls[i];
+      }
+      console.log(`[Pipeline] Cleared ${frames.length} image buffers after R2 upload`);
+
+      // Step 5: SKIPPED - Video models (Sora 2 / Veo 3.1) generate audio natively
+      // No need for separate TTS voiceover generation
+
+      // Step 6+7: Generate video with Sora 2 → Veo 3.1 fallback
+      // Combines task creation + polling + R2 upload with automatic model fallback
+      const videos = await stepGenerateVideoWithFallback(
+        generationId,
+        scripts,
+        frames,
+        frameUrls,
+      );
+
+      // Step 8 + 9: Generate and burn subtitles (only if enabled)
+      let subtitles: GeneratedSubtitle[] = [];
+      let burnedSubtitles: BurnedSubtitleVideo[] = [];
+
+      if (subtitlesEnabled) {
+        console.log(`[Pipeline] Generating subtitles for ${videos.length} videos...`);
+        subtitles = await stepGenerateSubtitles(generationId, videos);
+        console.log(`[Pipeline] Generated ${subtitles.length} subtitle sets:`, subtitles.map(s => ({ scriptIndex: s.scriptIndex, wordCount: s.words?.length || 0 })));
+
+        if (subtitles.length > 0) {
+          console.log('[Pipeline] Burning subtitles into videos...');
+          burnedSubtitles = await stepBurnSubtitles(generationId, videos, subtitles);
+          console.log(`[Pipeline] Burned subtitles for ${burnedSubtitles.length} videos:`, burnedSubtitles.map(bs => ({ scriptIndex: bs.scriptIndex, key: bs.videoSubtitledR2Key })));
+        }
+      } else {
+        console.log('[Pipeline] Captions disabled, skipping STT + subtitle burn');
+      }
+
+      // Step 9.5: Add watermark for pure free users only
+      if (applyWatermark) {
+        console.log('[Pipeline] Pure free tier - adding watermark to videos...');
+        try {
+          await stepAddWatermark(generationId, videos, burnedSubtitles);
+          console.log('[Pipeline] Watermark successfully added to all videos');
+        } catch (watermarkError) {
+          // Don't fail the pipeline - deliver unwatermarked video instead
+          console.error('[Pipeline] Watermark step failed, delivering unwatermarked videos:', watermarkError);
+        }
+      } else {
+        console.log('[Pipeline] Paid user or has_paid=true - skipping watermark');
+      }
+
+      // Create lookup map for subtitled video keys
+      const subtitledKeyMap = new Map(
+        burnedSubtitles.map((bs) => [bs.scriptIndex, bs.videoSubtitledR2Key])
+      );
+      console.log('[Pipeline] Subtitled key map:', Object.fromEntries(subtitledKeyMap));
+
+      // Mark as completed - store frame URL (public), video R2 key, and subtitled video R2 key
+      const generationVideos: GenerationVideo[] = videos.map((v, i) => ({
+        scriptIndex: v.scriptIndex,
+        frameUrl: frameUrls[i],
+        videoR2Key: v.videoR2Key,
+        videoSubtitledR2Key: subtitledKeyMap.get(v.scriptIndex),
+        duration: v.duration,
+        subtitleWords: subtitles[i]?.words,
+      }));
+      console.log('[Pipeline] Final generation videos:', generationVideos.map(gv => ({ scriptIndex: gv.scriptIndex, hasRawKey: !!gv.videoR2Key, hasSubtitledKey: !!gv.videoSubtitledR2Key })));
+
+      // Step 10: Generate strategy (Concierge only) - MUST run BEFORE marking completed
+      // so the frontend receives strategyBrief on the same poll that shows 'completed'
+      let strategyBrief = null;
       try {
         console.log('[Pipeline] Generating strategy brief...');
         strategyBrief = await generateStrategy(generationId);
@@ -986,45 +1985,45 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutput>
         console.error('[Pipeline] Strategy generation failed:', error);
         // Don't fail the entire generation - video is still usable
       }
-    }
 
-    // Now mark as completed - frontend will receive strategyBrief with this status
-    await updateGenerationStatus(generationId, 'completed', 10, {
-      videos: generationVideos,
-      strategy_brief: strategyBrief,
-    } as Partial<Generation>);
+      // Now mark as completed - frontend will receive strategyBrief with this status
+      await updateGenerationStatus(generationId, 'completed', 10, {
+        videos: generationVideos,
+        strategy_brief: strategyBrief,
+      } as Partial<Generation>);
 
-    // Confirm credits immediately after completion (don't rely on Inngest step)
-    const { data: completedGeneration } = await supabase
-      .from('generations')
-      .select('credit_transaction_id')
-      .eq('id', generationId)
-      .single();
+      // Confirm credits immediately after completion (don't rely on Inngest step)
+      const { data: completedGeneration } = await supabase
+        .from('generations')
+        .select('credit_transaction_id')
+        .eq('id', generationId)
+        .single();
 
-    if (completedGeneration?.credit_transaction_id) {
-      try {
-        await confirmCredits(completedGeneration.credit_transaction_id);
-        console.log(`[Pipeline] Credits confirmed for generation ${generationId}`);
-      } catch (creditError) {
-        console.error(`[Pipeline] Failed to confirm credits for generation ${generationId}:`, creditError);
-        // Don't throw - video is still usable, credits can be confirmed later
+      if (completedGeneration?.credit_transaction_id) {
+        try {
+          await confirmCredits(completedGeneration.credit_transaction_id);
+          console.log(`[Pipeline] Credits confirmed for generation ${generationId}`);
+        } catch (creditError) {
+          console.error(`[Pipeline] Failed to confirm credits for generation ${generationId}:`, creditError);
+          // Don't throw - video is still usable, credits can be confirmed later
+        }
       }
+
+      // Temp files are now created and cleaned up within each step
+      // No global cleanup needed - each step is self-contained
+
+      return {
+        persona,
+        scripts,
+        frames,
+        videos,
+        subtitles,
+        burnedSubtitles,
+        // Backward compatibility aliases
+        captions: subtitles,
+        burnedCaptions: burnedSubtitles,
+      };
     }
-
-    // Temp files are now created and cleaned up within each step
-    // No global cleanup needed - each step is self-contained
-
-    return {
-      persona,
-      scripts,
-      frames,
-      videos,
-      subtitles,
-      burnedSubtitles,
-      // Backward compatibility aliases
-      captions: subtitles,
-      burnedCaptions: burnedSubtitles,
-    };
   } catch (error) {
     // Mark generation as failed
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1206,9 +2205,21 @@ export const Pipeline = {
     pollVideoCompletion: stepPollVideoCompletion,
     generateSubtitles: stepGenerateSubtitles,
     burnSubtitles: stepBurnSubtitles,
+    addWatermark: stepAddWatermark,
     // Backward compatibility
     generateCaptions: stepGenerateSubtitles,
     burnCaptions: stepBurnSubtitles,
+    // Concierge with fallback
+    generateVideoWithFallback: stepGenerateVideoWithFallback,
+    // DIY Pipeline steps
+    useCustomScript: stepUseCustomScript,
+    generateComposite: stepGenerateComposite,
+    animateWithVeo31: stepAnimateWithVeo31,
+    generateEndScreen: stepGenerateEndScreen,
+    concatenateWithEndScreen: stepConcatenateWithEndScreen,
+    // Spotlight Pipeline steps
+    spotlightEnhanceFrame: stepSpotlightEnhanceFrame,
+    spotlightAnimate: stepSpotlightAnimate,
   },
   webhooks: {
     handleVideoComplete,

@@ -28,8 +28,18 @@ export type Events = {
       templateId?: string;
       customScript?: string;
       captionsEnabled: boolean;
-      mode: 'diy' | 'concierge';
+      mode: 'diy' | 'concierge' | 'spotlight';
       creditTransactionId: string;
+      voiceId?: string;
+      applyWatermark?: boolean;
+      existingPersona?: import('@/types/generation').PersonaProfile; // For regeneration - skip analysis
+      endScreenEnabled?: boolean;
+      endScreenCtaText?: string;
+      endScreenBrandText?: string;
+      // Spotlight-specific fields
+      spotlightCategoryId?: string;
+      spotlightStyleId?: string;
+      spotlightDuration?: '5' | '10';
     };
   };
 
