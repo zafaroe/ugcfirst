@@ -38,12 +38,24 @@ const KIE_MODELS = {
   VIDEO_SORA_2: 'sora-2-text-to-video',
   VIDEO_SORA_2_PRO: 'sora-2-pro-text-to-video',
   VIDEO_SORA_2_IMAGE_TO_VIDEO: 'sora-2-image-to-video',
+  VIDEO_SORA_2_PRO_IMAGE_TO_VIDEO: 'sora-2-pro-image-to-video',
 
   // Text-to-Speech
   TTS_ELEVENLABS: 'elevenlabs/text-to-speech-multilingual-v2',
 
   // Speech-to-Text
   STT_ELEVENLABS: 'elevenlabs/speech-to-text',
+
+  // Kling Avatar (talking head from photo + audio)
+  KLING_AVATAR_STANDARD: 'kling/ai-avatar-standard',
+  KLING_AVATAR_PRO: 'kling/ai-avatar-pro',
+
+  // Veo 3.1 (person animation with native speech)
+  VIDEO_VEO3_FAST: 'veo3_fast',
+  VIDEO_VEO3_QUALITY: 'veo3_quality',
+
+  // Kling 2.6 (motion graphics / product reveals)
+  VIDEO_KLING_2_6: 'kling-2.6/image-to-video',
 } as const;
 
 // ============================================
@@ -144,6 +156,7 @@ export interface ImageGenerateRequest {
   width?: number;
   height?: number;
   aspectRatio?: '9:16' | '16:9' | '1:1';
+  referenceImageUrls?: string[];  // Reference images for the model to use
 }
 
 export interface ImageResult {
@@ -200,20 +213,82 @@ export interface STTResult {
 }
 
 // ============================================
+// TYPES - Kling Avatar
+// ============================================
+
+export type AvatarModel = 'kling-avatar-standard' | 'kling-avatar-pro';
+
+export interface AvatarGenerateRequest {
+  model?: AvatarModel;
+  imageUrl: string;     // Photo of the avatar (face)
+  audioUrl: string;     // Voiceover audio file
+  prompt: string;       // Emotion/gesture/scene instructions
+}
+
+export interface AvatarResult {
+  url: string;
+  duration: number;
+  width: number;
+  height: number;
+}
+
+// ============================================
+// TYPES - Veo 3.1 Video Generation
+// ============================================
+
+export type Veo3Model = 'veo3_fast' | 'veo3_quality';
+
+export interface Veo3GenerateRequest {
+  model?: Veo3Model;
+  prompt: string;
+  imageUrls?: string[];      // Start frame(s) for image-to-video
+  aspectRatio?: '9:16' | '16:9' | '1:1';
+  sound?: boolean;            // Enable native audio/speech generation
+  duration?: '5' | '8';      // Duration in seconds (Veo 3.1 supports 5 or 8)
+  callBackUrl?: string;
+}
+
+export interface Veo3Result {
+  url: string;
+  duration: number;
+  width: number;
+  height: number;
+}
+
+// ============================================
+// TYPES - Kling 2.6 Video Generation (Motion Graphics)
+// ============================================
+
+export interface Kling26GenerateRequest {
+  prompt: string;
+  imageUrls?: string[];       // Start frame for image-to-video
+  duration?: '5' | '10';     // Kling 2.6 supports 5 or 10 seconds
+  sound?: boolean;           // Enable native audio generation (required)
+}
+
+export interface Kling26Result {
+  url: string;
+  duration: number;
+  width: number;
+  height: number;
+}
+
+// ============================================
 // CORE API CLIENT
 // ============================================
 
 async function kieRequest<T>(
   endpoint: string,
   method: 'GET' | 'POST' = 'POST',
-  body?: Record<string, unknown>
+  body?: Record<string, unknown>,
+  retryCount = 0
 ): Promise<T> {
   if (!KIE_API_KEY) {
     throw new Error('KIE_AI_API_KEY not configured');
   }
 
   const url = `${KIE_API_BASE_URL}${endpoint}`;
-  console.log(`[Kie.ai] ${method} ${url}`);
+  console.log(`[Kie.ai] ${method} ${url}${retryCount > 0 ? ` (retry ${retryCount})` : ''}`);
 
   const response = await fetch(url, {
     method,
@@ -227,6 +302,20 @@ async function kieRequest<T>(
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`[Kie.ai] Error ${response.status}: ${errorText}`);
+
+    // Retry on 429 rate limit with exponential backoff (max 3 retries)
+    if (response.status === 429 && retryCount < 3) {
+      const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // 1s, 2s, 4s, max 10s
+      console.log(`[Kie.ai] Rate limited, retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return kieRequest<T>(endpoint, method, body, retryCount + 1);
+    }
+
+    // User-friendly error for rate limits
+    if (response.status === 429) {
+      throw new Error('Too many requests. Please wait a moment and try again.');
+    }
+
     throw new Error(`Kie.ai API error: ${response.status} - ${errorText}`);
   }
 
@@ -357,6 +446,18 @@ async function getVideoTaskStatus(taskId: string): Promise<KieTask<VideoResult>>
     `/playground/recordInfo?taskId=${encodeURIComponent(taskId)}`,
     'GET'
   );
+
+  // Handle null data (can happen with Veo 3.1 tasks before they're ready)
+  if (!response.data) {
+    console.log('[Kie.ai] Task not ready yet (recordInfo is null), treating as pending');
+    return {
+      taskId,
+      status: 'pending',
+      result: undefined,
+      error: undefined,
+      progress: 0,
+    };
+  }
 
   const status = mapStatus(response.data.state);
   let result: VideoResult | undefined;
@@ -605,10 +706,19 @@ export async function pollForCompletion<T>(
  * Uses image-to-video when imageUrl is provided, otherwise text-to-video
  */
 export async function generateVideo(request: VideoGenerateRequest): Promise<string> {
-  // Use image-to-video model when imageUrl is provided
-  const model = request.imageUrl
-    ? KIE_MODELS.VIDEO_SORA_2_IMAGE_TO_VIDEO
-    : (request.model === 'sora-2-pro' ? KIE_MODELS.VIDEO_SORA_2_PRO : KIE_MODELS.VIDEO_SORA_2);
+  // Determine model based on request.model AND whether imageUrl is provided
+  let model: string;
+  if (request.imageUrl) {
+    // Image-to-video: route to Pro i2v if requested, otherwise standard i2v
+    model = request.model === 'sora-2-pro'
+      ? KIE_MODELS.VIDEO_SORA_2_PRO_IMAGE_TO_VIDEO
+      : KIE_MODELS.VIDEO_SORA_2_IMAGE_TO_VIDEO;
+  } else {
+    // Text-to-video: route to Pro t2v if requested, otherwise standard t2v
+    model = request.model === 'sora-2-pro'
+      ? KIE_MODELS.VIDEO_SORA_2_PRO
+      : KIE_MODELS.VIDEO_SORA_2;
+  }
 
   const aspectRatio = request.aspectRatio === '9:16' ? 'portrait' :
                       request.aspectRatio === '16:9' ? 'landscape' : 'portrait';
@@ -623,6 +733,11 @@ export async function generateVideo(request: VideoGenerateRequest): Promise<stri
     n_frames: validFrames,
     remove_watermark: true,
   };
+
+  // Sora 2 Pro image-to-video requires 'size' parameter
+  if (request.model === 'sora-2-pro') {
+    input.size = 'standard';
+  }
 
   if (request.imageUrl) {
     // API expects image_urls as an array, not singular image_url
@@ -650,6 +765,7 @@ export async function generateVideoSync(
 
 /**
  * Start an image generation task
+ * Supports reference images for compositing/style transfer
  */
 export async function generateImage(request: ImageGenerateRequest): Promise<string> {
   // Map aspect ratio to Kie.ai format
@@ -659,11 +775,19 @@ export async function generateImage(request: ImageGenerateRequest): Promise<stri
     '1:1': '1:1',
   };
 
-  return createTask(KIE_MODELS.IMAGE_NANO_BANANA, {
+  const input: Record<string, unknown> = {
     prompt: request.prompt,
     output_format: 'png',
     image_size: imageSizeMap[request.aspectRatio || '9:16'] || '9:16',
-  });
+  };
+
+  // Add reference images for compositing/style transfer
+  if (request.referenceImageUrls && request.referenceImageUrls.length > 0) {
+    input.image_urls = request.referenceImageUrls;
+    console.log(`[Kie.ai] Using ${request.referenceImageUrls.length} reference image(s)`);
+  }
+
+  return createTask(KIE_MODELS.IMAGE_NANO_BANANA, input);
 }
 
 /**
@@ -737,6 +861,425 @@ export async function getWordTimestampsSync(
  */
 export function filterWordTimestamps(result: STTResult): STTWord[] {
   return result.words.filter(word => word.type === 'word');
+}
+
+// ============================================
+// KLING AVATAR GENERATION
+// ============================================
+
+/**
+ * Get the status of a Kling Avatar task
+ */
+async function getAvatarTaskStatus(taskId: string): Promise<KieTask<AvatarResult>> {
+  const response = await kieRequest<RecordInfoApiResponse>(
+    `/playground/recordInfo?taskId=${encodeURIComponent(taskId)}`,
+    'GET'
+  );
+
+  const status = mapStatus(response.data.state);
+  let result: AvatarResult | undefined;
+
+  if (status === 'completed') {
+    let videoUrl: string | undefined;
+
+    // Primary: Extract from resultJson
+    if (response.data.resultJson) {
+      try {
+        const resultData = JSON.parse(response.data.resultJson);
+        videoUrl = resultData.resultUrls?.[0] || resultData.url;
+        console.log('[Kie.ai] Avatar result extracted from resultJson:', videoUrl);
+      } catch (e) {
+        console.error('[Kie.ai] Failed to parse resultJson:', e);
+      }
+    }
+
+    // Fallback: Legacy output format
+    if (!videoUrl && response.data.output?.url) {
+      videoUrl = response.data.output.url;
+    }
+
+    if (videoUrl) {
+      result = {
+        url: videoUrl,
+        duration: response.data.output?.duration || 0,
+        width: response.data.output?.width || 720,
+        height: response.data.output?.height || 1280,
+      };
+    } else {
+      console.error('[Kie.ai] Avatar task completed but no video URL found in response:', JSON.stringify(response.data));
+    }
+  }
+
+  return {
+    taskId,
+    status,
+    result,
+    error: response.data.error || response.data.failMsg || undefined,
+    progress: response.data.progress,
+    createdAt: response.data.created_at || (response.data.createTime ? new Date(response.data.createTime).toISOString() : undefined),
+    completedAt: response.data.completed_at || (response.data.completeTime ? new Date(response.data.completeTime).toISOString() : undefined),
+  };
+}
+
+/**
+ * Start a Kling Avatar video generation task
+ * Takes a photo + audio → produces lip-synced talking head video
+ */
+export async function generateAvatar(request: AvatarGenerateRequest): Promise<string> {
+  const model = request.model === 'kling-avatar-pro'
+    ? KIE_MODELS.KLING_AVATAR_PRO
+    : KIE_MODELS.KLING_AVATAR_STANDARD;
+
+  return createTask(model, {
+    image_url: request.imageUrl,
+    audio_url: request.audioUrl,
+    prompt: request.prompt,
+  });
+}
+
+/**
+ * Generate avatar and wait for completion
+ */
+export async function generateAvatarSync(
+  request: AvatarGenerateRequest,
+  onProgress?: (task: KieTask<AvatarResult>) => void
+): Promise<AvatarResult> {
+  const taskId = await generateAvatar(request);
+  return pollForCompletionWithType(taskId, getAvatarTaskStatus, {
+    onProgress,
+    timeout: 600000, // 10 min timeout — avatar generation can be slow
+  });
+}
+
+// ============================================
+// VEO 3.1 VIDEO GENERATION
+// ============================================
+
+// Veo 3.1 API response types (different from unified API)
+interface Veo3RecordInfoResponse {
+  code: number;
+  msg: string;
+  data: {
+    taskId: string;
+    paramJson?: string;
+    completeTime?: number;
+    response?: {
+      taskId?: string;
+      resultUrls?: string[] | null;
+      originUrls?: string[] | null;
+      resolution?: string;
+    };
+    successFlag: number; // 0=Generating, 1=Success, 2=Failed, 3=Generation Failed
+    errorCode?: number | null;
+    errorMessage?: string | null;
+    createTime?: number;
+  } | null;
+}
+
+/**
+ * Get the status of a Veo 3.1 task
+ * Uses dedicated /veo/record-info endpoint (NOT the unified /playground/recordInfo)
+ */
+async function getVeo3TaskStatus(taskId: string): Promise<KieTask<Veo3Result>> {
+  const response = await kieRequest<Veo3RecordInfoResponse>(
+    `/veo/record-info?taskId=${encodeURIComponent(taskId)}`,
+    'GET'
+  );
+
+  // Handle null data
+  if (!response.data) {
+    console.log('[Kie.ai] Veo 3.1 task not ready yet (data is null)');
+    return {
+      taskId,
+      status: 'pending',
+      result: undefined,
+      error: undefined,
+      progress: 0,
+    };
+  }
+
+  // Map Veo 3.1 successFlag to our status
+  const flagToStatus: Record<number, TaskStatus> = {
+    0: 'processing', // Generating
+    1: 'completed',  // Success
+    2: 'failed',     // Failed
+    3: 'failed',     // Generation Failed
+  };
+
+  const status = flagToStatus[response.data.successFlag] || 'processing';
+  let result: Veo3Result | undefined;
+
+  if (status === 'completed') {
+    const videoUrl = response.data.response?.resultUrls?.[0];
+    if (videoUrl) {
+      console.log('[Kie.ai] Veo 3.1 video URL:', videoUrl);
+      // Parse resolution like "1080x1920"
+      const resolution = response.data.response?.resolution || '1080x1920';
+      const [width, height] = resolution.split('x').map(Number);
+      result = {
+        url: videoUrl,
+        duration: 8, // Veo 3.1 default duration
+        width: width || 1080,
+        height: height || 1920,
+      };
+    } else {
+      console.error('[Kie.ai] Veo 3.1 completed but no video URL:', JSON.stringify(response.data));
+    }
+  }
+
+  return {
+    taskId,
+    status,
+    result,
+    error: response.data.errorMessage || undefined,
+    progress: status === 'completed' ? 100 : (status === 'processing' ? 50 : 0),
+    createdAt: response.data.createTime ? new Date(response.data.createTime).toISOString() : undefined,
+    completedAt: response.data.completeTime ? new Date(response.data.completeTime).toISOString() : undefined,
+  };
+}
+
+/**
+ * Start a Veo 3.1 video generation task
+ * Veo 3.1 generates video WITH native speech from the prompt text.
+ * No separate TTS needed — put the dialogue directly in the prompt.
+ *
+ * Uses dedicated /veo/generate endpoint (not unified createTask)
+ */
+export async function generateVeo3Video(request: Veo3GenerateRequest): Promise<string> {
+  const model = request.model === 'veo3_quality'
+    ? KIE_MODELS.VIDEO_VEO3_QUALITY
+    : KIE_MODELS.VIDEO_VEO3_FAST;
+
+  const body: Record<string, unknown> = {
+    prompt: request.prompt,
+    model,
+    aspect_ratio: request.aspectRatio || '9:16',
+    sound: request.sound !== false,  // Default to audio ON
+  };
+
+  // Add start frame images for image-to-video
+  if (request.imageUrls && request.imageUrls.length > 0) {
+    body.imageUrls = request.imageUrls;
+    body.generationType = 'REFERENCE_2_VIDEO';  // Image-to-video mode
+    console.log(`[Kie.ai] Veo 3.1 using ${request.imageUrls.length} start frame(s)`);
+  }
+
+  if (request.duration) {
+    body.duration = request.duration;
+  }
+
+  // Remove watermark
+  body.watermark = '';
+
+  const response = await kieRequest<CreateTaskApiResponse>('/veo/generate', 'POST', body);
+
+  if (!response.data?.taskId) {
+    console.error('[Kie.ai] Veo 3.1 generate failed:', JSON.stringify(response));
+    throw new Error(`Veo 3.1 generation failed: ${response.msg || 'no taskId'}`);
+  }
+
+  console.log(`[Kie.ai] Veo 3.1 task created: ${response.data.taskId}`);
+  return response.data.taskId;
+}
+
+/**
+ * Generate Veo 3.1 video and wait for completion
+ */
+export async function generateVeo3VideoSync(
+  request: Veo3GenerateRequest,
+  onProgress?: (task: KieTask<Veo3Result>) => void
+): Promise<Veo3Result> {
+  const taskId = await generateVeo3Video(request);
+  return pollForCompletionWithType(
+    taskId,
+    getVeo3TaskStatus,  // Uses /veo/record-info endpoint
+    {
+      onProgress,
+      timeout: 600000,  // 10 min timeout
+      interval: 8000,   // Poll every 8s (Veo 3.1 is slower than Sora)
+    }
+  );
+}
+
+// ============================================
+// VEO 3.1 VIDEO EXTENSION
+// ============================================
+
+export interface Veo3ExtendRequest {
+  taskId: string;           // Task ID from original video or previous extension
+  prompt: string;           // Description of how to continue the video
+  model?: Veo3Model;        // 'veo3_fast' or 'veo3_quality'
+  seed?: number;            // 10000-99999, controls randomness
+}
+
+/**
+ * Extend an existing Veo 3.1 video by ~7 seconds
+ * Uses dedicated /veo/extend endpoint
+ */
+export async function extendVeo3Video(request: Veo3ExtendRequest): Promise<string> {
+  const model = request.model === 'veo3_quality' ? 'quality' : 'fast';
+
+  const body: Record<string, unknown> = {
+    taskId: request.taskId,
+    prompt: request.prompt,
+    model,
+    watermark: '',  // No watermark
+  };
+
+  if (request.seed) {
+    body.seeds = request.seed;
+  }
+
+  const response = await kieRequest<CreateTaskApiResponse>('/veo/extend', 'POST', body);
+
+  if (!response.data?.taskId) {
+    console.error('[Kie.ai] Veo 3.1 extend failed:', JSON.stringify(response));
+    throw new Error(`Veo 3.1 extend failed: ${response.msg || 'no taskId'}`);
+  }
+
+  console.log(`[Kie.ai] Veo 3.1 extend task created: ${response.data.taskId}`);
+  return response.data.taskId;
+}
+
+/**
+ * Extend Veo 3.1 video and wait for completion
+ */
+export async function extendVeo3VideoSync(
+  request: Veo3ExtendRequest,
+  onProgress?: (task: KieTask<Veo3Result>) => void
+): Promise<Veo3Result> {
+  const taskId = await extendVeo3Video(request);
+  return pollForCompletionWithType(
+    taskId,
+    getVeo3TaskStatus,
+    {
+      onProgress,
+      timeout: 600000,
+      interval: 8000,
+    }
+  );
+}
+
+/**
+ * Video duration options for UGC generation
+ * Maps to Veo 3.1 base (8s) + extensions (+7s each)
+ */
+export type VideoDuration = '8s' | '15s' | '22s' | '30s';
+
+export const VIDEO_DURATION_CONFIG: Record<VideoDuration, {
+  label: string;
+  seconds: number;
+  extensions: number;
+  description: string;
+}> = {
+  '8s': { label: 'Quick', seconds: 8, extensions: 0, description: 'FB Feed, hooks, teasers' },
+  '15s': { label: 'Short', seconds: 15, extensions: 1, description: 'TikTok/Reels quick ads' },
+  '22s': { label: 'Standard', seconds: 22, extensions: 2, description: 'TikTok/Reels optimal' },
+  '30s': { label: 'Full', seconds: 30, extensions: 3, description: 'Complete UGC story' },
+};
+
+/**
+ * Generate a Veo 3.1 video with a specific duration
+ * Automatically chains extensions to reach target duration
+ *
+ * @param request - Initial video generation request
+ * @param duration - Target duration ('8s', '15s', '22s', '30s')
+ * @param onProgress - Progress callback for each phase
+ * @returns Final video result with taskId for potential further extensions
+ */
+export async function generateVeo3VideoWithDuration(
+  request: Veo3GenerateRequest,
+  duration: VideoDuration,
+  onProgress?: (phase: string, task: KieTask<Veo3Result>) => void
+): Promise<Veo3Result & { taskId: string }> {
+  const config = VIDEO_DURATION_CONFIG[duration];
+
+  // Phase 1: Generate base video (8s)
+  console.log(`[Kie.ai] Generating ${duration} video (base + ${config.extensions} extensions)`);
+
+  // Get the initial taskId
+  let currentTaskId = await generateVeo3Video(request);
+
+  let result = await pollForCompletionWithType(
+    currentTaskId,
+    getVeo3TaskStatus,
+    {
+      onProgress: (task) => onProgress?.('base', task),
+      timeout: 600000,
+      interval: 8000,
+    }
+  );
+
+  // Chain extensions if needed
+  for (let i = 0; i < config.extensions; i++) {
+    console.log(`[Kie.ai] Extending video (${i + 1}/${config.extensions})`);
+
+    const extendRequest: Veo3ExtendRequest = {
+      taskId: currentTaskId,
+      prompt: request.prompt,  // Continue with same prompt/direction
+      model: request.model,
+    };
+
+    // Get new taskId from extension
+    currentTaskId = await extendVeo3Video(extendRequest);
+
+    result = await pollForCompletionWithType(
+      currentTaskId,
+      getVeo3TaskStatus,
+      {
+        onProgress: (task) => onProgress?.(`extend-${i + 1}`, task),
+        timeout: 600000,
+        interval: 8000,
+      }
+    );
+  }
+
+  // Update duration to reflect actual length
+  result.duration = config.seconds;
+
+  return { ...result, taskId: currentTaskId };
+}
+
+// ============================================
+// KLING 2.6 VIDEO GENERATION (Motion Graphics)
+// ============================================
+
+/**
+ * Start a Kling 2.6 video generation task
+ * Best for: product reveals, motion design, sleek animations
+ * NOT for talking heads — use Veo 3.1 for that
+ */
+export async function generateKling26Video(request: Kling26GenerateRequest): Promise<string> {
+  const input: Record<string, unknown> = {
+    prompt: request.prompt,
+    duration: request.duration || '5',
+    sound: request.sound ?? false,  // Required by Kling 2.6 API
+  };
+
+  if (request.imageUrls && request.imageUrls.length > 0) {
+    input.image_urls = request.imageUrls;
+  }
+
+  return createTask(KIE_MODELS.VIDEO_KLING_2_6, input);
+}
+
+/**
+ * Generate Kling 2.6 video and wait for completion
+ */
+export async function generateKling26VideoSync(
+  request: Kling26GenerateRequest,
+  onProgress?: (task: KieTask<Kling26Result>) => void
+): Promise<Kling26Result> {
+  const taskId = await generateKling26Video(request);
+  return pollForCompletionWithType(
+    taskId,
+    getVideoTaskStatus as (id: string) => Promise<KieTask<Kling26Result>>,
+    {
+      onProgress,
+      timeout: 600000,
+      interval: 5000,
+    }
+  );
 }
 
 // ============================================
@@ -983,6 +1526,23 @@ export const KieService = {
   getWordTimestamps,
   getWordTimestampsSync,
   filterWordTimestamps,
+
+  // Kling Avatar
+  generateAvatar,
+  generateAvatarSync,
+  getAvatarTaskStatus,
+
+  // Veo 3.1
+  generateVeo3Video,
+  generateVeo3VideoSync,
+  extendVeo3Video,
+  extendVeo3VideoSync,
+  generateVeo3VideoWithDuration,
+  VIDEO_DURATION_CONFIG,
+
+  // Kling 2.6
+  generateKling26Video,
+  generateKling26VideoSync,
 
   // Prompt helpers
   buildVideoPrompt,
