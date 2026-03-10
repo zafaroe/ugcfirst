@@ -324,7 +324,8 @@ export function addWatermark(
 // ============================================
 
 /**
- * Concatenate multiple videos
+ * Concatenate multiple videos (requires matching codecs)
+ * Use concatenateVideosReencode for videos from different sources
  */
 export function concatenateVideos(
   inputPaths: string[],
@@ -350,6 +351,71 @@ export function concatenateVideos(
       })
       .on('error', (err) => {
         fs.unlinkSync(listPath);
+        reject(err);
+      })
+      .run();
+  });
+}
+
+/**
+ * Concatenate videos with re-encoding (handles different codecs)
+ * Used when concatenating videos from different AI sources (e.g., Veo 3.1 + Kling 2.6)
+ *
+ * Uses filter_complex to handle videos with different codecs, resolutions, etc.
+ */
+export function concatenateVideosReencode(
+  inputPaths: string[],
+  outputPath?: string
+): Promise<string> {
+  const output = outputPath || generateTempPath('concatenated', '.mp4');
+
+  console.log(`[FFmpeg] Re-encoding concatenation of ${inputPaths.length} videos`);
+
+  return new Promise((resolve, reject) => {
+    // Build filter complex for scaling and concatenating
+    // Scale all videos to 720x1280 (9:16) and normalize frame rate
+    const scaleFilters = inputPaths.map((_, i) =>
+      `[${i}:v]scale=720:1280:force_original_aspect_ratio=decrease,pad=720:1280:(ow-iw)/2:(oh-ih)/2,fps=30,setsar=1[v${i}];`
+    ).join('');
+
+    const audioFilters = inputPaths.map((_, i) =>
+      `[${i}:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a${i}];`
+    ).join('');
+
+    const videoConcat = inputPaths.map((_, i) => `[v${i}]`).join('') + `concat=n=${inputPaths.length}:v=1:a=0[outv];`;
+    const audioConcat = inputPaths.map((_, i) => `[a${i}]`).join('') + `concat=n=${inputPaths.length}:v=0:a=1[outa]`;
+
+    const filterComplex = scaleFilters + audioFilters + videoConcat + audioConcat;
+
+    let command = ffmpeg();
+
+    // Add all input files
+    inputPaths.forEach((inputPath) => {
+      command = command.input(inputPath);
+    });
+
+    command
+      .complexFilter(filterComplex)
+      .outputOptions([
+        '-map', '[outv]',
+        '-map', '[outa]',
+        '-c:v', 'libx264',
+        '-preset', 'fast',
+        '-crf', '23',
+        '-c:a', 'aac',
+        '-b:a', '128k',
+        '-movflags', '+faststart',
+      ])
+      .output(output)
+      .on('start', (cmd) => {
+        console.log(`[FFmpeg] Concatenate command: ${cmd.substring(0, 200)}...`);
+      })
+      .on('end', () => {
+        console.log(`[FFmpeg] Re-encoding concatenation complete: ${output}`);
+        resolve(output);
+      })
+      .on('error', (err) => {
+        console.error(`[FFmpeg] Re-encoding concatenation failed:`, err);
         reject(err);
       })
       .run();
@@ -515,6 +581,7 @@ export const FFmpegService = {
   burnCaptions: burnSubtitles, // backward compat
   addWatermark,
   concatenateVideos,
+  concatenateVideosReencode,
   convertToWebMp4,
   createThumbnail,
   processVideo,

@@ -30,7 +30,7 @@ import {
 } from '@/lib/ai/kie';
 import { SoraService } from '@/lib/ai/sora';
 import { uploadFrame, uploadVideo, uploadSubtitledVideo, R2Paths, getSignedDownloadUrl, getPublicUrl, uploadToR2, downloadVideo, downloadFromR2 } from '@/lib/r2';
-import { burnSubtitles, cleanupTempFile, extractAudio, addWatermark, concatenateVideos } from '@/lib/ffmpeg';
+import { burnSubtitles, cleanupTempFile, extractAudio, addWatermark, concatenateVideos, concatenateVideosReencode } from '@/lib/ffmpeg';
 import { generateASSFile } from '@/lib/subtitles/ass-generator';
 import { WordTimestamp } from '@/lib/subtitles/stt';
 import { confirmCredits, refundCredits } from '@/services/credits';
@@ -1559,7 +1559,7 @@ export async function stepGenerateEndScreen(
 
 /**
  * Concatenate main video with end screen video
- * Uses FFmpeg concat filter for seamless joining
+ * Uses FFmpeg re-encoding to handle different codecs (Veo 3.1 + Kling 2.6)
  */
 export async function stepConcatenateWithEndScreen(
   generationId: string,
@@ -1567,27 +1567,34 @@ export async function stepConcatenateWithEndScreen(
   endScreenR2Key: string,
 ): Promise<{ videoR2Key: string; videoSignedUrl: string; duration: number }> {
   console.log('[Pipeline:DIY] Step 9.7: Concatenating main + end screen...');
+  console.log(`[Pipeline:DIY] Main video: ${mainVideoR2Key}`);
+  console.log(`[Pipeline:DIY] End screen: ${endScreenR2Key}`);
 
   const tempFiles: string[] = [];
 
   try {
     const mainBuffer = await downloadFromR2(mainVideoR2Key);
+    console.log(`[Pipeline:DIY] Downloaded main video: ${mainBuffer.length} bytes`);
     const mainPath = path.join(os.tmpdir(), `ugcfirst_main_${generationId}_${Date.now()}.mp4`);
     fs.writeFileSync(mainPath, mainBuffer);
     tempFiles.push(mainPath);
 
     const endBuffer = await downloadFromR2(endScreenR2Key);
+    console.log(`[Pipeline:DIY] Downloaded end screen: ${endBuffer.length} bytes`);
     const endPath = path.join(os.tmpdir(), `ugcfirst_end_${generationId}_${Date.now()}.mp4`);
     fs.writeFileSync(endPath, endBuffer);
     tempFiles.push(endPath);
 
-    const concatPath = await concatenateVideos([mainPath, endPath]);
+    // Use re-encoding concatenation to handle different codecs from Veo 3.1 and Kling 2.6
+    const concatPath = await concatenateVideosReencode([mainPath, endPath]);
     tempFiles.push(concatPath);
 
     const concatBuffer = fs.readFileSync(concatPath);
+    console.log(`[Pipeline:DIY] Concatenated video: ${concatBuffer.length} bytes`);
     await uploadToR2(mainVideoR2Key, concatBuffer, { contentType: 'video/mp4' });
     const signedUrl = await getSignedDownloadUrl(mainVideoR2Key);
 
+    console.log('[Pipeline:DIY] End screen concatenation complete');
     return { videoR2Key: mainVideoR2Key, videoSignedUrl: signedUrl, duration: 13 };
   } finally {
     for (const f of tempFiles) {
