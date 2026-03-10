@@ -1,34 +1,11 @@
 import { inngest, Events } from '../client';
 import { Pipeline } from '@/lib/generation/pipeline';
-import {
-  stepAnalyzeProduct,
-  stepGenerateScripts,
-  stepUseCustomScript,
-  stepGenerateFrames,
-  stepUploadFrames,
-  stepGenerateVideoWithFallback,
-  stepGenerateSubtitles,
-  stepBurnSubtitles,
-  stepAddWatermark,
-  stepGenerateComposite,
-  stepAnimateWithVeo31,
-  stepGenerateEndScreen,
-  stepConcatenateWithEndScreen,
-  updateGenerationStatus,
-  generateStrategy as generateStrategyBrief,
-  GeneratedFrame,
-  CompletedVideo,
-  GeneratedSubtitle,
-  BurnedSubtitleVideo,
-} from '@/lib/generation/pipeline';
 import { CreditService } from '@/services/credits';
-import { confirmCredits, refundCredits } from '@/services/credits';
 import { getAdminClient } from '@/lib/supabase';
 import { FFmpegService } from '@/lib/ffmpeg';
 import { KieService } from '@/lib/ai/kie';
 import { ASSGenerator } from '@/lib/subtitles/ass-generator';
 import { uploadVideo, downloadFromR2 } from '@/lib/r2';
-import { PersonaProfile, GenerationVideo, GeneratedScript } from '@/types/generation';
 import * as path from 'path';
 import * as os from 'os';
 
@@ -87,301 +64,78 @@ export const generateVideo = inngest.createFunction(
       spotlightDuration,
     } = event.data;
 
-    // Spotlight mode should use the dedicated generateSpotlight function
-    if (mode === 'spotlight') {
-      throw new Error('Spotlight mode should use generation/spotlight-start event, not generation/start');
-    }
-
     try {
-      // ══════════════════════════════════════════════════════════════
-      // STEP 1: ANALYZE PRODUCT
-      // ══════════════════════════════════════════════════════════════
-      const persona = await step.run('analyze-product', async () => {
-        const supabase = getAdminClient();
-        await supabase
-          .from('generations')
-          .update({ started_at: new Date().toISOString() })
-          .eq('id', generationId);
+      // Spotlight mode should use the dedicated generateSpotlight function
+      if (mode === 'spotlight') {
+        throw new Error('Spotlight mode should use generation/spotlight-start event, not generation/start');
+      }
 
-        if (existingPersona) {
-          console.log('[Pipeline] Reusing existing persona (regeneration)');
-          await updateGenerationStatus(generationId, 'analyzing', 1, {
-            persona_profile: existingPersona,
-          } as any);
-          return existingPersona as PersonaProfile;
-        }
-
-        return stepAnalyzeProduct(generationId, productImageUrl, productName);
+      // Step 1: Run the full pipeline (includes polling and caption burning)
+      const result = await step.run('run-pipeline', async () => {
+        return Pipeline.run({
+          generationId,
+          productName,
+          productImageUrl,
+          templateId,
+          mode,
+          voiceId,
+          captionsEnabled: captionsEnabled ?? false,
+          applyWatermark: applyWatermark ?? false,
+          existingPersona,
+          customScript,
+          endScreenEnabled,
+          endScreenCtaText,
+          endScreenBrandText,
+          spotlightCategoryId,
+          spotlightStyleId,
+          spotlightDuration,
+        });
       });
 
-      if (mode === 'diy') {
-        // ══════════════════════════════════════════════════════════════
-        // DIY PIPELINE (Veo 3.1 + Compositing)
-        // ══════════════════════════════════════════════════════════════
+      // Step 2: Store subtitle words in DB (separate step = checkpoint after pipeline)
+      if (captionsEnabled && result.videos.length > 0 && result.subtitles) {
+        await step.run('store-subtitle-data', async () => {
+          const supabase = getAdminClient();
 
-        // Step 2: Use custom script
-        const scripts = await step.run('diy-use-script', async () => {
-          return stepUseCustomScript(generationId, customScript, persona, productName);
-        });
+          for (let i = 0; i < result.videos.length; i++) {
+            const video = result.videos[i];
+            const subtitle = result.subtitles[i];
 
-        // Step 3: Generate composite image
-        const composite = await step.run('diy-generate-composite', async () => {
-          return stepGenerateComposite(
-            generationId,
-            productImageUrl,
-            productName,
-            persona,
-            templateId
-          );
-        });
-
-        // Step 4: Animate with Veo 3.1
-        const diyVideo = await step.run('diy-animate', async () => {
-          return stepAnimateWithVeo31(
-            generationId,
-            composite.compositeImageUrl,
-            scripts[0],
-            productName,
-            templateId
-          );
-        });
-
-        // Build CompletedVideo for subtitle/watermark steps
-        const videos: CompletedVideo[] = [
-          {
-            scriptIndex: 0,
-            videoR2Key: diyVideo.videoR2Key,
-            videoSignedUrl: diyVideo.videoSignedUrl,
-            duration: diyVideo.duration,
-          },
-        ];
-
-        // Step 5: Generate and burn subtitles (if enabled)
-        const subtitlesEnabled = captionsEnabled ?? false;
-        let subtitleData = { subtitles: [] as GeneratedSubtitle[], burnedSubtitles: [] as BurnedSubtitleVideo[] };
-
-        if (subtitlesEnabled) {
-          subtitleData = await step.run('diy-subtitles', async () => {
-            const subs = await stepGenerateSubtitles(generationId, videos);
-            let burned: BurnedSubtitleVideo[] = [];
-            if (subs.length > 0 && subs[0].words.length > 0) {
-              burned = await stepBurnSubtitles(generationId, videos, subs);
+            if (subtitle && subtitle.words.length > 0) {
+              await supabase
+                .from('video_jobs')
+                .update({
+                  captions: subtitle.words,
+                })
+                .eq('generation_id', generationId)
+                .eq('script_index', video.scriptIndex);
             }
-            return { subtitles: subs, burnedSubtitles: burned };
-          });
-        }
-
-        // Step 6: Watermark (if free tier)
-        if (applyWatermark) {
-          await step.run('diy-watermark', async () => {
-            await stepAddWatermark(generationId, videos, subtitleData.burnedSubtitles);
-          });
-        }
-
-        // Step 7: End screen (if enabled)
-        let finalVideoR2Key = subtitleData.burnedSubtitles[0]?.videoSubtitledR2Key || diyVideo.videoR2Key;
-        let finalDuration = diyVideo.duration;
-
-        if (endScreenEnabled && endScreenCtaText) {
-          const endScreenResult = await step.run('diy-end-screen', async () => {
-            const endScreen = await stepGenerateEndScreen(
-              generationId,
-              productImageUrl,
-              productName,
-              endScreenCtaText,
-              endScreenBrandText
-            );
-
-            const videoToConcat = subtitleData.burnedSubtitles[0]?.videoSubtitledR2Key || diyVideo.videoR2Key;
-            const concatResult = await stepConcatenateWithEndScreen(
-              generationId,
-              videoToConcat,
-              endScreen.videoR2Key
-            );
-
-            return concatResult;
-          });
-
-          finalVideoR2Key = endScreenResult.videoR2Key;
-          finalDuration = endScreenResult.duration;
-        }
-
-        // Step 8: Finalize
-        await step.run('diy-finalize', async () => {
-          const subtitledKeyMap = new Map(
-            subtitleData.burnedSubtitles.map((bs) => [bs.scriptIndex, bs.videoSubtitledR2Key])
-          );
-
-          const generationVideos: GenerationVideo[] = [
-            {
-              scriptIndex: 0,
-              frameUrl: composite.compositeImageUrl,
-              videoR2Key: finalVideoR2Key,
-              videoSubtitledR2Key: subtitledKeyMap.get(0),
-              duration: finalDuration,
-              subtitleWords: subtitleData.subtitles[0]?.words,
-            },
-          ];
-
-          await updateGenerationStatus(generationId, 'completed', 10, {
-            videos: generationVideos,
-            strategy_brief: null,
-          } as any);
-
-          if (creditTransactionId) {
-            await confirmCredits(creditTransactionId);
           }
         });
-
-        return {
-          success: true,
-          generationId,
-          scriptsGenerated: scripts.length,
-          videosGenerated: 1,
-          subtitlesGenerated: subtitleData.subtitles.filter((s) => s.words.length > 0).length,
-        };
-      } else {
-        // ══════════════════════════════════════════════════════════════
-        // CONCIERGE PIPELINE (Sora 2 with 5-tier fallback)
-        // ══════════════════════════════════════════════════════════════
-
-        // Step 2: Generate or use custom script
-        const scripts = await step.run('generate-scripts', async () => {
-          if (customScript && customScript.trim().length > 0) {
-            console.log('[Pipeline:Concierge] Using pre-approved custom script');
-            return stepUseCustomScript(generationId, customScript, persona, productName);
-          }
-          console.log('[Pipeline:Concierge] Generating scripts from scratch');
-          return stepGenerateScripts(generationId, persona, productName);
-        });
-
-        // Step 3+4: Generate frames AND upload to R2 in same step
-        // CRITICAL: Must be same step — GeneratedFrame.imageBuffer is a Buffer
-        // that cannot survive Inngest JSON serialization between steps
-        const uploadResult = await step.run('generate-and-upload-frames', async () => {
-          const frames = await stepGenerateFrames(generationId, productImageUrl, productName, scripts, persona);
-          const urls = await stepUploadFrames(generationId, frames);
-
-          // Return ONLY serializable data (no Buffers)
-          const frameData = frames.map((frame, i) => ({
-            scriptIndex: frame.scriptIndex,
-            prompt: frame.prompt,
-            imageUrl: urls[i],
-          }));
-          return { urls, frameData };
-        });
-
-        const frameUrls = uploadResult.urls;
-
-        // Step 5: Generate video with 5-tier fallback (longest step ~120-300s)
-        const videos = await step.run('generate-video', async () => {
-          // Reconstruct frames with just the data needed for video generation
-          const framesForVideo = uploadResult.frameData.map((fd) => ({
-            scriptIndex: fd.scriptIndex,
-            prompt: fd.prompt,
-            imageUrl: fd.imageUrl,
-          })) as GeneratedFrame[];
-          return stepGenerateVideoWithFallback(generationId, scripts as GeneratedScript[], framesForVideo, frameUrls);
-        });
-
-        // Step 6: Generate and burn subtitles (if enabled)
-        const subtitlesEnabled = captionsEnabled ?? false;
-        let subtitleData = { subtitles: [] as GeneratedSubtitle[], burnedSubtitles: [] as BurnedSubtitleVideo[] };
-
-        if (subtitlesEnabled) {
-          subtitleData = await step.run('generate-subtitles', async () => {
-            console.log(`[Pipeline] Generating subtitles for ${videos.length} videos...`);
-            const subs = await stepGenerateSubtitles(generationId, videos);
-            let burned: BurnedSubtitleVideo[] = [];
-            if (subs.length > 0) {
-              burned = await stepBurnSubtitles(generationId, videos, subs);
-            }
-            return { subtitles: subs, burnedSubtitles: burned };
-          });
-        }
-
-        // Step 7: Watermark (if free tier)
-        if (applyWatermark) {
-          await step.run('add-watermark', async () => {
-            await stepAddWatermark(generationId, videos, subtitleData.burnedSubtitles);
-          });
-        }
-
-        // Step 8: Generate strategy (Concierge only)
-        const strategyBrief = await step.run('concierge-generate-strategy', async () => {
-          try {
-            console.log('[Pipeline] Generating strategy brief...');
-            return await generateStrategyBrief(generationId);
-          } catch (error) {
-            console.error('[Pipeline] Strategy generation failed:', error);
-            return null;
-          }
-        });
-
-        // Step 9: Finalize — mark complete + confirm credits
-        await step.run('finalize', async () => {
-          const subtitledKeyMap = new Map(
-            subtitleData.burnedSubtitles.map((bs) => [bs.scriptIndex, bs.videoSubtitledR2Key])
-          );
-
-          const generationVideos: GenerationVideo[] = videos.map((v, i) => ({
-            scriptIndex: v.scriptIndex,
-            frameUrl: frameUrls[i],
-            videoR2Key: v.videoR2Key,
-            videoSubtitledR2Key: subtitledKeyMap.get(v.scriptIndex),
-            duration: v.duration,
-            subtitleWords: subtitleData.subtitles[i]?.words,
-          }));
-
-          await updateGenerationStatus(generationId, 'completed', 10, {
-            videos: generationVideos,
-            strategy_brief: strategyBrief,
-          } as any);
-
-          if (creditTransactionId) {
-            await confirmCredits(creditTransactionId);
-          }
-        });
-
-        // Step 10: Store subtitle data in DB
-        if (subtitlesEnabled && videos.length > 0 && subtitleData.subtitles.length > 0) {
-          await step.run('store-subtitle-data', async () => {
-            const supabase = getAdminClient();
-            for (let i = 0; i < videos.length; i++) {
-              const video = videos[i];
-              const subtitle = subtitleData.subtitles[i];
-              if (subtitle && subtitle.words.length > 0) {
-                await supabase
-                  .from('video_jobs')
-                  .update({ captions: subtitle.words })
-                  .eq('generation_id', generationId)
-                  .eq('script_index', video.scriptIndex);
-              }
-            }
-          });
-        }
-
-        return {
-          success: true,
-          generationId,
-          scriptsGenerated: scripts.length,
-          videosGenerated: videos.length,
-          subtitlesGenerated: subtitleData.subtitles.filter((s) => s.words.length > 0).length,
-        };
       }
+
+      // Step 3: Confirm credits on success
+      await step.run('confirm-credits', async () => {
+        if (creditTransactionId) {
+          await CreditService.confirmCredits(creditTransactionId);
+        }
+      });
+
+      return {
+        success: true,
+        generationId,
+        scriptsGenerated: result.scripts.length,
+        videosGenerated: result.videos.length,
+        subtitlesGenerated: result.subtitles?.filter((s) => s.words.length > 0).length || 0,
+      };
     } catch (error) {
       // Refund credits on failure
       await step.run('refund-credits', async () => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-        // Mark generation as failed
-        await updateGenerationStatus(generationId, 'failed', -1, {
-          error_message: errorMessage,
-        } as any);
-
-        // Refund credits
         if (creditTransactionId) {
-          await refundCredits(creditTransactionId, `Generation failed: ${errorMessage}`);
+          await CreditService.refundCredits(
+            creditTransactionId,
+            `Generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
         }
       });
 
