@@ -176,9 +176,12 @@ export async function POST(request: NextRequest) {
       .eq('id', generation.id);
 
     // Route spotlight to dedicated function for proper Inngest checkpointing
+    // Note: Using timestamp in event ID to avoid deduplication issues on retries
+    const eventTimestamp = Date.now();
+
     if (mode === 'spotlight') {
       await inngest.send({
-        id: `generation-${generation.id}`,
+        id: `generation-${generation.id}-${eventTimestamp}`,
         name: 'generation/spotlight-start',
         data: {
           generationId: generation.id,
@@ -195,7 +198,7 @@ export async function POST(request: NextRequest) {
     } else {
       // DIY / Concierge use the original function
       await inngest.send({
-        id: `generation-${generation.id}`,
+        id: `generation-${generation.id}-${eventTimestamp}`,
         name: 'generation/start',
         data: {
           generationId: generation.id,

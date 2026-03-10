@@ -162,8 +162,9 @@ export async function POST(request: NextRequest) {
       .eq('id', newGeneration.id);
 
     // 7. Trigger generation pipeline with existingPersona to skip analysis
+    // Note: Using timestamp in event ID to avoid deduplication issues on retries
     await inngest.send({
-      id: `generation-${newGeneration.id}`,
+      id: `generation-${newGeneration.id}-${Date.now()}`,
       name: 'generation/start',
       data: {
         generationId: newGeneration.id,
