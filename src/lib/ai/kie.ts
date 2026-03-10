@@ -39,6 +39,7 @@ const KIE_MODELS = {
   VIDEO_SORA_2_PRO: 'sora-2-pro-text-to-video',
   VIDEO_SORA_2_IMAGE_TO_VIDEO: 'sora-2-image-to-video',
   VIDEO_SORA_2_PRO_IMAGE_TO_VIDEO: 'sora-2-pro-image-to-video',
+  VIDEO_SORA_2_STABLE_IMAGE_TO_VIDEO: 'sora-2-image-to-video-stable',
 
   // Text-to-Speech
   TTS_ELEVENLABS: 'elevenlabs/text-to-speech-multilingual-v2',
@@ -127,7 +128,7 @@ interface RecordInfoApiResponse {
 // TYPES - Video Generation
 // ============================================
 
-export type VideoModel = 'sora-2' | 'sora-2-pro' | 'veo-3';
+export type VideoModel = 'sora-2-stable' | 'sora-2' | 'sora-2-pro' | 'veo-3';
 
 export interface VideoGenerateRequest {
   model?: VideoModel;
@@ -709,15 +710,22 @@ export async function generateVideo(request: VideoGenerateRequest): Promise<stri
   // Determine model based on request.model AND whether imageUrl is provided
   let model: string;
   if (request.imageUrl) {
-    // Image-to-video: route to Pro i2v if requested, otherwise standard i2v
-    model = request.model === 'sora-2-pro'
-      ? KIE_MODELS.VIDEO_SORA_2_PRO_IMAGE_TO_VIDEO
-      : KIE_MODELS.VIDEO_SORA_2_IMAGE_TO_VIDEO;
+    // Image-to-video variants
+    if (request.model === 'sora-2-stable') {
+      model = KIE_MODELS.VIDEO_SORA_2_STABLE_IMAGE_TO_VIDEO;
+    } else if (request.model === 'sora-2-pro') {
+      model = KIE_MODELS.VIDEO_SORA_2_PRO_IMAGE_TO_VIDEO;
+    } else {
+      model = KIE_MODELS.VIDEO_SORA_2_IMAGE_TO_VIDEO;
+    }
   } else {
-    // Text-to-video: route to Pro t2v if requested, otherwise standard t2v
-    model = request.model === 'sora-2-pro'
-      ? KIE_MODELS.VIDEO_SORA_2_PRO
-      : KIE_MODELS.VIDEO_SORA_2;
+    // Text-to-video: Sora 2 Stable only has an image-to-video variant
+    // For text-to-video, fall through to standard Sora 2
+    if (request.model === 'sora-2-pro') {
+      model = KIE_MODELS.VIDEO_SORA_2_PRO;
+    } else {
+      model = KIE_MODELS.VIDEO_SORA_2;
+    }
   }
 
   const aspectRatio = request.aspectRatio === '9:16' ? 'portrait' :
@@ -1353,6 +1361,7 @@ const CREDIT_TO_USD = 0.005; // $0.005 per credit
 
 export function estimateVideoCost(model: VideoModel, durationSeconds: number): CostEstimate {
   const creditsPerSecond: Record<VideoModel, number> = {
+    'sora-2-stable': 1.5, // ~15 credits for 10s (cheapest, most reliable)
     'sora-2': 1.5, // ~15 credits for 10s
     'sora-2-pro': 6, // ~60 credits for 10s
     'veo-3': 20, // ~200 credits for 10s
