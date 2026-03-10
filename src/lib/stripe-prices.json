@@ -2,44 +2,44 @@
   "subscriptions": {
     "starter": {
       "product": "prod_U6jysDrj5cV8mu",
-      "monthly": "price_1T8WUPCpeigxTxH6AGHHwlfD",
-      "annual": "price_1T8WUQCpeigxTxH6Ws71jrL9"
+      "monthly": "price_1T9YQVCpeigxTxH6ty0z6IdZ",
+      "annual": "price_1T9YQVCpeigxTxH64mgjB7Qc"
     },
     "pro": {
       "product": "prod_U6jydrOG6DvA3Y",
-      "monthly": "price_1T8WUSCpeigxTxH68TG4gccU",
-      "annual": "price_1T8WUSCpeigxTxH6MXe2AVj6"
+      "monthly": "price_1T9YQXCpeigxTxH6Ti0ijiiv",
+      "annual": "price_1T9YQYCpeigxTxH6RQpJ36BY"
     },
     "plus": {
       "product": "prod_U6jy3L7Nm8agGd",
-      "monthly": "price_1T8WUUCpeigxTxH6wDM1QgF8",
-      "annual": "price_1T8WUVCpeigxTxH6pr6zdAcf"
+      "monthly": "price_1T9YQaCpeigxTxH6z0GAA4qv",
+      "annual": "price_1T9YQaCpeigxTxH6ASQ7IIFm"
     },
     "agency": {
       "product": "prod_U6jyR9IWzKMs1p",
-      "monthly": "price_1T8WUXCpeigxTxH66Mwggjna",
-      "annual": "price_1T8WUXCpeigxTxH6Qu0KHOVN"
+      "monthly": "price_1T9YQcCpeigxTxH6fBqvsQSB",
+      "annual": "price_1T9YQdCpeigxTxH6Cs58rFak"
     }
   },
   "credit_packs": {
     "pack-starter": {
       "product": "prod_U6jy3BIV8BTk6U",
-      "price": "price_1T8WUZCpeigxTxH6dzfpvGJr",
+      "price": "price_1T9YQfCpeigxTxH6PiMS9oYa",
       "credits": 30
     },
     "pack-growth": {
       "product": "prod_U6jykUhljUqYQB",
-      "price": "price_1T8WUaCpeigxTxH68eZtDmtd",
+      "price": "price_1T9YQgCpeigxTxH6c1kinwgk",
       "credits": 80
     },
     "pack-scale": {
       "product": "prod_U6jyYd70cElmNb",
-      "price": "price_1T8WUcCpeigxTxH6Dg7K1bEK",
+      "price": "price_1T9YQiCpeigxTxH6PAwpLekx",
       "credits": 200
     },
     "pack-bulk": {
       "product": "prod_U6jyFuE55GgTmC",
-      "price": "price_1T8WUeCpeigxTxH6EElVVThR",
+      "price": "price_1T9YQjCpeigxTxH6kSUd7lUa",
       "credits": 400
     }
   }
