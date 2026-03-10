@@ -10,13 +10,13 @@ export const size = {
 export const contentType = 'image/png'
 
 export default async function Image() {
-  // Load Outfit font
+  // Load Outfit font from local files (avoids Google Fonts URL issues)
   const outfitBold = fetch(
-    new URL('https://fonts.gstatic.com/s/outfit/v11/QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1C4G-EiAou6Y.woff2')
+    new URL('../../public/fonts/Outfit-Bold.ttf', import.meta.url)
   ).then((res) => res.arrayBuffer())
 
   const outfitExtraBold = fetch(
-    new URL('https://fonts.gstatic.com/s/outfit/v11/QGYyz_MVcBeNP4NjuGObqx1XmO1I4e-0C4G-EiAou6Y.woff2')
+    new URL('../../public/fonts/Outfit-ExtraBold.ttf', import.meta.url)
   ).then((res) => res.arrayBuffer())
 
   return new ImageResponse(
