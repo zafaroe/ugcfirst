@@ -43,6 +43,21 @@ export type Events = {
     };
   };
 
+  // Spotlight-specific generation (separate from generation/start for dedicated checkpointing)
+  'generation/spotlight-start': {
+    data: {
+      generationId: string;
+      userId: string;
+      productName: string;
+      productImageUrl: string;
+      creditTransactionId: string;
+      applyWatermark?: boolean;
+      spotlightCategoryId: string;
+      spotlightStyleId: string;
+      spotlightDuration?: '5' | '10';
+    };
+  };
+
   // Video processing events
   'video/process': {
     data: {

@@ -22,3 +22,6 @@ export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: allFunctions,
 });
+
+// Allow Inngest functions up to 300s per step (Vercel Pro required)
+export const maxDuration = 300;

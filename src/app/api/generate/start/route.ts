@@ -143,6 +143,10 @@ export async function POST(request: NextRequest) {
         status: 'queued',
         current_step: 0,
         total_steps: totalSteps,
+        // Spotlight-specific columns (null for non-spotlight modes)
+        spotlight_category_id: mode === 'spotlight' ? spotlightCategoryId : null,
+        spotlight_style_id: mode === 'spotlight' ? spotlightStyleId : null,
+        spotlight_duration: mode === 'spotlight' ? spotlightDuration : null,
       })
       .select('id')
       .single();
@@ -171,32 +175,47 @@ export async function POST(request: NextRequest) {
       .update({ credit_transaction_id: holdResult.transactionId })
       .eq('id', generation.id);
 
-    // Trigger background job with idempotency key to prevent duplicates
-    await inngest.send({
-      id: `generation-${generation.id}`,
-      name: 'generation/start',
-      data: {
-        generationId: generation.id,
-        userId: user.id,
-        productName,
-        productImageUrl,
-        avatarId,
-        templateId,
-        customScript,
-        captionsEnabled: mode === 'spotlight' ? false : captionsEnabled,
-        endScreenEnabled,
-        endScreenCtaText,
-        endScreenBrandText,
-        mode,
-        creditTransactionId: holdResult.transactionId,
-        applyWatermark,
-        existingPersona: existingPersona || undefined, // Reuse persona (avoid re-analysis)
-        // Spotlight-specific fields
-        spotlightCategoryId,
-        spotlightStyleId,
-        spotlightDuration,
-      },
-    });
+    // Route spotlight to dedicated function for proper Inngest checkpointing
+    if (mode === 'spotlight') {
+      await inngest.send({
+        id: `generation-${generation.id}`,
+        name: 'generation/spotlight-start',
+        data: {
+          generationId: generation.id,
+          userId: user.id,
+          productName,
+          productImageUrl,
+          creditTransactionId: holdResult.transactionId,
+          applyWatermark,
+          spotlightCategoryId: spotlightCategoryId!,
+          spotlightStyleId: spotlightStyleId!,
+          spotlightDuration: spotlightDuration as '5' | '10',
+        },
+      });
+    } else {
+      // DIY / Concierge use the original function
+      await inngest.send({
+        id: `generation-${generation.id}`,
+        name: 'generation/start',
+        data: {
+          generationId: generation.id,
+          userId: user.id,
+          productName,
+          productImageUrl,
+          avatarId,
+          templateId,
+          customScript,
+          captionsEnabled: captionsEnabled ?? false,
+          endScreenEnabled,
+          endScreenCtaText,
+          endScreenBrandText,
+          mode,
+          creditTransactionId: holdResult.transactionId,
+          applyWatermark,
+          existingPersona: existingPersona || undefined, // Reuse persona (avoid re-analysis)
+        },
+      });
+    }
 
     // Estimate time based on mode
     // Spotlight: ~2 mins (1 image + 1 video)

@@ -66,6 +66,11 @@ export const generateVideo = inngest.createFunction(
     } = event.data;
 
     try {
+      // Spotlight mode should use the dedicated generateSpotlight function
+      if (mode === 'spotlight') {
+        throw new Error('Spotlight mode should use generation/spotlight-start event, not generation/start');
+      }
+
       // Step 1: Run the full pipeline (now includes polling and caption burning)
       const result = await step.run('run-pipeline', async () => {
         return Pipeline.run({
@@ -135,6 +140,240 @@ export const generateVideo = inngest.createFunction(
             creditTransactionId,
             `Generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
           );
+        }
+      });
+
+      throw error;
+    }
+  }
+);
+
+// ============================================
+// SPOTLIGHT GENERATION FUNCTION
+// ============================================
+
+/**
+ * Spotlight Animation Background Job
+ *
+ * Dedicated function for Spotlight mode that breaks each phase
+ * into its own Inngest step for proper checkpointing.
+ *
+ * Spotlight pipeline (3 checkpointed steps):
+ * 1. Generate enhanced product frame (Nano Banana)
+ * 2. Animate frame (Kling 2.6, with Veo 3.1 fallback)
+ * 3. Finalize + confirm credits
+ *
+ * Each step is a separate HTTP request, so Vercel timeouts
+ * only apply per-step, not across the whole pipeline.
+ */
+export const generateSpotlight = inngest.createFunction(
+  {
+    id: 'generate-spotlight',
+    name: 'Generate Spotlight Animation',
+    retries: 2,
+    cancelOn: [
+      {
+        event: 'generation/cancel',
+        match: 'data.generationId',
+      },
+    ],
+  },
+  { event: 'generation/spotlight-start' },
+  async ({ event, step }) => {
+    const {
+      generationId,
+      userId,
+      productName,
+      productImageUrl,
+      creditTransactionId,
+      applyWatermark,
+      spotlightCategoryId,
+      spotlightStyleId,
+      spotlightDuration = '5',
+    } = event.data;
+
+    try {
+      // Step 1: Generate enhanced product frame (Nano Banana)
+      // Typically takes 30-60s — well within Vercel limits
+      const frameResult = await step.run('spotlight-enhance-frame', async () => {
+        const { getSpotlightStyle } = await import('@/data/spotlight-styles');
+        const { stepSpotlightEnhanceFrame, updateGenerationStatus } = await import('@/lib/generation/pipeline');
+        const { getAdminClient } = await import('@/lib/supabase');
+
+        const style = getSpotlightStyle(spotlightCategoryId as any, spotlightStyleId);
+        if (!style) {
+          throw new Error(`Invalid spotlight style: ${spotlightCategoryId}/${spotlightStyleId}`);
+        }
+
+        // Mark generation as started
+        const supabase = getAdminClient();
+        await supabase
+          .from('generations')
+          .update({ started_at: new Date().toISOString() })
+          .eq('id', generationId);
+
+        console.log(`[Spotlight] Step 1: Generating frame with style "${style.name}"`);
+
+        const { frameUrl } = await stepSpotlightEnhanceFrame(
+          generationId,
+          productImageUrl,
+          style.framePrompt,
+        );
+
+        return {
+          frameUrl,
+          styleName: style.name,
+          animationPrompt: style.animationPrompt,
+        };
+      });
+
+      // Step 2: Animate with Kling 2.6 (fallback to Veo 3.1)
+      // This is the long step — Kling 2.6 can take 2-5 minutes
+      // Having it as its own step means it gets a fresh Vercel timeout
+      const videoResult = await step.run('spotlight-animate', async () => {
+        const { stepSpotlightAnimate, updateGenerationStatus } = await import('@/lib/generation/pipeline');
+        const { KieService } = await import('@/lib/ai/kie');
+        const { uploadVideo } = await import('@/lib/r2');
+        const { getAdminClient } = await import('@/lib/supabase');
+
+        console.log(`[Spotlight] Step 2: Animating with Kling 2.6 (${spotlightDuration}s)`);
+
+        try {
+          const result = await stepSpotlightAnimate(
+            generationId,
+            frameResult.frameUrl,
+            frameResult.animationPrompt,
+            spotlightDuration as '5' | '10',
+          );
+          return result;
+        } catch (klingError) {
+          // Fallback to Veo 3.1 Fast if Kling 2.6 fails
+          console.warn(`[Spotlight] Kling 2.6 failed:`, klingError instanceof Error ? klingError.message : String(klingError));
+          console.log(`[Spotlight] Falling back to Veo 3.1 Fast...`);
+
+          const supabase = getAdminClient();
+
+          // Update status
+          await updateGenerationStatus(generationId, 'generating', 2);
+
+          const veoPrompt = `Cinematic product showcase animation. ${frameResult.animationPrompt} Smooth, professional motion design. Premium product commercial quality. 9:16 vertical format.`;
+
+          const veoResult = await KieService.generateVeo3VideoSync(
+            {
+              model: 'veo3_fast',
+              prompt: veoPrompt,
+              imageUrls: [frameResult.frameUrl],
+              aspectRatio: '9:16',
+              sound: false,
+              duration: spotlightDuration === '10' ? '8' : '5',
+            },
+            (task) => console.log(`[Spotlight] Veo 3.1 fallback: ${task.status} (${task.progress || 0}%)`)
+          );
+
+          const videoBuffer = await KieService.downloadFile(veoResult.url);
+          const uploadResult = await uploadVideo(generationId, 0, videoBuffer);
+
+          // Update video_jobs
+          await supabase
+            .from('video_jobs')
+            .upsert({
+              generation_id: generationId,
+              script_index: 0,
+              status: 'completed',
+              frame_url: frameResult.frameUrl,
+              video_r2_key: uploadResult.key,
+              duration_seconds: veoResult.duration || parseInt(spotlightDuration),
+              completed_at: new Date().toISOString(),
+            });
+
+          return {
+            videoR2Key: uploadResult.key,
+            videoSignedUrl: uploadResult.signedUrl,
+            duration: veoResult.duration || parseInt(spotlightDuration),
+          };
+        }
+      });
+
+      // Step 3: Finalize — mark complete, apply watermark if needed, confirm credits
+      await step.run('spotlight-finalize', async () => {
+        const { updateGenerationStatus, stepAddWatermark } = await import('@/lib/generation/pipeline');
+        const { getAdminClient } = await import('@/lib/supabase');
+        const { confirmCredits } = await import('@/services/credits');
+
+        const supabase = getAdminClient();
+
+        // Apply watermark for free tier if needed
+        if (applyWatermark) {
+          try {
+            await stepAddWatermark(
+              generationId,
+              [{
+                scriptIndex: 0,
+                videoR2Key: videoResult.videoR2Key,
+                videoSignedUrl: videoResult.videoSignedUrl,
+                duration: videoResult.duration,
+              }],
+              [] // No burned subtitles for spotlight
+            );
+          } catch (watermarkError) {
+            console.error('[Spotlight] Watermark failed:', watermarkError);
+            // Don't fail — deliver unwatermarked video
+          }
+        }
+
+        // Build final video array for generations table
+        const generationVideos = [{
+          scriptIndex: 0,
+          frameUrl: frameResult.frameUrl,
+          videoR2Key: videoResult.videoR2Key,
+          duration: videoResult.duration,
+        }];
+
+        // Mark complete
+        await updateGenerationStatus(generationId, 'completed', 3, {
+          videos: generationVideos,
+          total_steps: 3,
+        } as any);
+
+        // Confirm credits
+        if (creditTransactionId) {
+          try {
+            await confirmCredits(creditTransactionId);
+            console.log(`[Spotlight] Credits confirmed for ${generationId}`);
+          } catch (creditError) {
+            console.error('[Spotlight] Credit confirm failed:', creditError);
+          }
+        }
+
+        console.log(`[Spotlight] Generation ${generationId} completed successfully`);
+      });
+
+      return {
+        success: true,
+        generationId,
+        videosGenerated: 1,
+      };
+    } catch (error) {
+      // Refund credits on failure
+      await step.run('spotlight-refund-credits', async () => {
+        const { refundCredits } = await import('@/services/credits');
+        const { updateGenerationStatus } = await import('@/lib/generation/pipeline');
+
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+        // Mark as failed
+        await updateGenerationStatus(generationId, 'failed', -1, {
+          error_message: errorMessage,
+        } as any);
+
+        // Refund credits
+        if (creditTransactionId) {
+          try {
+            await refundCredits(creditTransactionId, errorMessage);
+            console.log(`[Spotlight] Credits refunded for failed generation ${generationId}`);
+          } catch (refundError) {
+            console.error('[Spotlight] Failed to refund credits:', refundError);
+          }
         }
       });
 
@@ -588,6 +827,7 @@ export const generateSingleVideo = inngest.createFunction(
 
 export const functions = [
   generateVideo,
+  generateSpotlight,
   processVideo,
   generateStrategy,
   handleKieCompleted,
