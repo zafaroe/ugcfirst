@@ -99,25 +99,78 @@ async function soraRequest<T>(
  *
  * OpenAI API: POST /v1/videos
  * Returns the video job ID for polling.
+ *
+ * NOTE: For image-to-video, OpenAI requires the image as base64 data,
+ * not a URL. We download the image and encode it.
  */
 export async function createVideo(request: SoraVideoRequest): Promise<string> {
+  if (!SORA_API_KEY) {
+    throw new Error('SORA_API_KEY not configured');
+  }
+
   const sizeMap: Record<string, string> = {
     '9:16': '720x1280',
     '16:9': '1280x720',
     '1:1': '720x720',
   };
 
-  const body: Record<string, unknown> = {
+  const url = `${SORA_API_BASE}/videos`;
+  console.log(`[Sora Direct] POST ${url}`);
+
+  // For image-to-video, we need to use multipart/form-data
+  if (request.imageUrl) {
+    // Download the image
+    console.log(`[Sora Direct] Downloading image from: ${request.imageUrl.substring(0, 100)}...`);
+    const imageResponse = await fetch(request.imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error(`Failed to download image for Sora: ${imageResponse.status}`);
+    }
+    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+    const contentType = imageResponse.headers.get('content-type') || 'image/png';
+    const extension = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : 'png';
+
+    // Create FormData for multipart upload
+    const formData = new FormData();
+    formData.append('model', request.model || 'sora-2');
+    formData.append('prompt', request.prompt);
+    formData.append('size', sizeMap[request.aspectRatio || '9:16']);
+    formData.append('seconds', String(request.seconds || 8));
+
+    // Append image as a Blob with proper filename
+    const imageBlob = new Blob([imageBuffer], { type: contentType });
+    formData.append('input_reference', imageBlob, `frame.${extension}`);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SORA_API_KEY}`,
+        // Don't set Content-Type - fetch will set it with boundary for FormData
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Sora Direct] Error ${response.status}: ${errorText}`);
+      throw new Error(`Sora API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json() as SoraVideoResponse;
+    if (!data.id) {
+      throw new Error('Sora API did not return a video ID');
+    }
+
+    console.log(`[Sora Direct] Video job created: ${data.id} (status: ${data.status})`);
+    return data.id;
+  }
+
+  // Text-to-video: use JSON body
+  const body = {
     model: request.model || 'sora-2',
     prompt: request.prompt,
     size: sizeMap[request.aspectRatio || '9:16'],
     seconds: String(request.seconds || 8),
   };
-
-  // Image-to-video: OpenAI uses "input_reference" (URL string)
-  if (request.imageUrl) {
-    body.input_reference = request.imageUrl;
-  }
 
   const response = await soraRequest<SoraVideoResponse>('/videos', 'POST', body);
 
