@@ -93,14 +93,17 @@ export interface Avatar {
 export interface PricingPlan {
   id: PlanType
   name: string
-  price: number
-  annualPrice: number
-  credits: number
-  videoCount: number
-  costPerVideo: number
+  price: number                 // Monthly price
+  annualPrice: number           // Price per month when billed annually
+  annualTotal: number           // Total annual cost
+  credits: number               // Monthly credit allocation
+  videoCount: number            // Advertised video count (credits / 10)
+  costPerVideo: number          // Monthly price / video count
   features: string[]
   limitations?: string[]
   isPopular?: boolean
+  badge?: string                // e.g. "Most Popular"
+  valueDescription: string      // Positioning language for the plan
 }
 
 export interface CreditPack {
@@ -110,4 +113,20 @@ export interface CreditPack {
   credits: number
   videoCount: number
   costPerVideo: number
+}
+
+// Feature gates by plan
+export interface PlanFeatures {
+  maxResolution: '720p' | '1080p'
+  watermark: boolean
+  concierge: boolean
+  scheduling: boolean
+  priorityRendering: boolean
+  apiAccess: boolean
+  teamSeats: number
+  platformStrategy: boolean
+  customAvatars: boolean
+  dedicatedSupport: boolean
+  hdUpgrade: boolean
+  premiumBroll: boolean
 }

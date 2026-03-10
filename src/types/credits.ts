@@ -99,22 +99,35 @@ export interface TransactionHistoryItem {
 
 // ============================================
 // CREDIT COSTS
+// Final pricing March 2026
+// 10 credits = 1 standard DIY video
 // ============================================
 
 export const CREDIT_COSTS = {
-  // Legacy costs (keeping for backwards compatibility)
-  DIY_BASE: 10,
-  DIY_WITH_CAPTIONS: 11,
-  CONCIERGE_BASE: 15,
-  CONCIERGE_WITH_CAPTIONS: 16,
-  EDIT_FIX: 5,
-  SINGLE_SCRIPT: 4,
-  CAPTION_ADDON: 1,
-  END_SCREEN_ADDON: 2,
-  SCHEDULE_POST: 2,
+  // Core Video Generation
+  DIY_VIDEO: 10,              // Standard DIY video (Sora 2 Standard via Kie.ai)
+  DIY_BASE: 10,               // Alias for backwards compatibility
+  CONCIERGE_VIDEO: 15,        // Concierge/Drop & Go (AI handles everything)
+  CONCIERGE_BASE: 15,         // Alias for backwards compatibility
 
-  // UGC Video Generation by Duration
-  // Pricing targets ~55-60% gross margin
+  // Add-ons (stackable on top of base cost)
+  AUTO_CAPTIONS: 1,           // TikTok-style word highlighting (ElevenLabs STT + FFmpeg ASS)
+  CAPTION_ADDON: 1,           // Alias for backwards compatibility
+  HD_VIDEO_UPGRADE: 3,        // 1080p via Sora 2 Pro HD instead of standard
+  PREMIUM_BROLL: 2,           // Veo 3 Quality via Kie.ai for higher-quality b-roll
+  END_SCREEN_ADDON: 2,        // CTA end screen (Kling 2.6 animation)
+
+  // Other Actions
+  EDIT_REVISION: 5,           // Re-render with changes (half of base cost)
+  EDIT_FIX: 5,                // Alias for backwards compatibility
+  SCHEDULE_POST: 2,           // Social media scheduling
+  SINGLE_SCRIPT: 4,           // Script generation only
+
+  // Legacy aliases
+  DIY_WITH_CAPTIONS: 11,      // DIY_VIDEO + AUTO_CAPTIONS
+  CONCIERGE_WITH_CAPTIONS: 16, // CONCIERGE_VIDEO + AUTO_CAPTIONS
+
+  // UGC Video Generation by Duration (future implementation)
   // Pipeline: Nano Banana (images) + Veo 3.1 (person animation) + Kling 2.6 (product reveal)
   UGC_8S: 20,    // Quick (8s) - FB Feed, hooks, teasers
   UGC_15S: 25,   // Short (15s) - TikTok/Reels quick ads
@@ -122,7 +135,7 @@ export const CREDIT_COSTS = {
   UGC_30S: 40,   // Full (30s) - Complete UGC story
 
   // Spotlight Product Animation (Nano Banana + Kling 2.6)
-  // Flat 10 credits regardless of duration — Kling 2.6 costs ~110 Kie credits ($0.55)
+  // Flat 10 credits regardless of duration
   SPOTLIGHT_5S: 10,   // 5-second cinematic product animation
   SPOTLIGHT_10S: 10,  // 10-second cinematic product animation
 } as const;

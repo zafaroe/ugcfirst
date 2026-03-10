@@ -18,21 +18,23 @@ import stripePrices from './stripe-prices.json'
 export { stripePrices }
 
 // Plan ID → credits per month mapping (used in webhook)
+// Updated March 2026 - Final pricing
 export const PLAN_CREDITS: Record<string, number> = {
   free: 10,
-  starter: 70,
-  pro: 230,
-  plus: 390,
-  agency: 710,
+  starter: 30,
+  pro: 100,
+  plus: 220,
+  agency: 450,
 }
 
 // Plan ID → monthly video limit mapping
+// 10 credits = 1 standard video
 export const PLAN_VIDEO_LIMITS: Record<string, number> = {
   free: 1,
-  starter: 7,
-  pro: 23,
-  plus: 39,
-  agency: 71,
+  starter: 3,
+  pro: 10,
+  plus: 22,
+  agency: 45,
 }
 
 /**

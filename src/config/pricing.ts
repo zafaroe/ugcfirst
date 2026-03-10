@@ -4,10 +4,12 @@
  * Single source of truth for all pricing data.
  * Used by: frontend pages, Stripe setup script, webhook handlers
  *
- * NOTE: This mirrors src/mocks/data/pricing.ts - keep in sync!
+ * UGCFirst Final Pricing (March 2026)
+ * Competitive positioning: authentic AI UGC quality, zero avatar setup, ad-ready output
+ * $/video improves at every tier: Starter $6.33 > Pro $4.90 > Plus $4.50 > Agency $4.42
  */
 
-import type { PricingPlan, CreditPack } from '@/types'
+import type { PricingPlan, CreditPack, PlanFeatures, PlanType } from '@/types'
 
 // ============================================
 // SUBSCRIPTION PLANS
@@ -19,14 +21,17 @@ export const SUBSCRIPTION_PLANS: PricingPlan[] = [
     name: 'Free',
     price: 0,
     annualPrice: 0,
+    annualTotal: 0,
     credits: 10,
     videoCount: 1,
     costPerVideo: 0,
+    valueDescription: 'Try authentic AI UGC — free',
     features: [
-      '1 free video on signup',
-      'All 10 UGC templates',
-      'Product URL auto-import',
-      'Basic captions',
+      '1 authentic AI UGC video/month',
+      'All templates included',
+      'Auto captions',
+      'Watermarked output',
+      '720p export',
     ],
     limitations: [
       'Watermark on all videos',
@@ -38,17 +43,19 @@ export const SUBSCRIPTION_PLANS: PricingPlan[] = [
     id: 'starter',
     name: 'Starter',
     price: 19,
-    annualPrice: 190,
-    credits: 70,
-    videoCount: 7,
-    costPerVideo: 2.71,
+    annualPrice: 15,
+    annualTotal: 180,
+    credits: 30,
+    videoCount: 3,
+    costPerVideo: 6.33,
+    valueDescription: 'Your first real UGC ad creatives',
     features: [
-      '7 videos per month',
-      'All 10 UGC templates',
-      'Product URL auto-import',
-      'Basic captions (Hormozi style)',
+      '3 videos/month',
       'No watermark',
-      'Email support',
+      '1080p export',
+      'All templates',
+      'Drop & Go mode',
+      'HD & Premium B-Roll add-ons',
     ],
     limitations: [
       'No social scheduling',
@@ -58,19 +65,22 @@ export const SUBSCRIPTION_PLANS: PricingPlan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 59,
-    annualPrice: 590,
-    credits: 230,
-    videoCount: 23,
-    costPerVideo: 2.57,
+    price: 49,
+    annualPrice: 39,
+    annualTotal: 468,
+    credits: 100,
+    videoCount: 10,
+    costPerVideo: 4.90,
     isPopular: true,
+    badge: 'Most Popular',
+    valueDescription: 'The smart plan for merchants posting consistently',
     features: [
-      '23 videos per month',
+      '10 videos/month',
       'Everything in Starter',
-      'Social media scheduling',
-      '10 connected social accounts',
-      'Content calendar',
-      'Priority support',
+      'Social scheduling (TikTok, IG, YouTube)',
+      'Priority rendering',
+      'Platform strategy AI',
+      'Best value per video',
     ],
     limitations: [
       '1 team seat',
@@ -80,35 +90,37 @@ export const SUBSCRIPTION_PLANS: PricingPlan[] = [
     id: 'plus',
     name: 'Plus',
     price: 99,
-    annualPrice: 990,
-    credits: 390,
-    videoCount: 39,
-    costPerVideo: 2.54,
+    annualPrice: 79,
+    annualTotal: 948,
+    credits: 220,
+    videoCount: 22,
+    costPerVideo: 4.50,
+    valueDescription: 'Stronger value for teams running repeat content',
     features: [
-      '39 videos per month',
+      '22 videos/month',
       'Everything in Pro',
-      'All caption styles',
-      '2 team seats',
+      '3 team seats',
+      'Higher volume for scaling',
     ],
-    limitations: [
-      '10 social accounts (same as Pro)',
-    ],
+    limitations: [],
   },
   {
     id: 'agency',
     name: 'Agency',
-    price: 179,
-    annualPrice: 1790,
-    credits: 710,
-    videoCount: 71,
-    costPerVideo: 2.52,
+    price: 199,
+    annualPrice: 159,
+    annualTotal: 1908,
+    credits: 450,
+    videoCount: 45,
+    costPerVideo: 4.42,
+    valueDescription: 'Premium scale with API, seats, and priority support',
     features: [
-      '71 videos per month',
+      '45 videos/month',
       'Everything in Plus',
-      '50 connected social accounts',
       '5 team seats',
-      'Dedicated support',
       'API access',
+      'Custom avatars',
+      'Dedicated support',
     ],
     limitations: [],
   },
@@ -116,40 +128,42 @@ export const SUBSCRIPTION_PLANS: PricingPlan[] = [
 
 // ============================================
 // CREDIT PACKS (One-time purchases)
+// Credit packs are priced HIGHER per-video than subscriptions
+// Minimum floor: $2.75/video
 // ============================================
 
 export const CREDIT_PACKS: CreditPack[] = [
   {
     id: 'pack-starter',
     name: 'Starter Pack',
-    price: 9,
+    price: 14.99,
     credits: 30,
     videoCount: 3,
-    costPerVideo: 3.00,
+    costPerVideo: 5.00,
   },
   {
     id: 'pack-growth',
     name: 'Growth Pack',
-    price: 25,
-    credits: 90,
-    videoCount: 9,
-    costPerVideo: 2.78,
+    price: 34.99,
+    credits: 80,
+    videoCount: 8,
+    costPerVideo: 4.37,
   },
   {
     id: 'pack-scale',
     name: 'Scale Pack',
-    price: 50,
-    credits: 190,
-    videoCount: 19,
-    costPerVideo: 2.63,
+    price: 64.99,
+    credits: 200,
+    videoCount: 20,
+    costPerVideo: 3.25,
   },
   {
     id: 'pack-bulk',
     name: 'Bulk Pack',
-    price: 100,
+    price: 109.99,
     credits: 400,
     videoCount: 40,
-    costPerVideo: 2.50,
+    costPerVideo: 2.75,
   },
 ]
 
@@ -159,17 +173,94 @@ export const CREDIT_PACKS: CreditPack[] = [
 
 export const PLAN_CREDITS: Record<string, number> = {
   free: 10,
-  starter: 70,
-  pro: 230,
-  plus: 390,
-  agency: 710,
+  starter: 30,
+  pro: 100,
+  plus: 220,
+  agency: 450,
 }
 
 export const PACK_CREDITS: Record<string, number> = {
   'pack-starter': 30,
-  'pack-growth': 90,
-  'pack-scale': 190,
+  'pack-growth': 80,
+  'pack-scale': 200,
   'pack-bulk': 400,
+}
+
+// ============================================
+// FEATURE GATES BY PLAN
+// ============================================
+
+export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
+  free: {
+    maxResolution: '720p',
+    watermark: true,
+    concierge: false,
+    scheduling: false,
+    priorityRendering: false,
+    apiAccess: false,
+    teamSeats: 1,
+    platformStrategy: false,
+    customAvatars: false,
+    dedicatedSupport: false,
+    hdUpgrade: false,
+    premiumBroll: false,
+  },
+  starter: {
+    maxResolution: '1080p',
+    watermark: false,
+    concierge: true,
+    scheduling: false,
+    priorityRendering: false,
+    apiAccess: false,
+    teamSeats: 1,
+    platformStrategy: false,
+    customAvatars: false,
+    dedicatedSupport: false,
+    hdUpgrade: true,
+    premiumBroll: true,
+  },
+  pro: {
+    maxResolution: '1080p',
+    watermark: false,
+    concierge: true,
+    scheduling: true,
+    priorityRendering: true,
+    apiAccess: false,
+    teamSeats: 1,
+    platformStrategy: true,
+    customAvatars: false,
+    dedicatedSupport: false,
+    hdUpgrade: true,
+    premiumBroll: true,
+  },
+  plus: {
+    maxResolution: '1080p',
+    watermark: false,
+    concierge: true,
+    scheduling: true,
+    priorityRendering: true,
+    apiAccess: false,
+    teamSeats: 3,
+    platformStrategy: true,
+    customAvatars: false,
+    dedicatedSupport: false,
+    hdUpgrade: true,
+    premiumBroll: true,
+  },
+  agency: {
+    maxResolution: '1080p',
+    watermark: false,
+    concierge: true,
+    scheduling: true,
+    priorityRendering: true,
+    apiAccess: true,
+    teamSeats: 5,
+    platformStrategy: true,
+    customAvatars: true,
+    dedicatedSupport: true,
+    hdUpgrade: true,
+    premiumBroll: true,
+  },
 }
 
 // ============================================
@@ -196,11 +287,17 @@ export function getFreePlan(): PricingPlan | undefined {
   return SUBSCRIPTION_PLANS.find((p) => p.price === 0)
 }
 
-// ============================================
-// FAQ DATA
-// ============================================
+export function getPlanFeatures(planId: PlanType): PlanFeatures {
+  return PLAN_FEATURES[planId]
+}
 
-import type { AccordionItem } from '@/components/ui/accordion'
+export function hasFeature(planId: PlanType, feature: keyof PlanFeatures): boolean {
+  const features = PLAN_FEATURES[planId]
+  const value = features[feature]
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value > 0
+  return false // string type (maxResolution) - treat as "has feature"
+}
 
 // ============================================
 // SCHEDULING TIER RESTRICTIONS
@@ -232,16 +329,18 @@ export function getAccountLimit(tier: string): number {
 // FAQ DATA
 // ============================================
 
+import type { AccordionItem } from '@/components/ui/accordion'
+
 export const PRICING_FAQ: AccordionItem[] = [
   {
     id: 'pricing_faq_1',
     question: 'How do credits work?',
-    answer: '10 credits = 1 full video. Unlike Creatify where unused credits expire monthly, your UGCFirst credits roll over for 12 months. We believe you shouldn\'t lose what you paid for.',
+    answer: '10 credits = 1 standard video. You can use credits for add-ons like HD upgrade (+3 credits) or premium b-roll (+2 credits). Monthly credits refresh each billing period, while purchased credits never expire.',
   },
   {
     id: 'pricing_faq_2',
-    question: 'How does UGCFirst compare to MakeUGC and Creatify?',
-    answer: 'The biggest difference? Your credits don\'t disappear. MakeUGC and Creatify expire unused credits monthly—you lose what you paid for. UGCFirst credits roll over for 12 months. Plus, we\'re built specifically for dropshippers with natural lip-sync and zero post-production needed.',
+    question: 'Why fewer videos than competitors?',
+    answer: 'Most AI video tools give you 60+ low-quality outputs you\'ll never use. UGCFirst gives you fewer, better, ad-ready UGC videos that actually look like a real creator made them. No avatar setup. No stitching assets together. Just paste your product and get content that converts.',
   },
   {
     id: 'pricing_faq_3',
@@ -251,11 +350,16 @@ export const PRICING_FAQ: AccordionItem[] = [
   {
     id: 'pricing_faq_4',
     question: 'Is there a free trial?',
-    answer: 'Better—1 free video on signup. No credit card required. MakeUGC and Creatify both require payment upfront. We let you test first.',
+    answer: 'Better — 1 free video on signup. No credit card required. Test our authentic AI UGC quality before committing.',
   },
   {
     id: 'pricing_faq_5',
-    question: 'Why is UGCFirst better for dropshippers?',
-    answer: 'Built specifically for e-commerce. Paste any product URL, and our AI creates videos in one click. Trained on what converts on TikTok Shop. Competitors are generic video tools—we\'re laser-focused on helping you sell.',
+    question: 'What makes UGCFirst different?',
+    answer: 'Built specifically for e-commerce. Paste any product URL, and our AI creates videos in one click. Trained on what converts on TikTok Shop. Competitors are generic video tools — we\'re laser-focused on helping you sell.',
+  },
+  {
+    id: 'pricing_faq_6',
+    question: 'Do I need to set up avatars?',
+    answer: 'No. UGCFirst uses AI video generation that creates authentic-looking UGC without needing to train or set up avatars. Just upload your product and go.',
   },
 ]
