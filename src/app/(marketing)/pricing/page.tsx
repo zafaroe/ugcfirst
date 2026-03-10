@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faXmark, faLightbulb } from '@fortawesome/free-solid-svg-icons'
 import {
   Logo,
   Button,
@@ -27,6 +27,7 @@ export default function PricingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('monthly')
   const [stripePrices, setStripePrices] = useState<{
     subscriptions: Record<string, { monthly: string; annual: string }>
     credit_packs: Record<string, { price: string; credits: number }>
@@ -57,7 +58,7 @@ export default function PricingPage() {
   const handleSubscribe = async (planId: string) => {
     // Always redirect to signup if not logged in (double-check)
     if (!authChecked || !isLoggedIn) {
-      window.location.href = `/signup?plan=${planId}`
+      window.location.href = `/signup?plan=${planId}&interval=${billingInterval}`
       return
     }
 
@@ -68,12 +69,28 @@ export default function PricingPage() {
 
     setLoadingPlan(planId)
     try {
-      // Pass planId for fallback redirect if session expired
-      await redirectToCheckout(stripePrices.subscriptions[planId].monthly, planId)
+      // Use monthly or annual price based on toggle
+      const priceId = billingInterval === 'annual'
+        ? stripePrices.subscriptions[planId].annual
+        : stripePrices.subscriptions[planId].monthly
+      await redirectToCheckout(priceId, planId)
     } catch (error) {
       console.error('Checkout error:', error)
       setLoadingPlan(null)
     }
+  }
+
+  // Calculate displayed price based on billing interval
+  const getDisplayPrice = (plan: typeof SUBSCRIPTION_PLANS[0]) => {
+    return billingInterval === 'annual' ? plan.annualPrice : plan.price
+  }
+
+  // Calculate savings for annual billing
+  const getAnnualSavings = (plan: typeof SUBSCRIPTION_PLANS[0]) => {
+    if (plan.price === 0) return 0
+    const monthlyCost = plan.price * 12
+    const annualCost = plan.annualTotal
+    return monthlyCost - annualCost
   }
 
   const handleBuyCreditPack = async (packId: string) => {
@@ -167,7 +184,7 @@ export default function PricingPage() {
       <main className="relative z-10 max-w-7xl mx-auto px-4 py-12">
         {/* Title */}
         <motion.div
-          className="text-center mb-12"
+          className="text-center mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -178,6 +195,40 @@ export default function PricingPage() {
           <p className="text-lg text-text-muted max-w-2xl mx-auto">
             Choose the plan that fits your needs. All plans include access to our AI video generation platform.
           </p>
+        </motion.div>
+
+        {/* Billing Toggle */}
+        <motion.div
+          className="flex justify-center mb-10"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <div className="inline-flex items-center gap-3 p-1.5 bg-surface-raised rounded-full border border-border-default">
+            <button
+              onClick={() => setBillingInterval('monthly')}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                billingInterval === 'monthly'
+                  ? 'bg-gradient-to-r from-mint to-mint-dark text-white shadow-md'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingInterval('annual')}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                billingInterval === 'annual'
+                  ? 'bg-gradient-to-r from-mint to-mint-dark text-white shadow-md'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              Annual
+              <span className="px-2 py-0.5 bg-coral/20 text-coral text-xs font-bold rounded-full">
+                Save 20%
+              </span>
+            </button>
+          </div>
         </motion.div>
 
         {/* Pricing cards */}
@@ -203,16 +254,25 @@ export default function PricingPage() {
 
                 {/* === Fixed-height header zone === */}
                 <div className="p-5 pb-0">
-                  <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-3">
+                  <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-1">
                     {plan.name}
                   </h3>
+                  <p className="text-xs text-text-muted/80 mb-3 min-h-[2.5rem]">
+                    {plan.valueDescription}
+                  </p>
 
                   <div className="flex items-baseline gap-1 mb-1">
                     <span className="text-4xl font-extrabold text-text-primary tracking-tight">
-                      ${plan.price}
+                      ${getDisplayPrice(plan)}
                     </span>
                     <span className="text-text-muted text-sm">/mo</span>
                   </div>
+
+                  {billingInterval === 'annual' && plan.price > 0 && (
+                    <div className="text-xs text-coral font-medium mb-1">
+                      Save ${getAnnualSavings(plan)}/year
+                    </div>
+                  )}
 
                   <div className="text-sm text-text-muted mb-4">
                     {plan.credits} credits &middot; {plan.videoCount} videos
@@ -272,6 +332,33 @@ export default function PricingPage() {
             </StaggerItem>
           ))}
         </StaggerContainer>
+
+        {/* "Why fewer videos?" Callout */}
+        <motion.div
+          className="mb-16 max-w-3xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <div className="relative p-6 rounded-2xl bg-gradient-to-br from-mint/5 to-coral/5 border border-mint/20">
+            <div className="flex gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-mint/20 flex items-center justify-center">
+                <FontAwesomeIcon icon={faLightbulb} className="w-5 h-5 text-mint" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">
+                  &ldquo;Why fewer videos than competitors?&rdquo;
+                </h3>
+                <p className="text-text-muted leading-relaxed">
+                  Most AI video tools give you 60+ low-quality outputs you&apos;ll never use.
+                  UGCFirst gives you <span className="text-mint font-medium">fewer, better, ad-ready UGC videos</span> that
+                  actually look like a real creator made them. No avatar setup. No stitching assets together.
+                  Just paste your product and get content that converts.
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Wave decoration */}
         <div className="relative h-16 -mb-8">
@@ -368,7 +455,7 @@ export default function PricingPage() {
           <div className="flex flex-wrap justify-center gap-6 text-sm text-text-muted">
             <span className="flex items-center gap-2">
               <FontAwesomeIcon icon={faCheck} className="w-4 h-4 text-status-success" />
-              Credits rollover for 12 months
+              Purchased credits never expire
             </span>
             <span className="flex items-center gap-2">
               <FontAwesomeIcon icon={faCheck} className="w-4 h-4 text-status-success" />
