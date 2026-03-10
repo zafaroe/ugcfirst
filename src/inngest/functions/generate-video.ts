@@ -255,16 +255,14 @@ export const generateVideo = inngest.createFunction(
           return stepGenerateScripts(generationId, persona, productName);
         });
 
-        // Step 3: Generate frames
-        const frames = await step.run('generate-frames', async () => {
-          return stepGenerateFrames(generationId, productImageUrl, productName, scripts, persona);
-        });
+        // Step 3+4: Generate frames AND upload to R2 in same step
+        // CRITICAL: Must be same step — GeneratedFrame.imageBuffer is a Buffer
+        // that cannot survive Inngest JSON serialization between steps
+        const uploadResult = await step.run('generate-and-upload-frames', async () => {
+          const frames = await stepGenerateFrames(generationId, productImageUrl, productName, scripts, persona);
+          const urls = await stepUploadFrames(generationId, frames);
 
-        // Step 4: Upload frames to R2
-        // We pass frames directly since stepUploadFrames handles them
-        const uploadResult = await step.run('upload-frames', async () => {
-          const urls = await stepUploadFrames(generationId, frames as GeneratedFrame[]);
-          // Build frame data for video generation (just prompts, no buffers)
+          // Return ONLY serializable data (no Buffers)
           const frameData = frames.map((frame, i) => ({
             scriptIndex: frame.scriptIndex,
             prompt: frame.prompt,
