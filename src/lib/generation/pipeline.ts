@@ -14,7 +14,7 @@
 
 import { getAdminClient } from '@/lib/supabase';
 import { analyzeProduct, generateStrategyBrief, OpenAIService } from '@/lib/ai/openai';
-import { GeminiService, generateFramePrompt, generateProductFrame } from '@/lib/ai/gemini';
+import { GeminiService, generateFramePrompt } from '@/lib/ai/gemini';
 import { ApproachSelector } from '@/lib/ai/approach-selector';
 import {
   KieService,
@@ -224,12 +224,17 @@ export async function stepGenerateFrames(
 ): Promise<GeneratedFrame[]> {
   await updateGenerationStatus(generationId, 'framing', 3);
 
+  if (!KieService.isConfigured()) {
+    throw new Error('KIE_AI_API_KEY not configured — required for Concierge pipeline');
+  }
+
   const frames: GeneratedFrame[] = [];
 
-  // Generate frames for each script
+  // Generate frames for each script using reference image approach
+  // This preserves the EXACT product appearance by passing it as a reference
   for (let i = 0; i < scripts.length; i++) {
     const script = scripts[i];
-    console.log(`[Pipeline] Generating frame ${i + 1}/${scripts.length}...`);
+    console.log(`[Pipeline] Generating frame ${i + 1}/${scripts.length} with product reference...`);
 
     // Generate frame prompt metadata (for logging/debugging)
     const framePromptData = await generateFramePrompt(
@@ -238,46 +243,28 @@ export async function stepGenerateFrames(
       script.fullScript
     );
 
-    let imageBuffer: Buffer | undefined;
+    // Build a prompt that features the product prominently
+    // The referenceImageUrls ensures the EXACT product appearance is preserved
+    const toneStyle = (persona.tone as 'casual' | 'professional' | 'energetic') || 'casual';
+    const framePrompt = buildConciergeFramePrompt(productName, toneStyle, persona);
 
-    // Try Gemini image-to-image first (product image visible)
-    try {
-      console.log(`[Pipeline] Using Gemini for frame ${i} (image-to-image)...`);
-      const geminiResult = await generateProductFrame(productImageUrl);
-      imageBuffer = Buffer.from(geminiResult.imageBase64, 'base64');
-      console.log(`[Pipeline] Gemini frame ${i} generated successfully`);
-    } catch (geminiError) {
-      console.error(`[Pipeline] Gemini frame generation failed for ${i}:`, geminiError);
+    console.log(`[Pipeline] Using Kie.ai nano-banana with product reference image`);
 
-      // Fallback to Kie.ai nano-banana (text-to-image)
-      if (KieService.isConfigured()) {
-        console.log(`[Pipeline] Falling back to Kie.ai nano-banana for frame ${i}...`);
-        try {
-          const toneStyle = (persona.tone as 'casual' | 'professional' | 'energetic') || 'casual';
-          const imagePrompt = buildFramePrompt(productName, toneStyle);
-
-          const imageResult = await KieService.generateImageSync(
-            {
-              model: 'nano-banana-pro',
-              prompt: imagePrompt,
-              aspectRatio: '9:16',
-            },
-            (task: KieTask<ImageResult>) => {
-              console.log(`Frame ${i} progress: ${task.status} (${task.progress || 0}%)`);
-            }
-          );
-
-          // Download the image from Kie.ai
-          imageBuffer = await KieService.downloadFile(imageResult.url);
-          console.log(`[Pipeline] Kie.ai fallback frame ${i} generated successfully`);
-        } catch (kieError) {
-          console.error(`[Pipeline] Kie.ai fallback also failed for frame ${i}:`, kieError);
-          throw new Error(`Failed to generate frame ${i}: Both Gemini and Kie.ai failed`);
-        }
-      } else {
-        throw new Error(`Failed to generate frame ${i}: Gemini failed and Kie.ai not configured`);
+    const imageResult = await KieService.generateImageSync(
+      {
+        model: 'nano-banana-pro',
+        prompt: framePrompt,
+        aspectRatio: '9:16',
+        referenceImageUrls: [productImageUrl], // CRITICAL: Pass product as reference to preserve exact appearance
+      },
+      (task: KieTask<ImageResult>) => {
+        console.log(`[Pipeline] Frame ${i} progress: ${task.status} (${task.progress || 0}%)`);
       }
-    }
+    );
+
+    // Download the image from Kie.ai
+    const imageBuffer = await KieService.downloadFile(imageResult.url);
+    console.log(`[Pipeline] Frame ${i} generated successfully with product reference`);
 
     frames.push({
       scriptIndex: i,
@@ -287,6 +274,37 @@ export async function stepGenerateFrames(
   }
 
   return frames;
+}
+
+/**
+ * Build a frame prompt for Concierge mode that preserves the product
+ * Used with referenceImageUrls to ensure exact product appearance
+ */
+function buildConciergeFramePrompt(
+  productName: string,
+  tone: 'casual' | 'professional' | 'energetic',
+  persona: PersonaProfile
+): string {
+  const toneDescriptions = {
+    casual: 'relaxed, friendly, approachable',
+    professional: 'polished, confident, trustworthy',
+    energetic: 'dynamic, excited, enthusiastic',
+  };
+
+  const toneDesc = toneDescriptions[tone] || toneDescriptions.casual;
+
+  // The prompt describes the scene but the referenceImageUrls ensures
+  // the product appears EXACTLY as in the original image
+  return `UGC-style product showcase frame for TikTok/Instagram Reels.
+The EXACT product from the reference image is prominently displayed in the center-foreground.
+CRITICAL: Preserve the product's exact appearance - same colors, shape, textures, details. Do NOT modify the product.
+Background: Clean, modern, lifestyle setting that complements the product.
+Mood: ${toneDesc}.
+Lighting: Warm, natural, flattering product photography style.
+Aspect ratio: 9:16 vertical format.
+Style: Authentic UGC content, not overly polished commercial.
+NO text, NO watermarks, NO logos, NO overlays.
+Product: ${productName}`.trim();
 }
 
 // ============================================
