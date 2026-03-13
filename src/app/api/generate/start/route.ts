@@ -39,6 +39,13 @@ export async function POST(request: NextRequest) {
       spotlightDuration = '5',
     } = body;
 
+    // Debug logging for captions flow
+    console.log('[API /generate/start] Received captions config:', {
+      captionsEnabled,
+      captionStyleId,
+      mode,
+    });
+
     // Validate required fields
     if (!productName || !productImageUrl) {
       return NextResponse.json(

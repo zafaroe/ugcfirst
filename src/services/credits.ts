@@ -28,12 +28,13 @@ export async function getBalance(userId: string): Promise<CreditBalance> {
     .single();
 
   if (error) {
-    // If no record exists, return zero balance
+    // If no record exists, return zero balance with free tier
     if (error.code === 'PGRST116') {
       return {
         balance: 0,
         held: 0,
         available: 0,
+        tier: 'free',
         lifetime: {
           purchased: 0,
           used: 0,
@@ -50,6 +51,7 @@ export async function getBalance(userId: string): Promise<CreditBalance> {
     balance: credits.balance,
     held: credits.held,
     available: credits.balance - credits.held,
+    tier: credits.subscription_tier,
     lifetime: {
       purchased: credits.lifetime_purchased,
       used: credits.lifetime_used,

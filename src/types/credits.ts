@@ -66,6 +66,7 @@ export interface CreditBalance {
   balance: number;
   held: number;
   available: number; // balance - held
+  tier: SubscriptionTier;
   lifetime: {
     purchased: number;
     used: number;

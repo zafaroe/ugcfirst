@@ -65,6 +65,13 @@ export const generateVideo = inngest.createFunction(
       spotlightDuration,
     } = event.data;
 
+    // Debug logging for captions flow
+    console.log('[Inngest generate-video] Received captions config:', {
+      captionsEnabled,
+      captionStyleId,
+      generationId,
+    });
+
     try {
       // Spotlight mode should use the dedicated generateSpotlight function
       if (mode === 'spotlight') {

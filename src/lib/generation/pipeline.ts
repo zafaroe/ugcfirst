@@ -1769,6 +1769,14 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutput>
     existingPersona, // Optional - skip analysis if provided (for regeneration)
   } = input;
 
+  // Debug logging for captions flow
+  console.log('[Pipeline run()] Captions config:', {
+    subtitlesEnabled,
+    captionStyleId,
+    inputCaptionsEnabled: input.captionsEnabled,
+    generationId,
+  });
+
   try {
     // Mark as started
     const supabase = getAdminClient();
