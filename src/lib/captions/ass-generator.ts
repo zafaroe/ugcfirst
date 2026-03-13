@@ -2,14 +2,31 @@
  * ASS Subtitle Generator
  *
  * Generates ASS (Advanced SubStation Alpha) subtitle files
- * with Hormozi-style word-by-word highlighting.
+ * with word-by-word highlighting and animation support.
+ *
+ * Supports multiple caption styles with:
+ * - Smart semantic grouping
+ * - Moving highlight effect
+ * - Fade, bounce, and typewriter animations
+ * - Background box support
+ * - Uppercase transform
  */
 
 import * as fs from 'fs';
-import { WordGroup, formatTimestamp, groupWordsSmooth, WordTimestamp } from './stt';
+import { WordGroup as LegacyWordGroup, formatTimestamp, groupWordsSmooth, WordTimestamp } from './stt';
+import { groupWordsSmartly, groupWordsFixed } from './smart-grouping';
+import {
+  CaptionStyleConfig,
+  WordGroup,
+  STTWord,
+  DEFAULT_GROUPING_CONFIG,
+  LegacyCaptionStyle,
+  toLegacyStyle,
+} from '@/types/captions';
+import { getCaptionPreset, getDefaultPreset, hexToAssBgr } from '@/config/caption-styles';
 
 // ============================================
-// TYPES
+// LEGACY TYPES (for backward compatibility)
 // ============================================
 
 export interface CaptionStyle {
@@ -26,15 +43,17 @@ export interface CaptionStyle {
 }
 
 export interface GenerateASSOptions {
-  style?: Partial<CaptionStyle>;
+  style?: Partial<CaptionStyle> | CaptionStyleConfig;
   wordsPerGroup?: number;
   smoothTransitions?: boolean;
   videoWidth?: number;
   videoHeight?: number;
+  /** New: Use CaptionStyleConfig directly */
+  captionStyle?: CaptionStyleConfig;
 }
 
 // ============================================
-// DEFAULT STYLE (Hormozi-Style)
+// DEFAULT STYLE (Hormozi-Style) - Legacy
 // ============================================
 
 const DEFAULT_STYLE: CaptionStyle = {
@@ -51,11 +70,60 @@ const DEFAULT_STYLE: CaptionStyle = {
 };
 
 // ============================================
-// ASS FILE GENERATION
+// TYPE GUARDS
 // ============================================
 
 /**
- * Generate ASS header section
+ * Check if style is a full CaptionStyleConfig
+ */
+function isCaptionStyleConfig(style: unknown): style is CaptionStyleConfig {
+  return (
+    typeof style === 'object' &&
+    style !== null &&
+    'id' in style &&
+    'animationType' in style &&
+    'tier' in style
+  );
+}
+
+// ============================================
+// ASS HEADER GENERATION
+// ============================================
+
+/**
+ * Generate ASS header with style line from CaptionStyleConfig
+ */
+function generateHeaderFromConfig(
+  config: CaptionStyleConfig,
+  videoWidth: number,
+  videoHeight: number
+): string {
+  // BorderStyle: 1 = outline, 3 = opaque box
+  const borderStyle = config.backgroundBox ? 3 : 1;
+
+  // BackColour with alpha for background box
+  const backColour = config.backgroundBox
+    ? hexToAssBgr('#000000', config.backgroundAlpha)
+    : '&H00000000';
+
+  return `[Script Info]
+Title: UGCFirst Auto Captions
+ScriptType: v4.00+
+PlayResX: ${videoWidth}
+PlayResY: ${videoHeight}
+Timer: 100.0000
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,${config.fontFamily},${config.fontSize},${config.primaryColor},&H0000FF00,${config.outlineColor},${backColour},${config.bold ? -1 : 0},${config.italic ? -1 : 0},0,0,100,100,0,0,${borderStyle},${config.outlineWidth},${config.shadowDepth},${config.alignment},${config.marginL},${config.marginR},${config.marginV},1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
+}
+
+/**
+ * Generate ASS header section (legacy)
  */
 function generateHeader(
   style: CaptionStyle,
@@ -79,11 +147,162 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 `;
 }
 
+// ============================================
+// TIME FORMATTING
+// ============================================
+
 /**
- * Generate ASS dialogue line with word highlighting
+ * Format milliseconds to ASS timecode: H:MM:SS.CC
+ */
+function formatAssTime(ms: number): string {
+  const seconds = ms / 1000;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const cs = Math.floor((seconds % 1) * 100);
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
+}
+
+// ============================================
+// DIALOGUE GENERATION WITH ANIMATIONS
+// ============================================
+
+/**
+ * Generate dialogue events for a word group with moving highlight
+ */
+function generateGroupDialogueEvents(
+  group: WordGroup,
+  config: CaptionStyleConfig
+): string[] {
+  const events: string[] = [];
+
+  for (let i = 0; i < group.words.length; i++) {
+    const word = group.words[i];
+
+    // Build the text line with highlight on the active word
+    const textParts = group.words.map((w, j) => {
+      let displayText = config.uppercase ? w.text.toUpperCase() : w.text;
+
+      if (j === i) {
+        // Active word - apply highlight color (and bold if style allows)
+        return `{\\c${config.highlightColor}\\b1}${displayText}{\\c${config.primaryColor}\\b0}`;
+      }
+      return displayText;
+    });
+
+    // Timing: this sub-event starts when the word starts
+    // and ends when the next word starts (or group ends)
+    const startTime = word.start;
+    const endTime =
+      i < group.words.length - 1 ? group.words[i + 1].start : group.endTime;
+
+    // Build animation prefix
+    let prefix = '';
+
+    // Fade animation on first word of group
+    if (config.animationType === 'fade' && i === 0) {
+      prefix = `{\\fad(${config.fadeInMs},${config.fadeOutMs})}`;
+    }
+
+    // Bounce animation on first word of group
+    if (config.animationType === 'bounce' && i === 0 && config.scaleOvershoot) {
+      // Start at 130% scale, animate to 100% over 100ms
+      prefix = `{\\fscx130\\fscy130\\t(0,100,\\fscx100\\fscy100)}`;
+    }
+
+    // Typewriter: progressive reveal (each word fades in)
+    if (config.animationType === 'typewriter') {
+      const fadeMs = 50; // Quick fade per word
+      prefix = `{\\fad(${fadeMs},0)}`;
+    }
+
+    const startTimecode = formatAssTime(startTime);
+    const endTimecode = formatAssTime(endTime);
+    const text = prefix + textParts.join(' ');
+
+    events.push(`Dialogue: 0,${startTimecode},${endTimecode},Default,,0,0,0,,${text}`);
+  }
+
+  return events;
+}
+
+/**
+ * Generate dialogue events for karaoke mode (one word at a time)
+ */
+function generateKaraokeDialogueEvents(
+  words: STTWord[],
+  config: CaptionStyleConfig
+): string[] {
+  const events: string[] = [];
+
+  for (const word of words) {
+    let displayText = config.uppercase ? word.text.toUpperCase() : word.text;
+
+    // Apply highlight color to the single word
+    const text = `{\\c${config.highlightColor}\\b1}${displayText}{\\c${config.primaryColor}\\b0}`;
+
+    const startTimecode = formatAssTime(word.start);
+    const endTimecode = formatAssTime(word.end);
+
+    events.push(`Dialogue: 0,${startTimecode},${endTimecode},Default,,0,0,0,,${text}`);
+  }
+
+  return events;
+}
+
+// ============================================
+// MAIN GENERATION FUNCTIONS
+// ============================================
+
+/**
+ * Generate ASS file content using CaptionStyleConfig
+ */
+export function generateASSWithConfig(
+  words: STTWord[],
+  config: CaptionStyleConfig,
+  videoWidth: number = 1080,
+  videoHeight: number = 1920
+): string {
+  if (words.length === 0) {
+    return generateHeaderFromConfig(config, videoWidth, videoHeight);
+  }
+
+  // Group words based on style config
+  let dialogueEvents: string[] = [];
+
+  if (config.wordsPerGroup === 0) {
+    // Smart semantic grouping
+    const groups = groupWordsSmartly(words, DEFAULT_GROUPING_CONFIG);
+
+    for (const group of groups) {
+      const events = generateGroupDialogueEvents(group, config);
+      dialogueEvents.push(...events);
+    }
+  } else if (config.wordsPerGroup === 1 || config.animationType === 'karaoke') {
+    // Karaoke mode - one word at a time
+    dialogueEvents = generateKaraokeDialogueEvents(words, config);
+  } else {
+    // Fixed group size
+    const groups = groupWordsFixed(words, config.wordsPerGroup);
+
+    for (const group of groups) {
+      const events = generateGroupDialogueEvents(group, config);
+      dialogueEvents.push(...events);
+    }
+  }
+
+  // Build complete ASS file
+  let ass = generateHeaderFromConfig(config, videoWidth, videoHeight);
+  ass += dialogueEvents.join('\n') + '\n';
+
+  return ass;
+}
+
+/**
+ * Generate ASS dialogue line with word highlighting (legacy)
  */
 function generateDialogueLine(
-  group: WordGroup,
+  group: LegacyWordGroup,
   style: CaptionStyle
 ): string {
   const start = formatTimestamp(group.start, 'ass');
@@ -120,12 +339,36 @@ export function generateASS(
     smoothTransitions = true,
     videoWidth = 1080,
     videoHeight = 1920,
+    captionStyle,
   } = options;
 
-  // Merge custom style with defaults
+  // If captionStyle is provided, use the new generation path
+  if (captionStyle) {
+    // Convert WordTimestamp to STTWord format
+    const sttWords: STTWord[] = words.map((w) => ({
+      text: w.word,
+      start: w.start,
+      end: w.end,
+    }));
+
+    return generateASSWithConfig(sttWords, captionStyle, videoWidth, videoHeight);
+  }
+
+  // Check if customStyle is a full CaptionStyleConfig
+  if (isCaptionStyleConfig(customStyle)) {
+    const sttWords: STTWord[] = words.map((w) => ({
+      text: w.word,
+      start: w.start,
+      end: w.end,
+    }));
+
+    return generateASSWithConfig(sttWords, customStyle, videoWidth, videoHeight);
+  }
+
+  // Legacy path: merge custom style with defaults
   const style: CaptionStyle = { ...DEFAULT_STYLE, ...customStyle };
 
-  // Group words
+  // Group words using legacy grouping
   const groups = smoothTransitions
     ? groupWordsSmooth(words, wordsPerGroup)
     : groupWords(words, wordsPerGroup);
@@ -142,13 +385,13 @@ export function generateASS(
 }
 
 /**
- * Group words helper (imported from stt.ts but exposed here for convenience)
+ * Group words helper (legacy - imported from stt.ts but exposed here for convenience)
  */
 function groupWords(
   words: WordTimestamp[],
   wordsPerGroup: number = 3
-): WordGroup[] {
-  const groups: WordGroup[] = [];
+): LegacyWordGroup[] {
+  const groups: LegacyWordGroup[] = [];
 
   for (let i = 0; i < words.length; i += wordsPerGroup) {
     const groupWords = words.slice(i, i + wordsPerGroup);
@@ -227,7 +470,7 @@ export function assColorToHex(assColor: string): string {
 }
 
 // ============================================
-// PRESET STYLES
+// PRESET STYLES (Legacy - use config/caption-styles.ts instead)
 // ============================================
 
 export const CaptionPresets = {
@@ -293,6 +536,7 @@ export const CaptionPresets = {
 
 export const ASSGenerator = {
   generate: generateASS,
+  generateWithConfig: generateASSWithConfig,
   generateFile: generateASSFile,
   writeFile: writeASSFile,
   hexToASSColor,
@@ -300,3 +544,6 @@ export const ASSGenerator = {
   presets: CaptionPresets,
   defaultStyle: DEFAULT_STYLE,
 };
+
+// Re-export types
+export type { CaptionStyleConfig, STTWord, WordGroup };

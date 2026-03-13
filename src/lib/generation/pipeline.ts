@@ -31,8 +31,9 @@ import {
 import { SoraService } from '@/lib/ai/sora';
 import { uploadFrame, uploadVideo, uploadSubtitledVideo, R2Paths, getSignedDownloadUrl, getPublicUrl, uploadToR2, downloadVideo, downloadFromR2 } from '@/lib/r2';
 import { burnSubtitles, cleanupTempFile, extractAudio, addWatermark, concatenateVideos, concatenateVideosReencode } from '@/lib/ffmpeg';
-import { generateASSFile } from '@/lib/subtitles/ass-generator';
-import { WordTimestamp } from '@/lib/subtitles/stt';
+import { generateASSFile } from '@/lib/captions/ass-generator';
+import { WordTimestamp } from '@/lib/captions/stt';
+import { getCaptionPreset, getDefaultPreset } from '@/config/caption-styles';
 import { confirmCredits, refundCredits } from '@/services/credits';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -1072,13 +1073,21 @@ export type BurnedCaptionVideo = BurnedSubtitleVideo;
 /**
  * Burn subtitles into videos using FFmpeg
  * Downloads raw videos from R2, burns in subtitles, uploads subtitled versions
+ *
+ * @param captionStyleId - Optional caption style preset ID (defaults to 'hormozi-bold')
  */
 export async function stepBurnSubtitles(
   generationId: string,
   videos: CompletedVideo[],
-  subtitles: GeneratedSubtitle[]
+  subtitles: GeneratedSubtitle[],
+  captionStyleId?: string
 ): Promise<BurnedSubtitleVideo[]> {
   await updateGenerationStatus(generationId, 'captioning', 9); // DB constraint expects 'captioning'
+
+  // Get the caption style configuration
+  const styleId = captionStyleId || 'hormozi-bold';
+  const captionStyle = getCaptionPreset(styleId) || getDefaultPreset();
+  console.log(`[Pipeline] Using caption style: ${captionStyle.name} (${captionStyle.id})`);
 
   const results: BurnedSubtitleVideo[] = [];
 
@@ -1112,10 +1121,10 @@ export async function stepBurnSubtitles(
         end: w.end,
       }));
 
-      // 3. Generate ASS file
+      // 3. Generate ASS file with caption style
       const assPath = path.join(os.tmpdir(), `ugcfirst_subtitles_${generationId}_${video.scriptIndex}.ass`);
       generateASSFile(wordTimestamps, assPath, {
-        wordsPerGroup: 3,
+        captionStyle, // Use the full style config for smart grouping + animations
         smoothTransitions: true,
       });
       tempFiles.push(assPath);
@@ -1715,6 +1724,7 @@ export interface PipelineInput {
   voiceId?: string;
   subtitlesEnabled?: boolean; // Whether to burn subtitles into video
   captionsEnabled?: boolean;  // DEPRECATED: backward compat, use subtitlesEnabled
+  captionStyleId?: string;    // Caption style preset ID (e.g., 'hormozi-bold', 'clean-minimal')
   webhookBaseUrl?: string; // Optional - only needed for webhook-based flow
   applyWatermark?: boolean; // Whether to add watermark (true for pure free users only)
   existingPersona?: PersonaProfile; // Optional - skip analysis and reuse persona (for regeneration)
@@ -1754,6 +1764,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutput>
     mode,
     voiceId,
     subtitlesEnabled = input.captionsEnabled ?? false, // Support both new and legacy param
+    captionStyleId, // Caption style preset ID (e.g., 'hormozi-bold')
     applyWatermark = false, // Only true for pure free users (free tier + never paid)
     existingPersona, // Optional - skip analysis if provided (for regeneration)
   } = input;
@@ -1899,7 +1910,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutput>
       if (subtitlesEnabled) {
         subtitles = await stepGenerateSubtitles(generationId, videos);
         if (subtitles.length > 0 && subtitles[0].words.length > 0) {
-          burnedSubtitles = await stepBurnSubtitles(generationId, videos, subtitles);
+          burnedSubtitles = await stepBurnSubtitles(generationId, videos, subtitles, captionStyleId);
         }
       } else {
         console.log('[Pipeline:DIY] Captions disabled, skipping STT + subtitle burn');
@@ -2054,7 +2065,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutput>
 
         if (subtitles.length > 0) {
           console.log('[Pipeline] Burning subtitles into videos...');
-          burnedSubtitles = await stepBurnSubtitles(generationId, videos, subtitles);
+          burnedSubtitles = await stepBurnSubtitles(generationId, videos, subtitles, captionStyleId);
           console.log(`[Pipeline] Burned subtitles for ${burnedSubtitles.length} videos:`, burnedSubtitles.map(bs => ({ scriptIndex: bs.scriptIndex, key: bs.videoSubtitledR2Key })));
         }
       } else {

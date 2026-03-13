@@ -235,6 +235,7 @@ export interface StartGenerationRequest {
   templateId?: string;
   customScript?: string;
   captionsEnabled: boolean;
+  captionStyleId?: string; // Caption style preset ID (e.g., 'hormozi-bold')
   endScreenEnabled?: boolean;
   endScreenCtaText?: string;
   endScreenBrandText?: string;

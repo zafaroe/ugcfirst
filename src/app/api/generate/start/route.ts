@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
       templateId,
       customScript,
       captionsEnabled,
+      captionStyleId, // Caption style preset ID (e.g., 'hormozi-bold')
       endScreenEnabled = false,
       endScreenCtaText,
       endScreenBrandText,
@@ -209,6 +210,7 @@ export async function POST(request: NextRequest) {
           templateId,
           customScript,
           captionsEnabled: captionsEnabled ?? false,
+          captionStyleId: captionStyleId || undefined, // Caption style preset ID
           endScreenEnabled,
           endScreenCtaText,
           endScreenBrandText,

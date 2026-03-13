@@ -28,6 +28,7 @@ export type Events = {
       templateId?: string;
       customScript?: string;
       captionsEnabled: boolean;
+      captionStyleId?: string; // Caption style preset ID (e.g., 'hormozi-bold')
       mode: 'diy' | 'concierge' | 'spotlight';
       creditTransactionId: string;
       voiceId?: string;

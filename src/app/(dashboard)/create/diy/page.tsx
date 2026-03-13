@@ -34,7 +34,7 @@ import { VisibilityToggle } from '@/components/composed/visibility-toggle'
 import type { GenerationStage } from '@/components/composed'
 import { TemplateSelector } from '@/components/blocks/create/template-selector'
 import { TemplatePreview } from '@/components/blocks/create/template-preview'
-import { CaptionToggle } from '@/components/blocks/create/caption-toggle'
+import { CaptionStylePicker, CAPTION_PRESETS } from '@/components/blocks/create/caption-style-picker'
 import { EndScreenToggle, type EndScreenData } from '@/components/blocks/create/end-screen-toggle'
 import { calculateCreditCost } from '@/types/credits'
 import { useTemplateStore } from '@/hooks/use-template'
@@ -136,7 +136,7 @@ export default function DIYCreatePage() {
 
   // Selection state
   const [freeformScript, setFreeformScript] = useState('')
-  const [captionsEnabled, setCaptionsEnabled] = useState(true)
+  const [captionStyleId, setCaptionStyleId] = useState<string | null>('hormozi-bold')
   const [endScreenEnabled, setEndScreenEnabled] = useState(false)
   const [endScreenData, setEndScreenData] = useState<EndScreenData>({
     ctaText: 'Shop Now',
@@ -188,6 +188,7 @@ export default function DIYCreatePage() {
   const progressValue = ((currentStepIndex + 1) / steps.length) * 100
 
   // Calculate credit cost (10 base + 1 captions + 2 end screen = max 13)
+  const captionsEnabled = captionStyleId !== null
   const totalCreditCost = calculateCreditCost({ mode: 'diy', captionsEnabled, endScreenEnabled })
 
   // Plans that include scheduling
@@ -506,6 +507,7 @@ export default function DIYCreatePage() {
           templateId: selectedTemplate?.id,
           customScript: fullScript,
           captionsEnabled,
+          captionStyleId,
           endScreenEnabled,
           endScreenCtaText: endScreenEnabled ? endScreenData.ctaText : undefined,
           endScreenBrandText: endScreenEnabled ? endScreenData.brandText : undefined,
@@ -789,7 +791,7 @@ export default function DIYCreatePage() {
     setManualProduct(null)
     setFetchedProduct(null)
     setFreeformScript('')
-    setCaptionsEnabled(true)
+    setCaptionStyleId('hormozi-bold')
     setEndScreenEnabled(false)
     setEndScreenData({ ctaText: 'Shop Now', brandText: '' })
     setVideoUrl(null)
@@ -1407,10 +1409,10 @@ export default function DIYCreatePage() {
                 </div>
               )}
 
-              {/* Caption Toggle */}
-              <CaptionToggle
-                enabled={captionsEnabled}
-                onToggle={setCaptionsEnabled}
+              {/* Caption Style Picker */}
+              <CaptionStylePicker
+                selectedStyleId={captionStyleId}
+                onStyleSelect={setCaptionStyleId}
               />
 
               {/* End Screen Toggle */}
@@ -1481,10 +1483,12 @@ export default function DIYCreatePage() {
                     <div className="flex items-center gap-2">
                       <Sparkles className={cn(
                         'w-4 h-4',
-                        captionsEnabled ? 'text-mint' : 'text-text-muted'
+                        captionStyleId ? 'text-mint' : 'text-text-muted'
                       )} />
                       <span className="text-text-primary">
-                        Auto Subtitles: {captionsEnabled ? 'Enabled (+1 credit)' : 'Disabled'}
+                        Auto Subtitles: {captionStyleId
+                          ? `${CAPTION_PRESETS.find(p => p.id === captionStyleId)?.name || captionStyleId} (+1 credit)`
+                          : 'Disabled'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">

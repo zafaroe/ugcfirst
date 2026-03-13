@@ -28,7 +28,7 @@ import { ScheduleModal } from '@/components/composed/schedule-modal'
 import type { CreditBalance } from '@/types/credits'
 import { VisibilityToggle } from '@/components/composed/visibility-toggle'
 import type { ManualProductData } from '@/components/composed'
-import { CaptionToggle } from '@/components/blocks/create/caption-toggle'
+import { CaptionStylePicker, CAPTION_PRESETS } from '@/components/blocks/create/caption-style-picker'
 import type {
   FetchedProduct,
   GeneratedScript,
@@ -204,7 +204,7 @@ export default function ConciergePage() {
   const [fetchedProduct, setFetchedProduct] = useState<FetchedProduct | null>(null)
   const [personaProfile, setPersonaProfile] = useState<PersonaProfile | null>(null)
   const [generatedScript, setGeneratedScript] = useState<GeneratedScript | null>(null)
-  const [subtitlesEnabled, setSubtitlesEnabled] = useState(true)
+  const [captionStyleId, setCaptionStyleId] = useState<string | null>('hormozi-bold')
   const [isFetchingProduct, setIsFetchingProduct] = useState(false)
   const [isRegeneratingScript, setIsRegeneratingScript] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -249,7 +249,8 @@ export default function ConciergePage() {
   }
 
   const canStartManual = manualProduct ? isManualProductValid(manualProduct) : false
-  const creditCost = subtitlesEnabled ? 16 : 15
+  const captionsEnabled = captionStyleId !== null
+  const creditCost = captionsEnabled ? 16 : 15
 
   // Fetch product data from URL using real API
   const fetchProductFromUrl = useCallback(async (url: string) => {
@@ -596,7 +597,8 @@ export default function ConciergePage() {
           productName: fetchedProduct.name,
           productImageUrl: fetchedProduct.image,
           customScript: generatedScript?.fullScript,
-          captionsEnabled: subtitlesEnabled, // API still uses captionsEnabled for backward compat
+          captionsEnabled, // API still uses captionsEnabled for backward compat
+          captionStyleId, // New: caption style preset ID
           mode: 'concierge',
           existingPersona: personaProfile || undefined, // Reuse persona from frontend (avoid double API calls)
         }),
@@ -769,7 +771,7 @@ export default function ConciergePage() {
     setFetchedProduct(null)
     setPersonaProfile(null)
     setGeneratedScript(null)
-    setSubtitlesEnabled(true)
+    setCaptionStyleId('hormozi-bold')
     setVideoUrl(null)
     setVideoSubtitledUrl(null)
     setShowSubtitledVideo(true)
@@ -1553,10 +1555,10 @@ export default function ConciergePage() {
         </Card>
       ) : null}
 
-      {/* Subtitle Toggle */}
-      <CaptionToggle
-        enabled={subtitlesEnabled}
-        onToggle={setSubtitlesEnabled}
+      {/* Caption Style Picker */}
+      <CaptionStylePicker
+        selectedStyleId={captionStyleId}
+        onStyleSelect={setCaptionStyleId}
       />
 
       {/* Generation Error Alert */}
@@ -1826,7 +1828,7 @@ export default function ConciergePage() {
         required={creditCost}
         available={creditBalance?.available ?? 0}
         mode="concierge"
-        captionsEnabled={subtitlesEnabled}
+        captionsEnabled={captionsEnabled}
       />
 
       {/* Video Limit Modal */}
@@ -1857,7 +1859,7 @@ export default function ConciergePage() {
           isOpen={showRegenerateModal}
           onClose={() => setShowRegenerateModal(false)}
           generationId={generationId}
-          captionsEnabled={subtitlesEnabled}
+          captionsEnabled={captionsEnabled}
           onRegenerated={handleRegenerated}
         />
       )}

@@ -222,6 +222,17 @@ export interface SubtitleBurnOptions {
 export type CaptionBurnOptions = SubtitleBurnOptions;
 
 /**
+ * Get the path to bundled caption fonts
+ * These fonts are used by the ASS subtitle renderer
+ */
+function getCaptionFontsDir(): string {
+  // In development, use the public folder
+  // In production (Vercel), public folder is served statically
+  // but for server-side FFmpeg, we need to reference from project root
+  return path.join(process.cwd(), 'public', 'fonts', 'captions');
+}
+
+/**
  * Burn subtitles into video using ASS subtitle file
  *
  * @param inputPath - Path to video file
@@ -238,12 +249,27 @@ export function burnSubtitles(
   // Escape single quotes in path and wrap in single quotes for FFmpeg ASS filter
   const escapedAssPath = assFilePath.replace(/'/g, "'\\''");
 
+  // Get the fonts directory for custom caption fonts
+  const fontsDirPath = getCaptionFontsDir();
+  const escapedFontsDir = fontsDirPath.replace(/'/g, "'\\''");
+
+  // Check if fonts directory exists, use it if so
+  const fontsExist = fs.existsSync(fontsDirPath);
+
   console.log(`[FFmpeg] Burning subtitles with ASS file: ${assFilePath}`);
-  console.log(`[FFmpeg] FFmpeg filter: ass='${escapedAssPath}'`);
+  console.log(`[FFmpeg] Fonts directory: ${fontsDirPath} (exists: ${fontsExist})`);
+
+  // Build the ASS filter with optional fontsdir
+  // Format: ass=filename:fontsdir=path
+  const assFilter = fontsExist
+    ? `ass='${escapedAssPath}':fontsdir='${escapedFontsDir}'`
+    : `ass='${escapedAssPath}'`;
+
+  console.log(`[FFmpeg] FFmpeg filter: ${assFilter}`);
 
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
-      .videoFilters(`ass='${escapedAssPath}'`)
+      .videoFilters(assFilter)
       .outputOptions([
         '-c:v', 'libx264', // Re-encode video (required for filter)
         '-preset', 'fast',
