@@ -34,52 +34,52 @@ export const TESTIMONIALS: Testimonial[] = [
   },
 ]
 
-// FAQ Items for Landing Page - Punchy, benefit-focused with competitor positioning
+// FAQ Items for Landing Page - SEO optimized with target keywords
 export const LANDING_FAQ: AccordionItem[] = [
   {
     id: 'faq_1',
-    question: 'How fast can I create a video?',
-    answer: 'Under 5 minutes. Paste your product link, pick an avatar, and our AI handles the script, voice, and editing. While competitors like MakeUGC take 10+ minutes and Creatify requires manual tweaking, UGCFirst is truly hands-off.',
+    question: 'How fast can I create a UGC video ad?',
+    answer: 'Under 5 minutes. UGCFirst is an AI UGC video generator that handles everything — paste your product link, pick an avatar, and the AI writes the script, records the voiceover, and edits the video. While MakeUGC takes 10+ minutes and Creatify requires manual tweaking, UGCFirst is truly hands-off.',
   },
   {
     id: 'faq_2',
-    question: 'Will these videos actually convert?',
-    answer: 'Our AI is trained on viral TikTok and Reels patterns. Early users report 2-3x higher engagement than their previous content. Videos are optimized for hooks, pacing, and calls-to-action that drive sales.',
+    question: 'Will these AI-generated UGC videos actually convert?',
+    answer: 'Our AI UGC video generator is trained on viral TikTok and Instagram Reels patterns used by top e-commerce sellers. Early dropshippers report 2-3x higher engagement than their previous content. Videos are optimized for hooks, pacing, and calls-to-action that drive sales.',
   },
   {
     id: 'faq_3',
-    question: 'Do I need video editing skills?',
-    answer: 'Zero. Unlike Creatify where most users need post-production editing, UGCFirst outputs polished, ready-to-post videos. Just upload and watch your engagement grow.',
+    question: 'Do I need video editing skills to make UGC ads?',
+    answer: 'Zero. Unlike Creatify where most users need post-production editing, UGCFirst outputs polished, ready-to-post UGC video ads with captions already burned in. No CapCut, no Premiere — just upload your product and get a finished video. Built specifically for e-commerce sellers and dropshippers who need results, not a learning curve.',
   },
   {
     id: 'faq_4',
-    question: 'What makes your AI avatars different?',
-    answer: "Natural lip-sync that doesn't look robotic. Many MakeUGC and Creatify users report lip-sync issues requiring manual fixes. Our avatars are specifically trained for UGC-style authenticity that builds trust.",
+    question: 'What makes UGCFirst different from MakeUGC and Creatify?',
+    answer: 'Three things no other AI UGC video generator offers: (1) Auto captions burned directly into the video — MakeUGC and Creatify both require you to add captions in CapCut separately. (2) Drop & Go concierge mode — paste one URL and get a finished video with zero input. No competitor has this. (3) Customizable end credits with optional logo branding. Plus, UGCFirst is 60% cheaper per video than MakeUGC.',
   },
   {
     id: 'faq_5',
-    question: 'What if I need changes?',
-    answer: "Instant regeneration at a fraction of the cost. Change avatars, tweak scripts, or try new hooks—all without starting over. Most edits take under 2 minutes.",
+    question: 'How much does UGCFirst cost compared to other AI UGC tools?',
+    answer: 'UGCFirst starts at $19/month for the Starter plan. MakeUGC starts at $39/month. On a per-video basis, UGCFirst videos cost approximately $2-4 each — about 60% cheaper than MakeUGC. There is also a free tier with 1 watermarked video and no credit card required, which MakeUGC does not offer at all.',
   },
   {
     id: 'faq_6',
-    question: 'Is there a free plan?',
-    answer: 'Yes! Get 1 video completely free on signup. No credit card required. Just sign up and start creating — upgrade when you need more.',
+    question: 'Is there a free AI UGC video generator plan?',
+    answer: 'Yes. UGCFirst offers 1 free watermarked UGC video on signup — no credit card required. This lets dropshippers and e-commerce sellers test the AI video quality before committing to a paid plan. Paid plans start at $19/month with full HD output and no watermark.',
   },
   {
     id: 'faq_7',
-    question: 'What platforms do you support?',
-    answer: 'TikTok, Instagram Reels, YouTube Shorts, and Facebook. All videos are optimized for vertical 9:16 format with captions, hooks, and CTAs that drive engagement on each platform.',
+    question: 'What platforms are the UGC videos optimized for?',
+    answer: 'TikTok, Instagram Reels, YouTube Shorts, and Facebook. All videos from the AI UGC video generator are exported in vertical 9:16 format with auto captions, hooks, and CTAs optimized for each platform. Dropshippers using TikTok Shop see the strongest results.',
   },
 ]
 
-// Use case personas for landing page
+// Use case personas for landing page - SEO optimized with target keywords
 export const USE_CASE_PERSONAS = [
   {
     id: 'dropshippers',
     title: 'Dropshippers',
     icon: 'Package',
-    description: 'Test products faster with instant video ads. No need to wait for samples or hire creators.',
+    description: 'Use the AI UGC video generator to test products faster with instant video ads. No samples needed, no creators to hire — just paste your product URL and get a TikTok-ready ad.',
     stat: '3.1x avg. ROAS',
     benefits: ['Test 10 products/week', 'No product samples needed', 'TikTok Shop optimized'],
   },
@@ -87,7 +87,7 @@ export const USE_CASE_PERSONAS = [
     id: 'ecommerce',
     title: 'E-commerce Brands',
     icon: 'Store',
-    description: 'Scale your content library. Create 20+ unique videos per month from your existing product catalog.',
+    description: 'Scale your UGC video ad library. Create 20+ unique AI-generated videos per month from your existing product catalog at a fraction of what MakeUGC charges.',
     stat: '20+ videos/month',
     benefits: ['Paste any product URL', 'Bulk video creation', 'A/B test creatives'],
   },
@@ -95,7 +95,7 @@ export const USE_CASE_PERSONAS = [
     id: 'agencies',
     title: 'Agencies',
     icon: 'Building2',
-    description: 'Deliver UGC videos to clients in hours, not weeks. Scale across multiple brands.',
+    description: 'Deliver AI UGC video ads to e-commerce clients in hours, not weeks. Scale across multiple brands without coordinating a dozen creators.',
     stat: '90% cost savings',
     benefits: ['Multi-brand support', 'Client-ready exports', 'White-label options'],
   },
@@ -103,7 +103,7 @@ export const USE_CASE_PERSONAS = [
     id: 'creators',
     title: 'Content Creators',
     icon: 'Camera',
-    description: 'Monetize your audience with product review videos. Auto-generated scripts from viral hooks.',
+    description: 'Monetize your audience with AI-generated product review videos. Auto-generated scripts from viral hooks, ready for TikTok and Instagram Reels.',
     stat: '50x faster output',
     benefits: ['Viral hook library', 'Multiple avatar styles', 'Cross-platform ready'],
   },

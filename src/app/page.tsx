@@ -232,9 +232,9 @@ export default function LandingPage() {
 
             <StaggerItem>
               <h1 className="text-display text-[2rem] sm:text-5xl md:text-6xl lg:text-[4.25rem] text-text-primary mb-6 leading-[1.08]">
-                <span className="block">Create Viral UGC</span>
+                <span className="block">AI UGC Video Generator</span>
                 <span className="block sm:whitespace-nowrap">
-                  Videos for Your{' '}
+                  for Your{' '}
                   <RotatingHeadline
                     words={['Store', 'Agency', 'Brand', 'TikTok Shop']}
                   />
@@ -349,7 +349,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <Badge variant="default" className="mb-4">The Problem</Badge>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-text-primary mb-4 tracking-tight">
-              Creating content is the #1 bottleneck
+              Creating UGC Video Ads Is the #1 E-Commerce Bottleneck
             </h2>
             <p className="text-lg text-text-muted max-w-2xl mx-auto">
               You found a winning product. You set up your store. But when it comes to content — you&apos;re stuck.
@@ -439,7 +439,7 @@ export default function LandingPage() {
           <div className="text-center mb-20">
             <Badge variant="default" className="mb-4 bg-white/10 text-white border-white/10">3 Simple Steps</Badge>
             <h2 className="text-display text-3xl md:text-4xl lg:text-5xl text-white mb-4 text-glow-white">
-              From product to post in minutes
+              How the AI UGC Video Generator Works
             </h2>
             <p className="text-lg text-stone-400 max-w-xl mx-auto">
               No filming. No editing. No freelancers. Just results.
@@ -507,7 +507,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <Badge variant="default" className="mb-4">For Every Seller</Badge>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-text-primary mb-4 tracking-tight">
-              Built for every seller
+              Built for Dropshippers, Brands & Agencies
             </h2>
             <p className="text-lg text-text-muted max-w-xl mx-auto">
               Whether you sell 5 products or 5,000 — UGCFirst scales with you.
@@ -558,7 +558,7 @@ export default function LandingPage() {
           <div className="text-center mb-14">
             <Badge variant="default" className="mb-4 bg-white/10 text-white border-white/10">Two Ways to Create</Badge>
             <h2 className="text-display text-3xl md:text-4xl lg:text-5xl text-white mb-4 text-glow-white">
-              Your video, your way
+              Two Ways to Create AI UGC Videos
             </h2>
             <p className="text-lg text-stone-400 max-w-xl mx-auto">
               Pick a template and customize, or let AI handle everything with Drop & Go.
@@ -659,7 +659,7 @@ export default function LandingPage() {
           <div className="text-center mb-14">
             <Badge variant="default" className="mb-4">The Showdown</Badge>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-text-primary mb-4 tracking-tight">
-              Why sellers choose UGCFirst
+              Why E-Commerce Sellers Choose UGCFirst Over MakeUGC
             </h2>
             <p className="text-lg text-text-muted max-w-xl mx-auto">
               Head-to-head comparison. See why we win every round.

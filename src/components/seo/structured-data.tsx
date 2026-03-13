@@ -28,14 +28,6 @@ export function WebsiteStructuredData({
     name,
     url,
     description,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${url}/search?q={search_term_string}`,
-      },
-      'query-input': 'required name=search_term_string',
-    },
   }
 
   return (
@@ -133,16 +125,9 @@ export function SoftwareApplicationStructuredData() {
     offers: {
       '@type': 'AggregateOffer',
       lowPrice: '0',
-      highPrice: '59',
+      highPrice: '179',
       priceCurrency: 'USD',
-      offerCount: '3',
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      ratingCount: '150',
-      bestRating: '5',
-      worstRating: '1',
+      offerCount: '5',
     },
     featureList: [
       'AI Avatar Video Generation',
