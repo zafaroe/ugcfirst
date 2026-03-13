@@ -225,23 +225,30 @@ Script 3: ${scripts[2]}
 // VIDEO GENERATION PROMPTS (kie.ai)
 // ============================================
 
+/**
+ * Video prompt template for AI video generation.
+ * NOTE: Do NOT include specific dialogue/script text in the prompt
+ * as this can cause AI video models (Sora, Veo 3.1) to generate visual subtitles.
+ * Subtitles should only be added via the stepBurnSubtitles workflow.
+ */
 export const VIDEO_PROMPT_TEMPLATE = (
-  hook: string,
+  _hook: string,
   frameDescription: string
 ) => `
 A person speaks directly to camera with natural expressions and gestures.
-Opening expression matches the energy of: "${hook}"
 ${frameDescription}
 
 The person speaks naturally with subtle movements:
 - Eye contact with camera
 - Natural hand gestures
-- Authentic facial expressions matching the script mood
+- Authentic facial expressions
 - Slight head movements for emphasis
 
 Style: Authentic UGC content, not polished commercial
 Movement: Natural, subtle, not exaggerated
 Mood: Engaging, relatable, genuine
+
+CRITICAL: Generate a clean video with NO text, NO subtitles, NO captions, NO overlays, NO watermarks visible anywhere in the video. The video must be completely free of any written text or typography.
 `.trim();
 
 // ============================================
