@@ -1917,8 +1917,29 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutput>
 
       if (subtitlesEnabled) {
         subtitles = await stepGenerateSubtitles(generationId, videos);
+
+        // Enhanced logging to debug caption issues
+        console.log('[Pipeline:DIY] stepGenerateSubtitles result:', {
+          subtitleCount: subtitles.length,
+          wordCount: subtitles[0]?.words?.length || 0,
+          hasWords: subtitles.length > 0 && subtitles[0]?.words?.length > 0,
+        });
+
         if (subtitles.length > 0 && subtitles[0].words.length > 0) {
           burnedSubtitles = await stepBurnSubtitles(generationId, videos, subtitles, captionStyleId);
+
+          // Enhanced logging to debug caption issues
+          console.log('[Pipeline:DIY] stepBurnSubtitles result:', {
+            burnedCount: burnedSubtitles.length,
+            subtitledKey: burnedSubtitles[0]?.videoSubtitledR2Key || 'NONE',
+          });
+        } else {
+          console.error('[Pipeline:DIY] WARNING: stepGenerateSubtitles returned no words - skipping burn');
+        }
+
+        // Final check: warn if subtitles were expected but not created
+        if (burnedSubtitles.length === 0) {
+          console.error('[Pipeline:DIY] CRITICAL: Subtitles enabled but no subtitled videos created!');
         }
       } else {
         console.log('[Pipeline:DIY] Captions disabled, skipping STT + subtitle burn');
@@ -2071,10 +2092,17 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutput>
         subtitles = await stepGenerateSubtitles(generationId, videos);
         console.log(`[Pipeline] Generated ${subtitles.length} subtitle sets:`, subtitles.map(s => ({ scriptIndex: s.scriptIndex, wordCount: s.words?.length || 0 })));
 
-        if (subtitles.length > 0) {
+        if (subtitles.length > 0 && subtitles.some(s => s.words?.length > 0)) {
           console.log('[Pipeline] Burning subtitles into videos...');
           burnedSubtitles = await stepBurnSubtitles(generationId, videos, subtitles, captionStyleId);
           console.log(`[Pipeline] Burned subtitles for ${burnedSubtitles.length} videos:`, burnedSubtitles.map(bs => ({ scriptIndex: bs.scriptIndex, key: bs.videoSubtitledR2Key })));
+        } else {
+          console.error('[Pipeline:Concierge] WARNING: stepGenerateSubtitles returned no words - skipping burn');
+        }
+
+        // Final check: warn if subtitles were expected but not created
+        if (burnedSubtitles.length === 0) {
+          console.error('[Pipeline:Concierge] CRITICAL: Subtitles enabled but no subtitled videos created!');
         }
       } else {
         console.log('[Pipeline] Captions disabled, skipping STT + subtitle burn');
