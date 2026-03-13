@@ -6,6 +6,19 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
 
+  // Webpack configuration for FFmpeg packages
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Mark FFmpeg packages as external so they're properly bundled
+      config.externals = config.externals || [];
+      config.externals.push({
+        '@ffmpeg-installer/ffmpeg': 'commonjs @ffmpeg-installer/ffmpeg',
+        '@ffprobe-installer/ffprobe': 'commonjs @ffprobe-installer/ffprobe',
+      });
+    }
+    return config;
+  },
+
   // SEO headers for protected routes
   async headers() {
     return [

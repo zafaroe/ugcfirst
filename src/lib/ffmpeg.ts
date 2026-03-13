@@ -16,21 +16,43 @@ import * as os from 'os';
 
 // Path to FFmpeg binary
 // 1. Use env var if set (local development with custom install)
-// 2. Use ffmpeg-static package (Vercel / production)
+// 2. Use @ffmpeg-installer/ffmpeg package (Vercel compatible)
 // 3. Fall back to system PATH
 let ffmpegPath = process.env.FFMPEG_PATH || '';
 let ffprobePath = process.env.FFPROBE_PATH || '';
 
 if (!ffmpegPath) {
   try {
-    // ffmpeg-static provides a bundled binary that works on Vercel
-    const ffmpegStatic = require('ffmpeg-static');
-    if (ffmpegStatic) {
-      ffmpegPath = ffmpegStatic;
-      console.log(`[FFmpeg] Using ffmpeg-static binary: ${ffmpegPath}`);
+    // @ffmpeg-installer/ffmpeg works better on Vercel than ffmpeg-static
+    const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+    if (ffmpegInstaller?.path) {
+      ffmpegPath = ffmpegInstaller.path;
+      console.log(`[FFmpeg] Using @ffmpeg-installer binary: ${ffmpegPath}`);
+    }
+  } catch (e) {
+    console.log('[FFmpeg] @ffmpeg-installer not available, trying ffmpeg-static...');
+    try {
+      const ffmpegStatic = require('ffmpeg-static');
+      if (ffmpegStatic) {
+        ffmpegPath = ffmpegStatic;
+        console.log(`[FFmpeg] Using ffmpeg-static binary: ${ffmpegPath}`);
+      }
+    } catch {
+      console.log('[FFmpeg] No FFmpeg package available, using system PATH');
+    }
+  }
+}
+
+if (!ffprobePath) {
+  try {
+    // @ffprobe-installer/ffprobe works better on Vercel
+    const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+    if (ffprobeInstaller?.path) {
+      ffprobePath = ffprobeInstaller.path;
+      console.log(`[FFmpeg] Using @ffprobe-installer binary: ${ffprobePath}`);
     }
   } catch {
-    console.log('[FFmpeg] ffmpeg-static not available, using system PATH');
+    console.log('[FFmpeg] @ffprobe-installer not available');
   }
 }
 
