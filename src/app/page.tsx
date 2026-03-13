@@ -30,6 +30,7 @@ import { useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } f
 import { ComparisonArena } from '@/components/composed/comparison-arena'
 import { StudioAnimation, DropAndGoAnimation } from '@/components/composed'
 import { LANDING_FAQ, USE_CASE_PERSONAS } from '@/config/landing'
+import { HomepageStructuredData } from '@/components/seo'
 
 const personaIcons: Record<string, React.ReactNode> = {
   Package: <Package className="w-6 h-6" />,
@@ -158,7 +159,11 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <>
+      {/* JSON-LD Structured Data for SEO */}
+      <HomepageStructuredData />
+
+      <div className="relative min-h-screen overflow-hidden">
 
       {/* ═══════════════════════════════════════════
           SECTION 1: NAVIGATION - High Contrast Design
@@ -876,6 +881,7 @@ export default function LandingPage() {
           </div>
         </div>
       </motion.footer>
-    </div>
+      </div>
+    </>
   )
 }

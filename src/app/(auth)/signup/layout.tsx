@@ -1,22 +1,28 @@
-import type { Metadata } from 'next';
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sign Up | UGCFirst - Start Creating UGC Videos',
-  description:
-    'Create your UGCFirst account and start making viral UGC videos with AI in minutes. Get 10 free credits.',
+  title: 'Sign Up — Start Creating AI UGC Videos Free',
+  description: 'Create your free UGCFirst account. Get 1 free AI UGC video, then upgrade to Starter ($19/mo) or Pro ($59/mo). No credit card required.',
+  keywords: [
+    'UGCFirst signup',
+    'free UGC video',
+    'AI video ads free trial',
+    'create UGC account',
+  ],
   alternates: {
-    canonical: '/signup',
+    canonical: 'https://ugcfirst.com/signup',
   },
-  robots: {
-    index: true,
-    follow: true,
+  openGraph: {
+    title: 'Sign Up — Start Creating AI UGC Videos Free | UGCFirst',
+    description: 'Get your first AI UGC video free. No credit card required.',
+    url: 'https://ugcfirst.com/signup',
   },
-};
+}
 
 export default function SignupLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
-  return children;
+  return children
 }

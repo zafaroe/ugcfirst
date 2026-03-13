@@ -23,11 +23,39 @@ const satoshi = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ugcfirst.com'),
-  alternates: {
-    canonical: '/',
+  title: {
+    default: 'UGCFirst | AI-Powered UGC Video Generator for E-Commerce',
+    template: '%s | UGCFirst',
   },
-  title: 'UGCFirst | AI-Powered UGC Videos for E-commerce',
-  description: 'Turn product images into viral UGC videos in minutes. AI avatars, viral scripts, no actors needed. Built for dropshippers.',
+  description: 'Generate AI-powered UGC video ads for your e-commerce store in 2 minutes. Auto captions, AI scripts, natural avatars. 60% cheaper than MakeUGC. Try your first video free.',
+  keywords: [
+    'AI UGC video generator',
+    'UGC ads',
+    'AI video ads',
+    'dropshipping video ads',
+    'e-commerce UGC',
+    'TikTok ad maker',
+    'AI avatars',
+    'UGC video maker',
+    'cheap UGC videos',
+    'MakeUGC alternative',
+    'auto captions video',
+    'product video generator',
+  ],
+  authors: [{ name: 'UGCFirst', url: 'https://ugcfirst.com' }],
+  creator: 'UGCFirst',
+  publisher: 'AZ Foundry LLC',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -40,26 +68,34 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: 'UGCFirst | AI-Powered UGC Videos',
-    description: 'Turn product images into viral UGC videos in minutes. No actors. No editors. No $200 invoices.',
+    type: 'website',
+    locale: 'en_US',
     url: 'https://ugcfirst.com',
     siteName: 'UGCFirst',
+    title: 'UGCFirst — AI UGC Video Ads for E-Commerce Sellers',
+    description: 'Turn product images into viral UGC videos in minutes. AI avatars, auto captions, viral scripts. Built for dropshippers. 60% cheaper than competitors.',
     images: [
       {
-        url: 'https://ugcfirst.com/og-image.png',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'UGCFirst - AI UGC Videos',
+        alt: 'UGCFirst — AI-Powered UGC Video Generator',
+        type: 'image/png',
       },
     ],
-    type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'UGCFirst | AI-Powered UGC Videos',
-    description: 'Turn product images into viral UGC videos in minutes.',
-    images: ['https://ugcfirst.com/og-image.png'],
+    site: '@AustinZBuilds',
+    creator: '@AustinZBuilds',
+    title: 'UGCFirst — AI UGC Video Ads for E-Commerce',
+    description: 'Generate UGC video ads in 2 minutes. Auto captions, AI scripts, natural avatars. Try free.',
+    images: ['/og-image.png'],
   },
+  alternates: {
+    canonical: 'https://ugcfirst.com',
+  },
+  category: 'technology',
 }
 
 export default function RootLayout({
