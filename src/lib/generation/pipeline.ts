@@ -41,12 +41,15 @@ import * as path from 'path';
 import {
   Generation,
   GenerationStatus,
+  GenerationState,
   PersonaProfile,
   GenerationMode,
   GenerationVideo,
   GeneratedScript,
   ScriptApproach,
   StrategyBrief,
+  VideoJobState,
+  CompletedVideoState,
 } from '@/types/generation';
 import {
   getSpotlightStyle,
@@ -87,6 +90,70 @@ export async function updateGenerationStatus(
     console.error('Failed to update generation status:', error);
     throw error;
   }
+}
+
+// ============================================
+// GENERATION STATE HELPERS (for multi-step Inngest pipeline)
+// ============================================
+
+/**
+ * Save generation state to database
+ * Used to persist state between Inngest steps
+ */
+export async function saveGenerationState(
+  generationId: string,
+  state: GenerationState
+): Promise<void> {
+  const supabase = getAdminClient();
+
+  const { error } = await supabase
+    .from('generations')
+    .update({ generation_state: state })
+    .eq('id', generationId);
+
+  if (error) {
+    console.error('[Pipeline] Failed to save generation state:', error);
+    throw error;
+  }
+
+  console.log(`[Pipeline] Saved generation state for ${generationId}`);
+}
+
+/**
+ * Load generation state from database
+ * Used to restore state between Inngest steps
+ */
+export async function loadGenerationState(
+  generationId: string
+): Promise<GenerationState> {
+  const supabase = getAdminClient();
+
+  const { data, error } = await supabase
+    .from('generations')
+    .select('generation_state')
+    .eq('id', generationId)
+    .single();
+
+  if (error) {
+    console.error('[Pipeline] Failed to load generation state:', error);
+    throw error;
+  }
+
+  return (data?.generation_state as GenerationState) || {};
+}
+
+/**
+ * Merge new state with existing state and save
+ * Useful for incrementally updating state
+ */
+export async function mergeGenerationState(
+  generationId: string,
+  partialState: Partial<GenerationState>
+): Promise<GenerationState> {
+  const currentState = await loadGenerationState(generationId);
+  const newState: GenerationState = { ...currentState, ...partialState };
+  await saveGenerationState(generationId, newState);
+  return newState;
 }
 
 // ============================================
@@ -622,6 +689,339 @@ export async function stepPollVideoCompletion(
   });
 
   return Promise.all(completionPromises);
+}
+
+// ============================================
+// MULTI-STEP VIDEO GENERATION (for Vercel timeout compliance)
+// ============================================
+
+/**
+ * Video models for tiered fallback
+ */
+type VideoModelTier = 'sora-2-stable' | 'sora-2' | 'sora-2-pro' | 'sora-direct' | 'veo3-fast';
+
+const VIDEO_MODEL_TIERS: VideoModelTier[] = [
+  'sora-2-stable',
+  'sora-2',
+  'sora-2-pro',
+  'sora-direct',
+  'veo3-fast',
+];
+
+export interface VideoJobSubmission {
+  scriptIndex: number;
+  taskId: string;
+  model: VideoModelTier;
+  tier: number;
+  frameUrl: string;
+  videoPrompt: string;
+  expectedDuration: number;
+}
+
+/**
+ * Submit video generation jobs WITHOUT polling
+ * Returns immediately after job submission - polling happens in separate step
+ *
+ * This is the first part of a 2-step video generation:
+ * 1. stepSubmitVideoJobs - Submit jobs, store task IDs
+ * 2. stepPollVideoCompletionV2 - Poll for completion with tier fallback
+ */
+export async function stepSubmitVideoJobs(
+  generationId: string,
+  scripts: GeneratedScript[],
+  frames: GeneratedFrame[],
+  frameUrls: string[],
+  tier: number = 1,
+): Promise<VideoJobSubmission[]> {
+  await updateGenerationStatus(generationId, 'generating', 6);
+
+  if (!KieService.isConfigured() && !SoraService.isConfigured()) {
+    throw new Error('No video generation service configured');
+  }
+
+  const supabase = getAdminClient();
+  const submissions: VideoJobSubmission[] = [];
+  const model = VIDEO_MODEL_TIERS[tier - 1] || 'sora-2-stable';
+
+  console.log(`[Pipeline:Submit] Submitting ${scripts.length} video jobs with model: ${model} (tier ${tier})`);
+
+  // Submit video jobs in parallel
+  const submissionPromises = scripts.map(async (script, i) => {
+    const frame = frames[i];
+    const frameUrl = frameUrls[i];
+
+    // Build the video prompt
+    const videoPrompt = buildVideoPrompt(
+      script.fullScript,
+      frame.prompt.description
+    );
+
+    // Calculate actual duration in seconds from script word count
+    const actualDuration = calculateVideoDuration(script);
+    const kieAiDuration = getKieAiDurationCode(actualDuration);
+
+    console.log(`[Pipeline:Submit] Submitting video ${i} (${model}, duration: ${actualDuration}s)`);
+
+    let taskId: string;
+
+    try {
+      if (model === 'sora-direct') {
+        // Use OpenAI Sora Direct API
+        if (!SoraService.isConfigured()) {
+          throw new Error('Sora Direct API not configured');
+        }
+        taskId = await SoraService.createVideo({
+          prompt: videoPrompt,
+          imageUrl: frameUrl,
+          seconds: actualDuration >= 15 ? 12 : 8,
+          aspectRatio: '9:16',
+          model: 'sora-2',
+        });
+      } else if (model === 'veo3-fast') {
+        // Use Veo 3.1 Fast
+        const veoPrompt = `UGC style selfie video of a person talking directly to camera, showing a product. The person speaks naturally with authentic energy. Natural hand gestures, genuine facial expressions, casual indoor setting. 9:16 vertical TikTok format, warm natural lighting. CRITICAL: The video must have NO text, NO subtitles, NO captions, NO overlays, NO watermarks visible anywhere in the video.`;
+        taskId = await KieService.generateVeo3Video({
+          model: 'veo3_fast',
+          prompt: veoPrompt,
+          imageUrls: [frameUrl],
+          aspectRatio: '9:16',
+          sound: true,
+          duration: '8',
+        });
+      } else {
+        // Use Kie.ai Sora variants
+        taskId = await KieService.generateVideo({
+          model: model as 'sora-2-stable' | 'sora-2' | 'sora-2-pro',
+          prompt: videoPrompt,
+          imageUrl: frameUrl,
+          duration: kieAiDuration,
+          aspectRatio: '9:16',
+        });
+      }
+
+      // Insert/update video_job record
+      await supabase
+        .from('video_jobs')
+        .upsert({
+          generation_id: generationId,
+          script_index: i,
+          kie_job_id: taskId,
+          status: 'pending',
+          frame_url: frameUrl,
+          current_tier: tier,
+          model_used: model,
+        }, {
+          onConflict: 'generation_id,script_index',
+        });
+
+      return {
+        scriptIndex: i,
+        taskId,
+        model,
+        tier,
+        frameUrl,
+        videoPrompt,
+        expectedDuration: actualDuration,
+      };
+    } catch (error) {
+      console.error(`[Pipeline:Submit] Failed to submit video ${i}:`, error);
+      throw error;
+    }
+  });
+
+  const results = await Promise.all(submissionPromises);
+  submissions.push(...results);
+
+  console.log(`[Pipeline:Submit] Submitted ${submissions.length} video jobs`);
+  return submissions;
+}
+
+/**
+ * Poll for video completion with tier fallback support
+ * Designed to complete within Vercel's 300s timeout
+ *
+ * @param timeout - Max time to poll per job (default 270s to leave buffer)
+ * @returns Completed videos or throws if all tiers fail
+ */
+export async function stepPollVideoCompletionV2(
+  generationId: string,
+  jobs: VideoJobSubmission[],
+  options: {
+    timeout?: number;
+    onProgress?: (scriptIndex: number, progress: number) => void;
+  } = {}
+): Promise<CompletedVideoState[]> {
+  const { timeout = 270000, onProgress } = options;
+
+  await updateGenerationStatus(generationId, 'generating', 7);
+
+  const supabase = getAdminClient();
+  const completedVideos: CompletedVideoState[] = [];
+
+  for (const job of jobs) {
+    console.log(`[Pipeline:Poll] Polling video ${job.scriptIndex} (${job.model})`);
+
+    try {
+      let videoBuffer: Buffer;
+      let duration: number;
+
+      if (job.model === 'sora-direct') {
+        // Poll OpenAI Sora Direct using getVideoStatus
+        // Sora Direct returns buffer directly (no URL)
+        const soraResult = await pollSoraDirect(job.taskId, {
+          timeout,
+          interval: 10000,
+          onProgress: (status: string, progress: number) => {
+            console.log(`[Pipeline:Poll] Sora Direct: ${status} (${progress}%)`);
+            onProgress?.(job.scriptIndex, progress);
+          },
+        });
+        videoBuffer = soraResult.buffer;
+        duration = soraResult.duration;
+      } else if (job.model === 'veo3-fast') {
+        // Poll Veo 3.1 using dedicated endpoint
+        const veoResult = await pollWithTimeout(
+          job.taskId,
+          KieService.getVeo3TaskStatus,
+          { timeout, interval: 8000 }
+        );
+        videoBuffer = await KieService.downloadFile(veoResult.url);
+        duration = veoResult.duration;
+      } else {
+        // Poll Kie.ai Sora variants
+        const kieResult = await KieService.pollForCompletion<VideoResult>(
+          job.taskId,
+          {
+            interval: 5000,
+            timeout,
+            onProgress: (task) => {
+              onProgress?.(job.scriptIndex, task.progress || 0);
+            },
+          }
+        );
+        videoBuffer = await KieService.downloadFile(kieResult.url);
+        duration = kieResult.duration;
+      }
+
+      console.log(`[Pipeline:Poll] Video ${job.scriptIndex} completed, uploading to R2...`);
+
+      // Upload to R2
+      const uploadResult = await uploadVideo(generationId, job.scriptIndex, videoBuffer);
+
+      console.log(`[Pipeline:Poll] Video ${job.scriptIndex} uploaded to R2: ${uploadResult.key}`);
+
+      // Update video_jobs record
+      await supabase
+        .from('video_jobs')
+        .update({
+          status: 'completed',
+          video_r2_key: uploadResult.key,
+          duration_seconds: duration,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('generation_id', generationId)
+        .eq('script_index', job.scriptIndex);
+
+      completedVideos.push({
+        scriptIndex: job.scriptIndex,
+        videoR2Key: uploadResult.key,
+        videoSignedUrl: uploadResult.signedUrl,
+        duration,
+      });
+
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`[Pipeline:Poll] Video ${job.scriptIndex} failed:`, errorMsg);
+
+      // Mark as failed in DB
+      await supabase
+        .from('video_jobs')
+        .update({
+          status: 'failed',
+          error_message: errorMsg,
+        })
+        .eq('generation_id', generationId)
+        .eq('script_index', job.scriptIndex);
+
+      // Re-throw for tier fallback handling in Inngest function
+      throw new Error(`Video ${job.scriptIndex} failed on tier ${job.tier}: ${errorMsg}`);
+    }
+  }
+
+  return completedVideos;
+}
+
+/**
+ * Poll Sora Direct API for video completion
+ */
+async function pollSoraDirect(
+  videoId: string,
+  options: {
+    timeout: number;
+    interval: number;
+    onProgress?: (status: string, progress: number) => void;
+  }
+): Promise<{ url: string; duration: number; buffer: Buffer }> {
+  const { timeout, interval, onProgress } = options;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeout) {
+    const status = await SoraService.getVideoStatus(videoId);
+
+    // Report progress
+    if (onProgress) {
+      const progress = status.progress || 0;
+      onProgress(status.status, progress);
+    }
+
+    if (status.status === 'completed') {
+      // Download the video content directly (Sora doesn't provide URL, only content download)
+      const buffer = await SoraService.downloadVideoContent(videoId);
+      // Parse seconds from response (e.g., "8" -> 8)
+      const duration = parseInt(status.seconds, 10) || 10;
+      return {
+        url: '', // Sora Direct provides content download, not URL
+        duration,
+        buffer,
+      };
+    }
+
+    if (status.status === 'failed') {
+      throw new Error(status.error?.message || 'Sora video generation failed');
+    }
+
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+
+  throw new Error(`Sora video ${videoId} timed out after ${timeout}ms`);
+}
+
+/**
+ * Helper to poll with timeout using a custom status getter
+ */
+async function pollWithTimeout<T>(
+  taskId: string,
+  getStatus: (taskId: string) => Promise<{ status: string; result?: T; error?: string }>,
+  options: { timeout: number; interval: number }
+): Promise<T> {
+  const { timeout, interval } = options;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeout) {
+    const task = await getStatus(taskId);
+
+    if (task.status === 'completed' && task.result) {
+      return task.result;
+    }
+
+    if (task.status === 'failed') {
+      throw new Error(task.error || 'Task failed');
+    }
+
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+
+  throw new Error(`Task ${taskId} timed out after ${timeout}ms`);
 }
 
 // ============================================
@@ -2376,6 +2776,9 @@ export const Pipeline = {
     burnCaptions: stepBurnSubtitles,
     // Concierge with fallback
     generateVideoWithFallback: stepGenerateVideoWithFallback,
+    // Multi-step pipeline functions (for Vercel timeout compliance)
+    submitVideoJobs: stepSubmitVideoJobs,
+    pollVideoCompletionV2: stepPollVideoCompletionV2,
     // DIY Pipeline steps
     useCustomScript: stepUseCustomScript,
     generateComposite: stepGenerateComposite,
@@ -2390,6 +2793,10 @@ export const Pipeline = {
     handleVideoComplete,
     handleVideoFailed,
   },
+  // State management
+  saveState: saveGenerationState,
+  loadState: loadGenerationState,
+  mergeState: mergeGenerationState,
   updateStatus: updateGenerationStatus,
   generateStrategy,
 };

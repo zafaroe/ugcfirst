@@ -166,6 +166,60 @@ export interface HookRecommendation {
   priority: number;
 }
 
+// ============================================
+// GENERATION STATE (for multi-step Inngest pipeline)
+// ============================================
+
+export interface VideoJobState {
+  scriptIndex: number;
+  taskId: string;
+  model: string;           // 'sora-2-stable' | 'sora-2' | 'sora-2-pro' | 'sora-direct' | 'veo3-fast'
+  tier: number;            // 1-5
+  frameUrl: string;
+  submitted_at: string;
+}
+
+export interface CompletedVideoState {
+  scriptIndex: number;
+  videoR2Key: string;
+  videoSignedUrl: string;
+  duration: number;
+}
+
+export interface GenerationState {
+  // After Phase 1 (prepare-generation)
+  persona?: PersonaProfile;
+  scripts?: GeneratedScript[];
+  frames?: Array<{
+    scriptIndex: number;
+    prompt: {
+      description: string;
+      cameraAngle: string;
+      lighting: string;
+      mood: string;
+    };
+  }>;
+  frameUrls?: string[];
+
+  // After video job submission
+  videoJobs?: VideoJobState[];
+
+  // After Phase 2 (generate-raw-videos)
+  completedVideos?: CompletedVideoState[];
+
+  // After Phase 3 (post-process-videos)
+  subtitles?: Array<{
+    scriptIndex: number;
+    words: Array<{ text: string; start: number; end: number }>;
+    fullText: string;
+  }>;
+  burnedSubtitles?: Array<{
+    scriptIndex: number;
+    videoSubtitledR2Key: string;
+    videoSubtitledSignedUrl: string;
+  }>;
+}
+
 export interface Generation {
   id: string;
   user_id: string;
@@ -183,6 +237,7 @@ export interface Generation {
   status: GenerationStatus;
   current_step: number;
   total_steps: number;
+  generation_state: GenerationState | null;  // Multi-step pipeline state
 
   // AI outputs
   persona_profile: PersonaProfile | null;

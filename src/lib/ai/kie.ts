@@ -1546,6 +1546,7 @@ export const KieService = {
   // Veo 3.1
   generateVeo3Video,
   generateVeo3VideoSync,
+  getVeo3TaskStatus,
   extendVeo3Video,
   extendVeo3VideoSync,
   generateVeo3VideoWithDuration,
